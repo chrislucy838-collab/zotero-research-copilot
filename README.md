@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <strong>🌐 Project:</strong> <a href="https://github.com/liliMozi/openhanako">https://github.com/liliMozi/openhanako</a>
+  <strong>🌐 Project:</strong> <a href="https://github.com/chrislucy838-collab/zotero-research-copilot">https://github.com/chrislucy838-collab/zotero-research-copilot</a>
 </p>
 
 <p align="center">
@@ -162,7 +162,7 @@ The plugin interface now supports **12 UI languages**: **English**, **简体中�
 
 ### Install the Plugin
 
-1. Download the latest `Zotero-Research-Copilot-x.x.x.xpi` from the project's [Releases](https://github.com/liliMozi/openhanako/releases)
+1. Download the latest `Zotero-Research-Copilot-x.x.x.xpi` from this project's [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases)
 2. In Zotero, go to **Tools → Add-ons**
 3. Click the gear icon ⚙️ and choose **Install Add-on From File...**
 4. Select the downloaded `.xpi` file
@@ -253,7 +253,7 @@ Click shortcut buttons such as **Summarize**, **Explain**, or **Translate** for 
 - API requests are sent **directly** to the selected provider or configured endpoint
 - AIdea **does not collect usage telemetry or user data**
 - Chat history and memory remain in Zotero's local database
-- The code is fully available for inspection on [GitHub](https://github.com/liliMozi/openhanako)
+- The code is fully available for inspection on [GitHub](https://github.com/chrislucy838-collab/zotero-research-copilot)
 
 ---
 
@@ -263,7 +263,7 @@ Planned directions for future releases include:
 
 - **One-click architecture diagrams**, for generating structural visualizations from paper content
 
-> 💡 Feature requests are welcome through the project's [Issues](https://github.com/liliMozi/openhanako/issues).
+> 💡 Feature requests are welcome through this project's [Issues](https://github.com/chrislucy838-collab/zotero-research-copilot/issues).
 
 ---
 
@@ -295,11 +295,11 @@ This project is derived from [llm-for-zotero](https://github.com/yilewang/llm-fo
 
 ## ⭐ Star History
 
-<a href="https://star-history.com/#liliMozi/openhanako&Date">
+<a href="https://star-history.com/#chrislucy838-collab/zotero-research-copilot&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=liliMozi/openhanako&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=liliMozi/openhanako&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=liliMozi/openhanako&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=chrislucy838-collab/zotero-research-copilot&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=chrislucy838-collab/zotero-research-copilot&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=chrislucy838-collab/zotero-research-copilot&type=Date" />
  </picture>
 </a>
 
