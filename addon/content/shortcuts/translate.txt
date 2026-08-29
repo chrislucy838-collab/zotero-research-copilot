@@ -1,0 +1,1 @@
+Translate the selected text or image content into the target language. If the source is Chinese, translate to English; if the source is English or other languages, translate to Chinese. Provide only the translation, no explanations.

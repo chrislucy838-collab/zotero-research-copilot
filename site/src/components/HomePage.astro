@@ -1,0 +1,733 @@
+---
+import type { HeadingKey, PageData } from "../content";
+import { headingFragments } from "../content";
+import { getLocaleDefinition, localeOptions } from "../i18n";
+
+type Props = {
+  page: PageData;
+};
+
+const { page } = Astro.props;
+const basePath = import.meta.env.BASE_URL;
+const baseRoot = basePath.endsWith("/") ? basePath : `${basePath}/`;
+const withBase = (value: string) => `${baseRoot}${value.replace(/^\//, "")}`;
+const locale = getLocaleDefinition(page.locale);
+const docsHref = {
+  en: "https://github.com/Visterainer/aidea-zotero/blob/master/README.md",
+  "zh-CN":
+    "https://github.com/Visterainer/aidea-zotero/blob/master/doc/readme/README.zh-CN.md",
+  "zh-TW":
+    "https://github.com/Visterainer/aidea-zotero/blob/master/doc/readme/README.zh-TW.md",
+  ja: "https://github.com/Visterainer/aidea-zotero/blob/master/doc/readme/README.ja.md",
+  ko: "https://github.com/Visterainer/aidea-zotero/blob/master/doc/readme/README.ko.md",
+  fr: "https://github.com/Visterainer/aidea-zotero/blob/master/doc/readme/README.fr.md",
+}[page.locale] ?? "https://github.com/Visterainer/aidea-zotero/blob/master/README.md";
+const heroImage = locale.usesChineseMedia
+  ? withBase("/media/chat-panel-cn.png")
+  : withBase("/media/chat-panel-en.png");
+const storyImage = locale.usesChineseMedia
+  ? withBase("/media/story-chat-cn.png")
+  : withBase("/media/story-chat-en.png");
+const settingsImage = locale.usesChineseMedia
+  ? withBase("/media/settings-oauth-models-cn.png")
+  : withBase("/media/settings-oauth-models-en.png");
+const translationImage = locale.usesChineseMedia
+  ? withBase("/media/translate-panel-cn.png")
+  : withBase("/media/translate-panel-en.png");
+const selectionTranslationPopupImage = withBase("/media/selection-translation-popup.png");
+const selectionTranslationSettingsImage = withBase("/media/selection-translation-settings.png");
+const releaseHref = "https://github.com/Visterainer/aidea-zotero/releases";
+const githubHref = "https://github.com/Visterainer/aidea-zotero";
+const issuesHref = "https://github.com/Visterainer/aidea-zotero/issues";
+const licenseHref = "https://github.com/Visterainer/aidea-zotero/blob/master/LICENSE";
+const languageLabel = "Language";
+const modelAccessContent = {
+  "zh-CN": {
+    kicker: "模型接入",
+    heading: "连接模型，开始对话",
+    headingAccent: "连接模型",
+    headingRest: "，开始对话",
+    body: "支持 OAuth 授权和 API / 本地模型接入两种方式，你可以按自己的使用习惯选择。",
+    note: "之后也可以在插件设置中随时切换接入方式。",
+    options: [
+      {
+        label: "OAuth 授权",
+        tag: "推荐",
+        title: "登录服务商账号，授权后即可使用",
+        body: "无需手动填写 API Key，适合希望快速开始模型对话的大多数用户。",
+        points: ["点击授权登录", "自动保存授权状态", "适合 OpenAI、Gemini、GitHub Copilot 等服务"],
+      },
+      {
+        label: "API / 本地模型",
+        tag: "灵活",
+        title: "填写接口地址和模型名称，连接自己的模型服务",
+        body: "按服务要求填写 API Key，可连接云端 API、自部署服务，或本地模型接口。",
+        points: ["支持 OpenAI 兼容接口", "可自定义服务地址和模型名称", "适合 Ollama、LM Studio、vLLM 等本地模型"],
+      },
+    ],
+  },
+  "zh-TW": {
+    kicker: "模型接入",
+    heading: "連接模型，開始對話",
+    headingAccent: "連接模型",
+    headingRest: "，開始對話",
+    body: "支援 OAuth 授權和 API / 本地模型接入兩種方式，你可以依照自己的使用習慣選擇。",
+    note: "之後也可以在外掛設定中隨時切換接入方式。",
+    options: [
+      {
+        label: "OAuth 授權",
+        tag: "推薦",
+        title: "登入服務商帳號，授權後即可使用",
+        body: "不需要手動填寫 API Key，適合希望快速開始模型對話的大多數使用者。",
+        points: ["點擊授權登入", "自動保存授權狀態", "適合 OpenAI、Gemini、GitHub Copilot 等服務"],
+      },
+      {
+        label: "API / 本地模型",
+        tag: "彈性",
+        title: "填寫接口地址和模型名稱，連接自己的模型服務",
+        body: "依服務要求填寫 API Key，可連接雲端 API、自部署服務，或本地模型接口。",
+        points: ["支援 OpenAI 相容接口", "可自訂服務地址和模型名稱", "適合 Ollama、LM Studio、vLLM 等本地模型"],
+      },
+    ],
+  },
+  en: {
+    kicker: "Model Access",
+    heading: "Connect a model and start chatting",
+    headingAccent: "Connect a model",
+    headingRest: " and start chatting",
+    body: "AIdea supports both OAuth sign-in and API / local model access, so you can choose the setup that fits your workflow.",
+    note: "You can switch connection methods later from the plugin settings.",
+    options: [
+      {
+        label: "OAuth",
+        tag: "Recommended",
+        title: "Sign in with a provider account and start after authorization",
+        body: "No manual API key entry is needed, which makes this the simplest path for most users.",
+        points: ["Authorize from the provider", "Keep the authorization state locally", "Works well for OpenAI, Gemini, GitHub Copilot, and similar services"],
+      },
+      {
+        label: "API / Local Models",
+        tag: "Flexible",
+        title: "Enter an endpoint and model name to use your own model service",
+        body: "Add an API key when your service requires one, and connect cloud APIs, self-hosted endpoints, or local model servers.",
+        points: ["Supports OpenAI-compatible APIs", "Custom endpoint and model name", "Fits Ollama, LM Studio, vLLM, and other local setups"],
+      },
+    ],
+  },
+};
+const modelAccess =
+  modelAccessContent[page.locale as keyof typeof modelAccessContent] ?? modelAccessContent.en;
+
+const selectionTranslationContent = {
+  "zh-CN": {
+    kicker: "划词翻译",
+    heading: "选中一段文字，就能在阅读器内直接翻译。",
+    body: "启用后，在 Zotero PDF 或 EPUB 阅读器里划选文本会自动调用你指定的模型翻译，并自动识别当前文档格式。首次进入某篇文献时，AIdea 会先生成本地冷启动缓存，把文章概述和专业术语摘要作为后续划词翻译的上下文。",
+    points: [
+      {
+        title: "独立开关与模型",
+        body: "在设置中单独启用划词翻译，并从现有 OAuth/API 模型列表中选择专用模型。",
+      },
+      {
+        title: "论文级上下文",
+        body: "冷启动缓存保存在本地，后续翻译会复用这份精简上下文，减少每次划词都重新理解全文的成本。",
+      },
+      {
+        title: "回写 Zotero 笔记",
+        body: "弹窗里的译文可以直接添加到当前文献的 AIdea 划词翻译笔记中。",
+      },
+    ],
+    screenshots: {
+      popup: "阅读器划词翻译弹窗",
+      settings: "划词翻译设置",
+    },
+  },
+  "zh-TW": {
+    kicker: "劃詞翻譯",
+    heading: "選取一段文字，就能在閱讀器內直接翻譯。",
+    body: "啟用後，在 Zotero PDF 或 EPUB 閱讀器中選取文字會自動呼叫指定模型翻譯，並自動識別目前的文件格式。第一次進入某篇文獻時，AIdea 會先產生本機冷啟動快取，把文章概述和專業術語摘要作為後續劃詞翻譯的上下文。",
+    points: [
+      {
+        title: "獨立開關與模型",
+        body: "在設定中單獨啟用劃詞翻譯，並從既有 OAuth/API 模型列表選擇專用模型。",
+      },
+      {
+        title: "論文級上下文",
+        body: "冷啟動快取保存在本機，後續翻譯會重複使用這份精簡上下文，降低每次選取都重新理解全文的成本。",
+      },
+      {
+        title: "回寫 Zotero 筆記",
+        body: "彈窗中的譯文可以直接加入目前文獻的 AIdea 劃詞翻譯筆記。",
+      },
+    ],
+    screenshots: {
+      popup: "閱讀器劃詞翻譯彈窗",
+      settings: "劃詞翻譯設定",
+    },
+  },
+  en: {
+    kicker: "Selection Translation",
+    heading: "Select a passage and translate it directly in the reader.",
+    body: "When enabled, selected text in Zotero's PDF or EPUB reader is translated automatically with the model you choose, and AIdea detects the active document format automatically. The first time a paper uses this feature, AIdea builds a local cold-start cache with a compact paper summary and terminology notes, then reuses that context for later selections.",
+    points: [
+      {
+        title: "Dedicated switch and model",
+        body: "Turn selection translation on separately and choose its model from the same OAuth/API model list used by chat.",
+      },
+      {
+        title: "Paper-level context",
+        body: "The cold-start cache stays local and gives later selection translations a compact view of the paper instead of starting from scratch every time.",
+      },
+      {
+        title: "Save back to Zotero notes",
+        body: "Translated passages can be added directly to the current item's AIdea selection translation note.",
+      },
+    ],
+    screenshots: {
+      popup: "Reader selection translation popup",
+      settings: "Selection translation settings",
+    },
+  },
+  ja: {
+    kicker: "選択範囲の翻訳",
+    heading: "本文を選択するだけで、リーダー内で直接翻訳できます。",
+    body: "有効にすると、Zotero の PDF リーダーで選択したテキストを指定モデルで自動翻訳します。論文ごとに初回だけローカルのコールドスタートキャッシュを作成し、要約と専門用語メモを後続の翻訳コンテキストとして再利用します。",
+    points: [
+      {
+        title: "専用スイッチとモデル",
+        body: "設定から選択範囲の翻訳を個別に有効化し、既存の OAuth/API モデル一覧から専用モデルを選べます。",
+      },
+      {
+        title: "論文単位の文脈",
+        body: "コールドスタートキャッシュはローカルに保存され、毎回全文を読み直さずに精簡された文脈を使えます。",
+      },
+      {
+        title: "Zotero ノートへ保存",
+        body: "ポップアップ内の翻訳結果を、現在の文献の AIdea 選択翻訳ノートへ直接追加できます。",
+      },
+    ],
+    screenshots: {
+      popup: "リーダーの選択翻訳ポップアップ",
+      settings: "選択翻訳の設定",
+    },
+  },
+  ko: {
+    kicker: "선택 번역",
+    heading: "문장을 선택하면 리더 안에서 바로 번역할 수 있습니다.",
+    body: "사용하면 Zotero PDF 리더에서 선택한 텍스트가 지정한 모델로 자동 번역됩니다. 논문별 첫 사용 시 AIdea가 로컬 콜드 스타트 캐시를 만들고, 논문 요약과 전문 용어 메모를 이후 선택 번역의 문맥으로 재사용합니다.",
+    points: [
+      {
+        title: "전용 스위치와 모델",
+        body: "설정에서 선택 번역을 따로 켜고 기존 OAuth/API 모델 목록에서 전용 모델을 고를 수 있습니다.",
+      },
+      {
+        title: "논문 단위 문맥",
+        body: "콜드 스타트 캐시는 로컬에 저장되며, 이후 번역은 매번 처음부터 논문을 다시 이해하지 않아도 됩니다.",
+      },
+      {
+        title: "Zotero 노트로 저장",
+        body: "팝업의 번역 결과를 현재 항목의 AIdea 선택 번역 노트에 바로 추가할 수 있습니다.",
+      },
+    ],
+    screenshots: {
+      popup: "리더 선택 번역 팝업",
+      settings: "선택 번역 설정",
+    },
+  },
+  fr: {
+    kicker: "Traduction de sélection",
+    heading: "Sélectionnez un passage et traduisez-le directement dans le lecteur.",
+    body: "Une fois activée, la sélection de texte dans le lecteur PDF de Zotero déclenche automatiquement le modèle choisi. Lors de la première utilisation sur un article, AIdea crée un cache local avec un résumé compact et des notes de terminologie, puis le réutilise comme contexte.",
+    points: [
+      {
+        title: "Interrupteur et modèle dédiés",
+        body: "Activez la traduction de sélection séparément et choisissez son modèle dans la même liste OAuth/API que le chat.",
+      },
+      {
+        title: "Contexte au niveau de l'article",
+        body: "Le cache de démarrage reste local et donne aux traductions suivantes un contexte condensé de l'article.",
+      },
+      {
+        title: "Ajout aux notes Zotero",
+        body: "Les passages traduits peuvent être ajoutés directement à la note AIdea de l'élément courant.",
+      },
+    ],
+    screenshots: {
+      popup: "Fenêtre de traduction dans le lecteur",
+      settings: "Réglages de traduction de sélection",
+    },
+  },
+  de: {
+    kicker: "Auswahlübersetzung",
+    heading: "Markieren Sie eine Passage und übersetzen Sie sie direkt im Reader.",
+    body: "Nach dem Aktivieren übersetzt Zotero ausgewählten PDF-Text automatisch mit dem gewählten Modell. Bei der ersten Nutzung für ein Paper erstellt AIdea lokal einen Cold-Start-Cache mit Kurzüberblick und Fachbegriffen und verwendet ihn später als Kontext.",
+    points: [
+      {
+        title: "Eigener Schalter und eigenes Modell",
+        body: "Aktivieren Sie die Auswahlübersetzung separat und wählen Sie ihr Modell aus derselben OAuth/API-Liste wie im Chat.",
+      },
+      {
+        title: "Kontext pro Paper",
+        body: "Der Cold-Start-Cache bleibt lokal und liefert späteren Übersetzungen einen kompakten Paper-Kontext.",
+      },
+      {
+        title: "In Zotero-Notizen speichern",
+        body: "Übersetzte Passagen können direkt zur AIdea-Notiz des aktuellen Eintrags hinzugefügt werden.",
+      },
+    ],
+    screenshots: {
+      popup: "Auswahlübersetzung im Reader",
+      settings: "Einstellungen für Auswahlübersetzung",
+    },
+  },
+  es: {
+    kicker: "Traducción de selección",
+    heading: "Selecciona un pasaje y tradúcelo directamente en el lector.",
+    body: "Al activarla, el texto seleccionado en el lector PDF de Zotero se traduce automáticamente con el modelo elegido. La primera vez que se usa en un artículo, AIdea crea una caché local con un resumen compacto y notas de terminología para reutilizarlas como contexto.",
+    points: [
+      {
+        title: "Interruptor y modelo propios",
+        body: "Activa la traducción de selección por separado y elige su modelo desde la misma lista OAuth/API del chat.",
+      },
+      {
+        title: "Contexto por artículo",
+        body: "La caché de arranque permanece local y ofrece a las siguientes traducciones un contexto compacto del artículo.",
+      },
+      {
+        title: "Guardar en notas de Zotero",
+        body: "Los pasajes traducidos pueden añadirse directamente a la nota AIdea del elemento actual.",
+      },
+    ],
+    screenshots: {
+      popup: "Ventana de traducción en el lector",
+      settings: "Ajustes de traducción de selección",
+    },
+  },
+  ru: {
+    kicker: "Перевод выделения",
+    heading: "Выделите фрагмент и переведите его прямо в ридере.",
+    body: "После включения выделенный текст в PDF-ридере Zotero автоматически переводится выбранной моделью. При первом использовании для статьи AIdea создает локальный cold-start cache с кратким обзором и терминами, а затем использует его как контекст.",
+    points: [
+      {
+        title: "Отдельный переключатель и модель",
+        body: "Включайте перевод выделения отдельно и выбирайте модель из того же списка OAuth/API, что и для чата.",
+      },
+      {
+        title: "Контекст на уровне статьи",
+        body: "Кэш остается локальным и дает последующим переводам сжатое понимание статьи.",
+      },
+      {
+        title: "Сохранение в заметки Zotero",
+        body: "Переведенные фрагменты можно сразу добавить в заметку AIdea текущего элемента.",
+      },
+    ],
+    screenshots: {
+      popup: "Окно перевода выделения в ридере",
+      settings: "Настройки перевода выделения",
+    },
+  },
+  pt: {
+    kicker: "Tradução de seleção",
+    heading: "Selecione um trecho e traduza-o diretamente no leitor.",
+    body: "Quando ativado, o texto selecionado no leitor PDF do Zotero é traduzido automaticamente pelo modelo escolhido. Na primeira utilização em um artigo, o AIdea cria um cache local com resumo compacto e notas de terminologia para reutilizar como contexto.",
+    points: [
+      {
+        title: "Alternador e modelo dedicados",
+        body: "Ative a tradução de seleção separadamente e escolha seu modelo na mesma lista OAuth/API usada pelo chat.",
+      },
+      {
+        title: "Contexto por artigo",
+        body: "O cache de arranque permanece local e oferece às traduções seguintes uma visão compacta do artigo.",
+      },
+      {
+        title: "Salvar em notas do Zotero",
+        body: "Os trechos traduzidos podem ser adicionados diretamente à nota AIdea do item atual.",
+      },
+    ],
+    screenshots: {
+      popup: "Popup de tradução no leitor",
+      settings: "Configurações da tradução de seleção",
+    },
+  },
+  ar: {
+    kicker: "ترجمة التحديد",
+    heading: "حدد مقطعاً وترجمه مباشرة داخل القارئ.",
+    body: "عند التفعيل، يترجم AIdea النص المحدد في قارئ PDF داخل Zotero تلقائياً بالنموذج الذي تختاره. عند الاستخدام الأول مع ورقة ما، ينشئ ذاكرة محلية مختصرة تضم ملخصاً ومصطلحات تخصصية، ثم يعيد استخدامها كسياق للترجمات اللاحقة.",
+    points: [
+      {
+        title: "مفتاح ونموذج مخصصان",
+        body: "فعّل ترجمة التحديد بشكل مستقل واختر نموذجها من قائمة نماذج OAuth/API نفسها المستخدمة في الدردشة.",
+      },
+      {
+        title: "سياق على مستوى الورقة",
+        body: "تبقى الذاكرة المحلية على جهازك وتمنح الترجمات التالية فهماً مختصراً للورقة.",
+      },
+      {
+        title: "الحفظ في ملاحظات Zotero",
+        body: "يمكن إضافة المقاطع المترجمة مباشرة إلى ملاحظة AIdea الخاصة بالعنصر الحالي.",
+      },
+    ],
+    screenshots: {
+      popup: "نافذة ترجمة التحديد في القارئ",
+      settings: "إعدادات ترجمة التحديد",
+    },
+  },
+  hi: {
+    kicker: "चयन अनुवाद",
+    heading: "किसी अंश को चुनें और उसे रीडर में ही अनुवाद करें।",
+    body: "सक्रिय होने पर Zotero PDF रीडर में चुना गया पाठ आपके चुने हुए मॉडल से अपने आप अनुवादित होता है। किसी पेपर पर पहली बार उपयोग करते समय AIdea स्थानीय कोल्ड-स्टार्ट कैश बनाता है, जिसमें संक्षिप्त सार और शब्दावली नोट होते हैं, फिर बाद के चयन अनुवादों में उसी संदर्भ का उपयोग करता है।",
+    points: [
+      {
+        title: "अलग स्विच और मॉडल",
+        body: "चयन अनुवाद को अलग से चालू करें और चैट वाली OAuth/API मॉडल सूची से उसका मॉडल चुनें।",
+      },
+      {
+        title: "पेपर-स्तर संदर्भ",
+        body: "कोल्ड-स्टार्ट कैश स्थानीय रहता है और बाद के अनुवादों को पेपर का संक्षिप्त संदर्भ देता है।",
+      },
+      {
+        title: "Zotero नोट में जोड़ें",
+        body: "अनुवादित अंशों को मौजूदा आइटम के AIdea चयन अनुवाद नोट में सीधे जोड़ा जा सकता है।",
+      },
+    ],
+    screenshots: {
+      popup: "रीडर चयन अनुवाद पॉपअप",
+      settings: "चयन अनुवाद सेटिंग्स",
+    },
+  },
+} as const;
+
+const selectionTranslation =
+  selectionTranslationContent[page.locale as keyof typeof selectionTranslationContent] ??
+  selectionTranslationContent.en;
+
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
+const renderHeading = (key: HeadingKey, fallback: string) => {
+  const fragments = headingFragments[page.locale]?.[key];
+
+  if (!fragments?.length) {
+    return escapeHtml(fallback);
+  }
+
+  return fragments
+    .map((fragment) => {
+      const classes = ["heading-fragment"];
+
+      if (fragment.accent) {
+        classes.push("is-accent");
+      }
+
+      if (fragment.keep) {
+        classes.push("is-keep");
+      }
+
+      return `<span class="${classes.join(" ")}">${escapeHtml(fragment.text)}</span>`;
+    })
+    .join("");
+};
+---
+
+<div class="site-shell" data-locale={page.locale}>
+  <div class="page-orb orb-left"></div>
+  <div class="page-orb orb-right"></div>
+
+  <header class="site-header">
+    <a class="brand" href={page.locale === "zh-CN" ? withBase("/") : withBase("/en/")}>
+      <img src={withBase("/media/icon-96.png")} alt="AIdea icon" />
+      <span>AIdea</span>
+    </a>
+
+    <div class="header-tools">
+      <nav class="site-nav">
+        <a href="#story">{page.nav.story}</a>
+        <a href="#features">{page.nav.features}</a>
+        <a href="#install">{page.nav.install}</a>
+        <a href={githubHref} target="_blank" rel="noreferrer">{page.nav.github}</a>
+      </nav>
+
+      <details class="header-language">
+        <summary class="header-language-summary" aria-label={languageLabel}>
+          <span class="header-language-label">{languageLabel}</span>
+          <span class="header-language-current">{locale.label}</span>
+          <span class="header-language-caret" aria-hidden="true"></span>
+        </summary>
+
+        <ul class="language-list">
+          {localeOptions.map((option) => (
+            <li>
+              <a
+                class:list={["language-list-item", option.code === page.locale && "is-active"]}
+                href={withBase(option.href)}
+                lang={option.code}
+                hreflang={option.code}
+                aria-current={option.code === page.locale ? "page" : undefined}
+              >
+                {option.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero section">
+      <div class="hero-copy">
+        <div class="eyebrow-wrap">
+          <span class="badge">{page.badge}</span>
+          <p class="eyebrow">{page.hero.eyebrow}</p>
+        </div>
+        <h1 set:html={renderHeading("hero", page.hero.heading)} />
+        <p class="lede">{page.hero.subheading}</p>
+
+        <div class="cta-row">
+          <a class="button button-primary" href={releaseHref} target="_blank" rel="noreferrer">
+            {page.hero.primaryCta}
+          </a>
+          <a class="button button-secondary" href={githubHref} target="_blank" rel="noreferrer">
+            {page.hero.secondaryCta}
+          </a>
+        </div>
+
+        <div class="cta-subrow">
+          <a class="cta-inline-link" href={docsHref} target="_blank" rel="noreferrer">
+            {page.hero.tertiaryCta}
+          </a>
+          <span class="cta-divider" aria-hidden="true"></span>
+          <a class="cta-inline-link" href={issuesHref} target="_blank" rel="noreferrer">
+            {page.footer.issuesLabel}
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-frame">
+          <div class="frame-topline"></div>
+          <img src={heroImage} alt={page.story.panelCaption} loading="eager" />
+        </div>
+
+        <div class="metrics-grid">
+          {page.hero.metrics.map((metric) => (
+            <article class="metric-card">
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="section model-access-section" aria-labelledby="model-access-title">
+      <div class="model-access-copy">
+        <p class="section-kicker">{modelAccess.kicker}</p>
+        <h2 id="model-access-title">
+          <span class="heading-fragment is-accent is-keep">{modelAccess.headingAccent}</span>
+          {modelAccess.headingRest}
+        </h2>
+        <p>{modelAccess.body}</p>
+        <p class="model-access-note">{modelAccess.note}</p>
+      </div>
+
+      <div class="model-access-grid">
+        {modelAccess.options.map((option) => (
+          <article class="access-card">
+            <div class="access-card-head">
+              <span class="access-label">{option.label}</span>
+              <span class="access-tag">{option.tag}</span>
+            </div>
+            <h3>{option.title}</h3>
+            <p>{option.body}</p>
+            <ul class="access-points">
+              {option.points.map((point) => <li>{point}</li>)}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="section trust-section">
+      <div class="section-intro">
+        <p class="section-kicker">{page.trust.kicker}</p>
+        <h2 set:html={renderHeading("trust", page.trust.heading)} />
+      </div>
+      <div class="trust-grid">
+        {page.trust.items.map((item) => (
+          <article class="trust-card">
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="section story-section" id="story">
+      <div class="section-copy">
+        <p class="section-kicker">{page.story.kicker}</p>
+        <h2 set:html={renderHeading("story", page.story.heading)} />
+        <p>{page.story.body}</p>
+        <ul class="story-list">
+          {page.story.bullets.map((bullet) => <li>{bullet}</li>)}
+        </ul>
+      </div>
+
+      <div class="stacked-showcase">
+        <article class="showcase-panel large">
+          <div class="panel-meta">
+            <span>{page.story.panelLabel}</span>
+            <p>{page.story.panelCaption}</p>
+          </div>
+          <img src={storyImage} alt={page.story.panelCaption} loading="lazy" />
+        </article>
+
+        <article class="showcase-panel small">
+          <div class="panel-meta">
+            <span>{page.story.secondaryPanelLabel}</span>
+            <p>{page.story.secondaryPanelCaption}</p>
+          </div>
+          <img src={settingsImage} alt={page.story.secondaryPanelLabel} loading="lazy" />
+        </article>
+      </div>
+    </section>
+
+    <section class="section feature-section" id="features">
+      <div class="section-intro">
+        <p class="section-kicker">{page.featureSection.kicker}</p>
+        <h2 set:html={renderHeading("feature", page.featureSection.heading)} />
+        <p>{page.featureSection.body}</p>
+      </div>
+
+      <div class="feature-grid">
+        {page.featureSection.cards.map((card) => (
+          <article class="feature-card">
+            <span class="feature-meta">{card.meta}</span>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="section selection-translation-section" aria-labelledby="selection-translation-title">
+      <div class="section-intro">
+        <p class="section-kicker">{selectionTranslation.kicker}</p>
+        <h2 id="selection-translation-title">{selectionTranslation.heading}</h2>
+        <p>{selectionTranslation.body}</p>
+      </div>
+
+      <div class="selection-point-grid">
+        {selectionTranslation.points.map((point) => (
+          <article class="feature-card">
+            <span class="feature-meta">{selectionTranslation.kicker}</span>
+            <h3>{point.title}</h3>
+            <p>{point.body}</p>
+          </article>
+        ))}
+      </div>
+
+      <div class="selection-showcase">
+        <figure class="showcase-panel selection-shot">
+          <img
+            src={selectionTranslationPopupImage}
+            alt={selectionTranslation.screenshots.popup}
+            loading="lazy"
+          />
+          <figcaption>{selectionTranslation.screenshots.popup}</figcaption>
+        </figure>
+        <figure class="showcase-panel selection-shot">
+          <img
+            src={selectionTranslationSettingsImage}
+            alt={selectionTranslation.screenshots.settings}
+            loading="lazy"
+          />
+          <figcaption>{selectionTranslation.screenshots.settings}</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section translation-section">
+      <div class="translation-copy">
+        <p class="section-kicker">{page.translation.kicker}</p>
+        <h2 set:html={renderHeading("translation", page.translation.heading)} />
+        <p>{page.translation.body}</p>
+      </div>
+
+      <article class="translation-panel">
+        <img src={translationImage} alt={page.translation.panelAlt} loading="lazy" />
+      </article>
+
+      <div class="gallery-grid">
+        <figure class="gallery-card">
+          <img
+            src={withBase("/media/translate-example-architecture.png")}
+            alt={page.translation.captions[0]}
+            loading="lazy"
+          />
+          <figcaption>{page.translation.captions[0]}</figcaption>
+        </figure>
+        <figure class="gallery-card">
+          <img
+            src={withBase("/media/translate-example-formula.png")}
+            alt={page.translation.captions[1]}
+            loading="lazy"
+          />
+          <figcaption>{page.translation.captions[1]}</figcaption>
+        </figure>
+        <figure class="gallery-card">
+          <img
+            src={withBase("/media/translate-example-table.png")}
+            alt={page.translation.captions[2]}
+            loading="lazy"
+          />
+          <figcaption>{page.translation.captions[2]}</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section install-section" id="install">
+      <div class="section-copy">
+        <p class="section-kicker">{page.install.kicker}</p>
+        <h2 set:html={renderHeading("install", page.install.heading)} />
+        <p>{page.install.body}</p>
+        <p class="install-note">{page.install.note}</p>
+      </div>
+
+      <ol class="install-steps">
+        {page.install.steps.map((step) => <li>{step}</li>)}
+      </ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-copy">
+      <p>{page.footer.summary}</p>
+    </div>
+
+    <div class="footer-panels">
+      <section class="footer-panel">
+        <span class="footer-panel-title">{page.footer.projectTitle}</span>
+        <div class="footer-links">
+          <a href={releaseHref} target="_blank" rel="noreferrer">{page.footer.releaseLabel}</a>
+          <a href={docsHref} target="_blank" rel="noreferrer">{page.footer.docsLabel}</a>
+          <a href={githubHref} target="_blank" rel="noreferrer">{page.footer.githubLabel}</a>
+        </div>
+      </section>
+
+      <section class="footer-panel">
+        <span class="footer-panel-title">{page.footer.communityTitle}</span>
+        <p>{page.footer.communityBody}</p>
+        <div class="footer-links">
+          <a href={issuesHref} target="_blank" rel="noreferrer">{page.footer.issuesLabel}</a>
+          <a href={licenseHref} target="_blank" rel="noreferrer">{page.footer.licenseLabel}</a>
+        </div>
+      </section>
+    </div>
+  </footer>
+</div>

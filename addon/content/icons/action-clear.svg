@@ -1,0 +1,12 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- broom handle -->
+  <path d="M10 2V10" stroke="#111111" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- broom head top bar -->
+  <path d="M6 10H14" stroke="#111111" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- bristles fanning out -->
+  <path d="M6 10L4 18" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M8 10L7 18" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M10 10V18" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M12 10L13 18" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M14 10L16 18" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

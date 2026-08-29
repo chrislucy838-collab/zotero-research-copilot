@@ -1,0 +1,60 @@
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+site/node_modules/
+pnpm-lock.yaml
+yarn.lock
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Build output and release artifacts
+.scaffold/
+build/
+*.xpi
+*.zip
+$out
+$prefs
+
+# TypeScript and logs
+tsconfig.tsbuildinfo
+*.log
+logs/
+
+# Historical/generated release metadata
+release.txt
+temp_release.txt
+
+# Agent and local planning artifacts
+.agent/
+.gemini/
+.agents/
+.claude/
+CLAUDE.md
+OPTIMIZATION_PLAN.md
+REVIEW_REPORT.md
+TODO.md
+DEV_NOTES.md
+codex-models-response.json
+
+test-codex-chat.mjs
+test_output.txt
+reference/
+doc/PLAN_*.md
+docs/refactor/
+
+# Empty/generated design placeholder
+assets/logo/815×815

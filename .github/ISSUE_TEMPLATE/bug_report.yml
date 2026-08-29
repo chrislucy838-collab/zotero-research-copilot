@@ -1,0 +1,65 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior / 报告 Bug 或异常行为
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug / 描述问题
+      description: A clear description of what the bug is. / 清晰地描述这个 Bug 是什么。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: To Reproduce / 复现步骤
+      description: Steps to reproduce the behavior. / 复现这个问题的步骤。
+      placeholder: |
+        1. Open Zotero
+        2. Select an item
+        3. Click on ...
+        4. See error
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / 截图
+      description: If applicable, add screenshots to help explain the problem. / 如果方便，请添加截图。
+    validations:
+      required: false
+
+  - type: input
+    id: os
+    attributes:
+      label: "OS / 操作系统"
+      placeholder: "e.g. Windows 11 / macOS 15 / Ubuntu 24.04"
+    validations:
+      required: false
+
+  - type: input
+    id: zotero-version
+    attributes:
+      label: "Zotero Version / Zotero 版本"
+      placeholder: "e.g. 7.0.15"
+    validations:
+      required: false
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: "Plugin Version / 插件版本"
+      placeholder: "e.g. v1.1.2"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context / 补充信息
+      description: Any other context about the problem. / 其他补充信息。
+    validations:
+      required: false

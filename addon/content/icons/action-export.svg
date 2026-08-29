@@ -1,0 +1,7 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- share arrow -->
+  <path d="M15 7L10 3L5 7" stroke="#111111" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 3V13" stroke="#111111" stroke-width="1.6" stroke-linecap="round"/>
+  <!-- tray -->
+  <path d="M4 11V15.5C4 16.05 4.45 16.5 5 16.5H15C15.55 16.5 16 16.05 16 15.5V11" stroke="#111111" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

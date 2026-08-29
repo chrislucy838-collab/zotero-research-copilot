@@ -1,0 +1,15 @@
+<vbox
+  id="zotero-research-copilot-prefs"
+  onload="
+    Zotero.ZoteroResearchCopilot?.hooks.onPrefsEvent('load', {
+      window: this.ownerDocument.defaultView,
+    })
+  "
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+>
+  <linkset>
+    <html:link rel="localization" href="zoteroResearchCopilot-preferences.ftl" />
+  </linkset>
+  <html:div id="zrc-provider-settings" />
+</vbox>

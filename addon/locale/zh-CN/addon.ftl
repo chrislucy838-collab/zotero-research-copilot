@@ -1,0 +1,11 @@
+startup-begin = Zotero Research Copilot 加载中...
+startup-finish = Zotero Research Copilot 已就绪
+menuitem-label = Zotero Research Copilot
+menupopup-label = Zotero Research Copilot
+menuitem-submenulabel = Zotero Research Copilot
+menuitem-filemenulabel = Zotero Research Copilot
+prefs-title = Zotero Research Copilot
+prefs-table-title = Zotero Research Copilot
+prefs-table-detail = Zotero Research Copilot
+tabpanel-lib-tab-label = Zotero Research Copilot
+tabpanel-reader-tab-label = Zotero Research Copilot

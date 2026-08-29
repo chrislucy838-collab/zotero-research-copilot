@@ -1,0 +1,57 @@
+name: ✨ Feature Request
+description: Suggest a new feature or improvement / 提出新功能或改进建议
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make AIdea better? We'd love to hear it!
+
+        有让 AIdea 变得更好的想法？我们很乐意听取！
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / 问题背景
+      description: |
+        Is your feature request related to a problem? Describe what frustrates you.
+        你的需求是否跟某个使用痛点有关？描述一下让你不满意的地方。
+      placeholder: |
+        I'm always frustrated when ...
+        我总是在……的时候感到不便
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / 建议方案
+      description: |
+        Describe the feature or improvement you'd like to see.
+        描述你希望看到的功能或改进。
+      placeholder: |
+        It would be great if ...
+        如果能够……就好了
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered / 替代方案
+      description: |
+        Have you considered any alternative solutions or workarounds?
+        你是否考虑过其他替代方案或临时解决办法？
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context / 补充信息
+      description: |
+        Any other context, screenshots, or references for the feature request.
+        其他补充信息、截图或参考资料。
+    validations:
+      required: false

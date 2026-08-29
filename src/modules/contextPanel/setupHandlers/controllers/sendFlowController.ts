@@ -1,0 +1,346 @@
+import { MAX_SELECTED_IMAGES } from "../../constants";
+import type { ModelProfileKey } from "../../constants";
+import type {
+  AdvancedModelParams,
+  ChatAttachment,
+  PaperContextRef,
+  SelectedTextContext,
+} from "../../types";
+import type { SelectedTextSource } from "../../types";
+import type { EditLatestTurnMarker, EditLatestTurnResult } from "../../chat";
+import { getPanelI18n } from "../../i18n";
+
+type StatusLevel = "ready" | "warning" | "error";
+
+type SelectedProfile = {
+  key: ModelProfileKey;
+  model: string;
+  apiBase: string;
+  apiKey: string;
+};
+
+type LatestEditablePair = {
+  conversationKey: number;
+  pair: {
+    userMessage: {
+      timestamp: number;
+    };
+    assistantMessage: {
+      timestamp: number;
+      streaming?: boolean;
+    };
+  };
+};
+
+type SendFlowControllerDeps = {
+  body: Element;
+  inputBox: HTMLTextAreaElement;
+  isPanelGenerating: () => boolean;
+  getItem: () => Zotero.Item | null;
+  closeSlashMenu: () => void;
+  closePaperPicker: () => void;
+  getSelectedTextContextEntries: (itemId: number) => SelectedTextContext[];
+  getSelectedPaperContexts: (itemId: number) => PaperContextRef[];
+  getSelectedFiles: (itemId: number) => ChatAttachment[];
+  getSelectedImages: (itemId: number) => string[];
+  resolvePromptText: (
+    text: string,
+    selectedText: string,
+    hasAttachmentContext: boolean,
+  ) => string;
+  buildQuestionWithSelectedTextContexts: (
+    selectedTexts: string[],
+    selectedTextSources: SelectedTextSource[],
+    promptText: string,
+    options?: {
+      selectedTextPaperContexts?: (PaperContextRef | undefined)[];
+      includePaperAttribution?: boolean;
+    },
+  ) => string;
+  buildModelPromptWithFileContext: (
+    question: string,
+    attachments: ChatAttachment[],
+  ) => string;
+  isGlobalMode: () => boolean;
+  normalizeConversationTitleSeed: (raw: unknown) => string;
+  getConversationKey: (item: Zotero.Item) => number;
+  touchGlobalConversationTitle: (
+    conversationKey: number,
+    title: string,
+  ) => Promise<void>;
+  touchPaperConversationTitle: (
+    conversationKey: number,
+    title: string,
+  ) => Promise<void>;
+  getSelectedProfile: () => SelectedProfile | null;
+  getCurrentModelName: () => string;
+  isScreenshotUnsupportedModel: (modelName: string) => boolean;
+  getActiveEditSession: () => EditLatestTurnMarker | null;
+  setActiveEditSession: (value: EditLatestTurnMarker | null) => void;
+  getLatestEditablePair: () => Promise<LatestEditablePair | null>;
+  editLatestUserMessageAndRetry: (
+    body: Element,
+    item: Zotero.Item,
+    displayQuestion: string,
+    selectedTexts?: string[],
+    selectedTextSources?: SelectedTextSource[],
+    selectedTextPaperContexts?: (PaperContextRef | undefined)[],
+    screenshotImages?: string[],
+    paperContexts?: PaperContextRef[],
+    attachments?: ChatAttachment[],
+    expected?: EditLatestTurnMarker,
+    model?: string,
+    apiBase?: string,
+    apiKey?: string,
+    advanced?: AdvancedModelParams,
+  ) => Promise<EditLatestTurnResult>;
+  sendQuestion: (
+    body: Element,
+    item: Zotero.Item,
+    question: string,
+    screenshotImages?: string[],
+    model?: string,
+    apiBase?: string,
+    apiKey?: string,
+    advanced?: AdvancedModelParams,
+    displayQuestion?: string,
+    selectedTexts?: string[],
+    selectedTextSources?: SelectedTextSource[],
+    selectedTextPaperContexts?: (PaperContextRef | undefined)[],
+    paperContexts?: PaperContextRef[],
+    attachments?: ChatAttachment[],
+    onContextEstimate?: (tokens: number) => void,
+  ) => Promise<void>;
+  clearSelectedImageState: (itemId: number) => void;
+  clearSelectedPaperState: (itemId: number) => void;
+  clearSelectedFileState: (itemId: number) => void;
+  clearSelectedTextState: (itemId: number) => void;
+  updatePaperPreviewPreservingScroll: () => void;
+  updateFilePreviewPreservingScroll: () => void;
+  updateImagePreviewPreservingScroll: () => void;
+  updateSelectedTextPreviewPreservingScroll: () => void;
+  scheduleAttachmentGc: () => void;
+  refreshGlobalHistoryHeader: () => void;
+  setStatusMessage?: (message: string, level: StatusLevel) => void;
+  onContextEstimate?: (tokens: number) => void;
+  editStaleStatusText: string;
+};
+
+export function createSendFlowController(deps: SendFlowControllerDeps): {
+  doSend: () => Promise<void>;
+} {
+  const doSend = async () => {
+    const labels = getPanelI18n();
+    if (deps.isPanelGenerating()) {
+      deps.setStatusMessage?.(labels.waitForCurrentResponse, "ready");
+      return;
+    }
+
+    const item = deps.getItem();
+    if (!item) return;
+
+    deps.closeSlashMenu();
+    deps.closePaperPicker();
+
+    const textContextConversationKey = deps.getConversationKey(item);
+    const text = deps.inputBox.value.trim();
+    const selectedContexts =
+      textContextConversationKey > 0
+        ? deps.getSelectedTextContextEntries(textContextConversationKey)
+        : [];
+    const selectedTexts = selectedContexts.map((entry) => entry.text);
+    const selectedTextSources = selectedContexts.map((entry) => entry.source);
+    const selectedTextPaperContexts = selectedContexts.map(
+      (entry) => entry.paperContext,
+    );
+    const primarySelectedText = selectedTexts[0] || "";
+    const selectedPaperContexts = deps.getSelectedPaperContexts(item.id);
+    const selectedFiles = deps.getSelectedFiles(item.id);
+
+    if (
+      !text &&
+      !primarySelectedText &&
+      !selectedPaperContexts.length &&
+      !selectedFiles.length
+    ) {
+      deps.setStatusMessage?.(labels.emptyPromptStatus, "warning");
+      return;
+    }
+
+    const promptText = deps.resolvePromptText(
+      text,
+      primarySelectedText,
+      selectedFiles.length > 0 || selectedPaperContexts.length > 0,
+    );
+    if (!promptText) return;
+
+    const resolvedPromptText =
+      !text &&
+      !primarySelectedText &&
+      selectedPaperContexts.length > 0 &&
+      !selectedFiles.length
+        ? "Please analyze selected papers."
+        : promptText;
+
+    const composedQuestionBase = primarySelectedText
+      ? deps.buildQuestionWithSelectedTextContexts(
+          selectedTexts,
+          selectedTextSources,
+          resolvedPromptText,
+          {
+            selectedTextPaperContexts,
+            includePaperAttribution: deps.isGlobalMode(),
+          },
+        )
+      : resolvedPromptText;
+
+    const composedQuestion = deps.buildModelPromptWithFileContext(
+      composedQuestionBase,
+      selectedFiles,
+    );
+    const displayQuestion = primarySelectedText
+      ? resolvedPromptText
+      : text || resolvedPromptText;
+
+    if (deps.isGlobalMode()) {
+      const titleSeed =
+        deps.normalizeConversationTitleSeed(text) ||
+        deps.normalizeConversationTitleSeed(resolvedPromptText);
+      void deps
+        .touchGlobalConversationTitle(deps.getConversationKey(item), titleSeed)
+        .catch((err) => {
+          ztoolkit.log("LLM: Failed to touch global conversation title", err);
+        });
+    } else {
+      const titleSeed =
+        deps.normalizeConversationTitleSeed(text) ||
+        deps.normalizeConversationTitleSeed(resolvedPromptText);
+      void deps
+        .touchPaperConversationTitle(deps.getConversationKey(item), titleSeed)
+        .catch((err) => {
+          ztoolkit.log("LLM: Failed to touch paper conversation title", err);
+        });
+    }
+
+    const selectedProfile = deps.getSelectedProfile();
+    const activeModelName = (
+      deps.getCurrentModelName() ||
+      selectedProfile?.model ||
+      ""
+    ).trim();
+    if (!activeModelName) {
+      deps.setStatusMessage?.(labels.chatReadinessNoModels, "error");
+      return;
+    }
+    const selectedImages = deps
+      .getSelectedImages(item.id)
+      .slice(0, MAX_SELECTED_IMAGES);
+    const images = deps.isScreenshotUnsupportedModel(activeModelName)
+      ? []
+      : selectedImages;
+
+    const activeEditSession = deps.getActiveEditSession();
+    if (activeEditSession) {
+      const latest = await deps.getLatestEditablePair();
+      if (!latest) {
+        deps.setActiveEditSession(null);
+        deps.setStatusMessage?.(labels.noEditableLatestPrompt, "error");
+        return;
+      }
+      const { conversationKey: latestKey, pair } = latest;
+      if (
+        pair.assistantMessage.streaming ||
+        activeEditSession.conversationKey !== latestKey ||
+        activeEditSession.userTimestamp !== pair.userMessage.timestamp ||
+        activeEditSession.assistantTimestamp !== pair.assistantMessage.timestamp
+      ) {
+        deps.setActiveEditSession(null);
+        deps.setStatusMessage?.(deps.editStaleStatusText, "error");
+        return;
+      }
+
+      const editResult = await deps.editLatestUserMessageAndRetry(
+        deps.body,
+        item,
+        displayQuestion,
+        selectedTexts.length ? selectedTexts : undefined,
+        selectedTexts.length ? selectedTextSources : undefined,
+        selectedTexts.length ? selectedTextPaperContexts : undefined,
+        images,
+        selectedPaperContexts.length ? selectedPaperContexts : undefined,
+        selectedFiles.length ? selectedFiles : undefined,
+        activeEditSession,
+        activeModelName,
+        selectedProfile?.apiBase,
+        selectedProfile?.apiKey,
+        undefined,
+      );
+      if (editResult !== "ok") {
+        if (editResult === "stale") {
+          deps.setActiveEditSession(null);
+          deps.setStatusMessage?.(deps.editStaleStatusText, "error");
+          return;
+        }
+        if (editResult === "missing") {
+          deps.setActiveEditSession(null);
+          deps.setStatusMessage?.(labels.noEditableLatestPrompt, "error");
+          return;
+        }
+        deps.setStatusMessage?.(labels.failedToSaveEditedPrompt, "error");
+        return;
+      }
+
+      deps.inputBox.value = "";
+      deps.clearSelectedImageState(item.id);
+      // Pinned context (papers, files) is NOT cleared after send —
+      // they persist across turns until the user explicitly removes them.
+      deps.updateImagePreviewPreservingScroll();
+      if (primarySelectedText) {
+        deps.clearSelectedTextState(textContextConversationKey);
+        deps.updateSelectedTextPreviewPreservingScroll();
+      }
+      deps.setActiveEditSession(null);
+      deps.scheduleAttachmentGc();
+      deps.refreshGlobalHistoryHeader();
+      return;
+    }
+
+    deps.inputBox.value = "";
+    deps.clearSelectedImageState(item.id);
+    // Pinned context (papers, files) is NOT cleared after send —
+    // they persist across turns until the user explicitly removes them.
+    deps.updateImagePreviewPreservingScroll();
+    if (primarySelectedText) {
+      deps.clearSelectedTextState(textContextConversationKey);
+      deps.updateSelectedTextPreviewPreservingScroll();
+    }
+
+    const sendTask = deps.sendQuestion(
+      deps.body,
+      item,
+      composedQuestion,
+      images,
+      activeModelName,
+      selectedProfile?.apiBase,
+      selectedProfile?.apiKey,
+      undefined,
+      displayQuestion,
+      selectedTexts.length ? selectedTexts : undefined,
+      selectedTexts.length ? selectedTextSources : undefined,
+      selectedTexts.length ? selectedTextPaperContexts : undefined,
+      selectedPaperContexts.length ? selectedPaperContexts : undefined,
+      selectedFiles.length ? selectedFiles : undefined,
+      deps.onContextEstimate,
+    );
+    const win = deps.body.ownerDocument?.defaultView;
+    if (win) {
+      win.setTimeout(() => {
+        deps.refreshGlobalHistoryHeader();
+      }, 120);
+    }
+    await sendTask;
+    deps.refreshGlobalHistoryHeader();
+  };
+
+  return { doSend };
+}

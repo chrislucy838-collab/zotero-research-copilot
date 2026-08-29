@@ -1,0 +1,66 @@
+{
+  "name": "zotero-research-copilot",
+  "type": "module",
+  "version": "0.10.4",
+  "description": "A local-first AI research assistant for Zotero using an OpenAI-compatible gateway",
+  "config": {
+    "addonName": "Zotero Research Copilot",
+    "addonID": "zotero-research-copilot@local",
+    "addonRef": "zoteroResearchCopilot",
+    "addonInstance": "ZoteroResearchCopilot",
+    "prefsPrefix": "extensions.zotero.zoteroResearchCopilot"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/liliMozi/openhanako.git"
+  },
+  "author": "Zotero Research Copilot contributors; based on AIdea by zhile",
+  "bugs": {
+    "url": "https://github.com/liliMozi/openhanako/issues"
+  },
+  "homepage": "https://github.com/liliMozi/openhanako#readme",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "start": "zotero-plugin serve",
+    "build": "zotero-plugin build && tsc --noEmit",
+    "lint:check": "prettier --check . && eslint .",
+    "lint:fix": "prettier --write . && eslint . --fix",
+    "release": "zotero-plugin release",
+    "test": "zotero-plugin test",
+    "test:unit": "npx tsx node_modules/mocha/bin/mocha --timeout 10000 --ignore test/startup.test.ts --ignore test/oauthCli*.test.ts --ignore test/oauthModelSelection.test.ts --ignore test/selectionTranslate*.test.ts --ignore test/pdfTranslator/**/*.test.ts --ignore test/customEndpointSettings.test.ts \"test/**/*.test.ts\"",
+    "update-deps": "npm update --save"
+  },
+  "dependencies": {
+    "katex": "^0.18.1",
+    "zotero-plugin-toolkit": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^26.1.2",
+    "@zotero-plugin/eslint-config": "^0.6.10",
+    "chai": "^6.2.2",
+    "eslint": "^10.8.0",
+    "mocha": "^11.7.6",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.1",
+    "typescript": "^6.0.3",
+    "zotero-plugin-scaffold": "^0.8.8",
+    "zotero-types": "^4.1.3"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "tabWidth": 2,
+    "endOfLine": "lf",
+    "overrides": [
+      {
+        "files": [
+          "*.xhtml"
+        ],
+        "options": {
+          "htmlWhitespaceSensitivity": "css"
+        }
+      }
+    ]
+  }
+}
