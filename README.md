@@ -1,310 +1,172 @@
 <p align="center">
-  <img src="addon/content/icons/icon-96.png" alt="Zotero Research Copilot logo" width="80" />
+  <img src="addon/content/icons/icon-96.png" alt="Zotero Research Copilot logo" width="88" />
 </p>
 
 <h1 align="center">Zotero Research Copilot</h1>
 
 <p align="center">
+  A research workspace for reading, discussing, discovering, and organizing papers inside Zotero.
+</p>
+
+<p align="center">
   <a href="./README.md">English</a>
-  ·
-  <a href="./doc/readme/README.zh-CN.md">简体中文</a>
-  ·
-  <a href="./doc/readme/README.zh-TW.md">繁體中文</a>
-  ·
-  <a href="./doc/readme/README.ja.md">日本語</a>
-  ·
-  <a href="./doc/readme/README.ko.md">한국어</a>
-  ·
-  <a href="./doc/readme/README.fr.md">Français</a>
+  · <a href="./doc/readme/README.zh-CN.md">简体中文</a>
+  · <a href="./doc/readme/README.zh-TW.md">繁體中文</a>
+  · <a href="./doc/readme/README.ja.md">日本語</a>
+  · <a href="./doc/readme/README.ko.md">한국어</a>
+  · <a href="./doc/readme/README.fr.md">Français</a>
 </p>
 
 <p align="center">
-  <strong>🌐 Project:</strong> <a href="https://github.com/chrislucy838-collab/zotero-research-copilot">https://github.com/chrislucy838-collab/zotero-research-copilot</a>
+  <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/releases"><strong>Download the latest XPI</strong></a>
+  · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/issues">Issues</a>
+  · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/discussions">Discussions</a>
 </p>
 
-<p align="center">
-  <strong>A free, open-source AI assistant plugin for Zotero</strong><br/>
-  🔐 OAuth login with OpenAI (ChatGPT), Google Gemini, and GitHub Copilot<br/>
-  ⚙️ OpenAI-compatible APIs and local or self-hosted models via Ollama, LM Studio, vLLM, and similar runtimes
-</p>
+> **Current scope:** this distribution targets Zotero 10.x. It is an independent build derived from open-source Zotero AI projects; the original attribution and licenses are retained in [LICENSE](./LICENSE), [CUSTOMIZATION.md](./CUSTOMIZATION.md), and [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
-<p align="center">
-  <img alt="OpenAI ChatGPT" src="https://img.shields.io/badge/OpenAI-ChatGPT-10A37F?style=for-the-badge&logo=openai&logoColor=white" />
-  <img alt="Google Gemini" src="https://img.shields.io/badge/Google-Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" />
-  <img alt="GitHub Copilot" src="https://img.shields.io/badge/GitHub-Copilot-111111?style=for-the-badge&logo=github&logoColor=white" />
-</p>
+## What it does
 
-<p align="center">
-  <img alt="OpenAI Compatible API" src="https://img.shields.io/badge/OpenAI-Compatible%20API-4B5563?style=flat-square&logo=openai&logoColor=white" />
-  <img alt="Ollama" src="https://img.shields.io/badge/Ollama-1F2937?style=flat-square&logoColor=white" />
-  <img alt="LM Studio" src="https://img.shields.io/badge/LM%20Studio-2563EB?style=flat-square&logoColor=white" />
-  <img alt="vLLM" src="https://img.shields.io/badge/vLLM-7C3AED?style=flat-square&logoColor=white" />
-</p>
+Zotero Research Copilot keeps an AI conversation beside the Zotero item or reader you are already using. It can use the active paper, selected passages, additional papers, images, and uploaded files as context, while keeping conversations and memory in Zotero's local data directory.
 
-<p align="center">
-  <a href="#-features">Features</a> &nbsp;|&nbsp;
-  <a href="#-installation">Installation</a> &nbsp;|&nbsp;
-  <a href="#-getting-started">Getting Started</a> &nbsp;|&nbsp;
-  <a href="#-configuration">Configuration</a> &nbsp;|&nbsp;
-  <a href="#-license">License</a>
-</p>
+### Research chat
 
----
+- Chat in the Zotero Library item pane or PDF/EPUB reader sidebar.
+- Use the active paper as context and add selected reader text with **Add Text**.
+- Add multiple papers with `@` references or from a Zotero collection. The context picker keeps the selected papers visible and attributed.
+- Follow evidence-oriented answers with paper/page citations when the model provides them; citation markers can be linked back to the relevant evidence in the panel.
+- Continue, rename, pin, delete, branch, edit, retry, export, or save conversations as native Zotero notes.
+- Use configurable quick actions such as summarizing, explaining, comparing, and translating.
 
-## ✨ Features
+### PDF and EPUB context
 
-### 💬 AI Chat in the Side Panel
+- Extract and retrieve bounded context from PDF and EPUB attachments instead of sending an entire book by default.
+- Preserve EPUB navigation and section structure when it is available.
+- Use deterministic section routing for explicit chapter or section requests, then retrieve relevant chunks locally.
+- Keep document context separate from supplemental paper context so the source of an answer remains visible.
 
-Chat with AI directly in Zotero's side panel, available in the **Library** view and the **PDF or EPUB Reader**. Ask questions, get summaries, and stay inside the same research workflow. EPUB conversations use the book's EPUB 2/3 publisher structure and bounded local retrieval to select relevant sections without an additional planning-model request.
+### Files and images
 
-<p align="center">
-  <img src="doc/screenshots/chat_panel_en.png" alt="Side panel chat" width="800" />
-</p>
+- Paste, drag, or upload text, Markdown, code, PDF, and image files through the composer.
+- Capture a region from the active reader to discuss a figure, table, or chart.
+- Use multimodal models when the selected provider and model support image input.
+- Explicit image generation is supported for compatible provider flows; availability depends on the provider, model, and endpoint.
 
-### 📄 Paper-Aware Context
+### Paper discovery and import
 
-Select text in the PDF or EPUB reader and click **Add Text** to attach the selected passage to the context area. AIdea can then answer against the selected passage instead of relying on a generic summary.
+The **Discover** tab searches public scholarly indexes and lets you review results before writing anything to Zotero:
 
-### 📝 Selection Translation
+- OpenAlex
+- Semantic Scholar
+- Crossref
 
-Translate selected text directly in Zotero's PDF or EPUB reader popup. AIdea detects the active format automatically, with no manual switch required. Selection translation uses the same OAuth/API model list as the chat panel, but can be configured with its own enable switch, model, source language, and target language.
+Results are deduplicated across sources and show metadata, DOI, venue, authors, and PDF availability when known. You choose which records to import and may target **My Library** or an existing/new Zotero collection. Existing items are detected before import. PDF attachment retrieval is attempted when a source exposes a usable open-access URL, but it is not guaranteed.
 
-For PDFs, the first selection translation creates a local cold-start cache with a compact paper overview and terminology summary. EPUB selections instead use bounded, selection-anchored book context without a separate warm-up request. Translated passages can be added back to Zotero notes.
+### Selection translation
 
-<p align="center">
-  <img src="doc/screenshots/selection_translation_popup.png" alt="Selection translation popup in the PDF reader" width="800" />
-</p>
+- Translate selected text from the PDF or EPUB reader using the shared model list.
+- PDF selection translation can prepare a local paper overview and terminology cache on first use; later selections reuse it.
+- EPUB selection translation uses bounded context around the selected passage.
+- Configure automatic translation, source and target languages, the model, and whether the popup offers copy or note actions.
 
-<p align="center">
-  <img src="doc/screenshots/selection_translation_settings.png" alt="Selection translation settings" width="800" />
-</p>
+The repository also contains a PDF translation controller and related runtime code. It is not part of the currently supported three-tab interface, so it is deliberately not presented as a stable end-user feature here.
 
-### ⚡ Quick Action Shortcuts
+### Current interface and local persistence
 
-Use one-click shortcuts for common tasks such as **Summarize**, **Explain**, and **Translate**. Shortcuts can be added, edited, reordered, or removed to match your workflow.
+- Conversations, attachments, memory, and related metadata are stored locally in Zotero's SQLite data.
+- Per-library conversation scope prevents unrelated libraries from sharing paper context.
+- Memory retrieval uses local storage, deduplication, relevance ranking, and prompt-injection filtering.
+- The supported panel currently exposes **Discussion**, **Discover**, and **Setting** tabs. Experimental modules that are not wired into this interface are not advertised as supported features.
+- Responses render Markdown, code blocks, tables, links, images, and LaTeX; responses and complete chat histories can be saved to Zotero notes.
+- The interface supports English, Simplified Chinese, Traditional Chinese, Japanese, Korean, French, German, Spanish, Russian, Portuguese, Arabic, and Hindi.
 
-### 🖼️ Multimodal Support
+## Connecting a model
 
-Attach screenshots, figures, and charts to your messages. AIdea supports drag and drop, clipboard paste, and screenshot capture directly from PDF content.
+Open **Tools → Add-ons → Zotero Research Copilot → Settings**. Depending on the Zotero build, the preference pane may also appear under **Edit → Settings**.
 
-### 🔐 OAuth Login Without an API Key
+There are two connection paths:
 
-Sign in with your existing account through OAuth. AIdea supports multiple providers with provider-specific OAuth flows, so you can start without managing an API key manually.
+### OAuth providers
 
-### 📄 Full-Document Translation
+The Settings pane currently exposes OAuth cards for:
 
-Translate full papers directly inside Zotero and export either a **bilingual dual-column PDF** or a **single-language PDF**. The translation workflow supports model selection, output path configuration, and end-to-end execution in the side panel.
+| Provider       | Flow                    | Notes                                                                      |
+| -------------- | ----------------------- | -------------------------------------------------------------------------- |
+| ChatGPT        | OpenAI Codex OAuth      | The plugin can install/update the required local environment and CLI flow. |
+| Gemini         | Google Gemini CLI OAuth | The plugin can install/update the required local environment and CLI flow. |
+| GitHub Copilot | Device Code OAuth       | Does not require the Node.js setup step used by the CLI-based flows.       |
 
-<p align="center">
-  <img src="doc/screenshots/translate_panel_en.png" alt="Full-document translation panel" width="800" />
-</p>
+Typical order:
 
-Example outputs:
+1. Click **Install/Update Env** when the provider requires its local CLI environment.
+2. Click **OAuth Login** and complete the provider's browser authorization.
+3. Click **Refresh Models**, then select the models that should appear in the chat picker.
 
-<p align="center">
-  <img src="doc/screenshots/translate_example_architecture.png" alt="Bilingual architecture paper translation example" width="800" />
-</p>
+OAuth tokens are kept locally by the plugin. OAuth access through CLI credentials may not be an officially endorsed use of a provider account; read the warning in the plugin before continuing and check the provider's terms.
 
-<p align="center">
-  <img src="doc/screenshots/translate_example_formula.png" alt="Formula-heavy paper translation example" width="800" />
-</p>
+### OpenAI-compatible API
 
-<p align="center">
-  <img src="doc/screenshots/translate_example_table.png" alt="Table and prose translation example" width="800" />
-</p>
+Switch the primary connection mode to **API Mode** and configure:
 
-### 🌐 Multi-Provider Support
+| Field          | Required                | Example                                                     |
+| -------------- | ----------------------- | ----------------------------------------------------------- |
+| API Base URL   | Yes                     | `https://api.openai.com/v1` or `http://127.0.0.1:11434/v1`  |
+| Model          | Yes                     | `gpt-4.1-mini` or `llama3.1:8b`                             |
+| API Key        | Depends on the endpoint | Leave empty for an unauthenticated local endpoint.          |
+| Custom headers | Optional                | JSON headers for gateways with non-standard authentication. |
 
-| Provider             | Auth Method                   | Extra Setup              |
-| -------------------- | ----------------------------- | ------------------------ |
-| **OpenAI (ChatGPT)** | OAuth via Codex CLI           | Node.js (auto-installed) |
-| **Google Gemini**    | In-plugin OAuth (PKCE)        | Node.js (auto-installed) |
-| **GitHub Copilot**   | In-plugin OAuth (Device Code) | None                     |
+The endpoint must provide the API shape required by the selected operation, normally `/models` and `/chat/completions`. Provider-specific features are not guaranteed by compatibility alone. Local, self-hosted, and hosted gateways such as Ollama, LM Studio, vLLM, OpenRouter, DeepSeek-compatible gateways, and similar services may work when they expose the expected API.
 
-### 📝 Note Export
-
-Save AI responses as Zotero notes with one click. Responses are stored in Markdown and support LaTeX math rendering.
-
-### 💾 Persistent Chat History
-
-All conversations are stored locally in Zotero's database. You can switch between conversations, continue previous threads, and manage local chat history.
-
-### 🧠 Memory System
-
-AIdea captures and recalls useful information across conversations to improve continuity and context awareness over time.
-
-- **Auto-capture** detects preferences, decisions, facts, and key entities from natural conversation
-- **Per-library isolation** keeps memories scoped to each Zotero library
-- **Smart deduplication** uses Jaccard token similarity to prevent redundant memories
-- **Relevance-ranked retrieval** combines overlap, substring match, recency, and importance
-- **Prompt injection defense** blocks malicious or irrelevant content from being stored
-- **Fully local storage** keeps memory data inside Zotero's SQLite database
-
-### 🎨 Rich Rendering
-
-- Full **Markdown** rendering, including headings, lists, code blocks, and tables
-- **LaTeX** math support via KaTeX
-- **Syntax highlighting** for code blocks
-- Smooth **streaming** responses
-
-### 🌍 Interface Languages
-
-The plugin interface now supports **12 UI languages**: **English**, **简体中文**, **繁體中文**, **日本語**, **한국어**, **Français**, **Deutsch**, **Español**, **Русский**, **Português**, **العربية**, and **हिन्दी**. Full-document translation keeps its broader target-language list independent from the UI language list.
-
----
-
-## 📦 Installation
+## Installation
 
 ### Requirements
 
-- **Zotero 7 or later**
-- **Node.js**, required for OpenAI and Gemini, can be installed automatically by the plugin when needed
+- Zotero **10.0–10.x**
+- A configured OAuth provider or OpenAI-compatible endpoint
+- Node.js for the provider flows that require a local CLI environment; the plugin can guide you through setup
+- Internet access for OAuth, hosted model APIs, and scholarly-index searches
 
-### Install the Plugin
+### Install or upgrade
 
-1. Download the latest `Zotero-Research-Copilot-x.x.x.xpi` from this project's [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases)
-2. In Zotero, go to **Tools → Add-ons**
-3. Click the gear icon ⚙️ and choose **Install Add-on From File...**
-4. Select the downloaded `.xpi` file
-5. Restart Zotero
+1. Download `Zotero-Research-Copilot-<version>.xpi` from [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases).
+2. In Zotero, open **Tools → Add-ons**.
+3. Open the gear menu and choose **Install Add-on From File…**.
+4. Select the downloaded XPI and restart Zotero if prompted.
+5. Configure a provider in **Zotero Research Copilot Settings** before starting a chat.
 
-### Upgrade
+Install a newer XPI over the existing installation to upgrade. The plugin stores its chat history, memory, and settings in Zotero's local data; nevertheless, back up important Zotero data before testing development builds.
 
-Install the newer `.xpi` package over the existing one. Chat history, stored memory, and local settings are preserved.
+## Privacy and security
 
----
+- The plugin does not include a telemetry service or a project-owned proxy.
+- API requests go from Zotero to the provider or endpoint selected by the user.
+- API keys, custom headers, and OAuth credentials are configured locally and are not hardcoded into the source or release XPI.
+- Chat history, memory, and local attachment metadata are stored in Zotero's local database/data directory.
+- When you use a third-party model, the selected context, uploaded files, and images are sent to that provider according to its API and privacy policy.
+- Do not include secrets or confidential documents in a request unless you understand the provider's data handling.
 
-## 🚀 Getting Started
-
-### 1. Open Settings
-
-Go to **Tools → Add-ons → Zotero Research Copilot → Settings**. On older Zotero builds, the path may appear under **Edit → Settings → Zotero Research Copilot**.
-
-### 2. Choose a Connection Mode
-
-AIdea supports two connection modes. You can use either one or combine both.
-
-#### Option A: OAuth Login
-
-For each provider card, the typical setup order is:
-
-> **① `Install/Update Env`** → **② `OAuth Login`** → **③ `Refresh Models`**
-
-| Button                   | What it does                                                                                                                                                                  |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`Install/Update Env`** | Installs and configures the required CLI tools and runtime, including Node.js and npm when needed. GitHub Copilot does not require this step.                                 |
-| **`OAuth Login`**        | Starts the provider-specific login flow. OpenAI and Gemini open the browser directly. GitHub Copilot shows a device code, copies it, and opens the browser for authorization. |
-| **`Refresh Models`**     | Loads the list of available models for the provider after login.                                                                                                              |
-| **`Remove Auth`**        | Clears the locally stored OAuth token for that provider.                                                                                                                      |
-
-<p align="center">
-  <img src="doc/screenshots/settings_oauth_models_en.png" alt="OAuth providers and model management" width="700" />
-</p>
-
-> 💡 **Tip:** Each provider only needs to be configured once. The login session is stored locally and remains available after Zotero restarts.
-
-#### Option B: OpenAI-Compatible API Endpoint
-
-AIdea can also connect to any **OpenAI-compatible chat endpoint**, including local, self-hosted, or third-party services such as Ollama, LM Studio, vLLM, DeepSeek, OpenRouter, or Groq.
-
-In **Settings**, switch to **API Mode** and fill in:
-
-| Field            | Required | Description                                                                                                 |
-| ---------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
-| **API Base URL** | Yes      | The base URL of the compatible endpoint, such as `https://api.openai.com/v1` or `http://localhost:11434/v1` |
-| **API Key**      | No       | Required only when the endpoint expects authentication                                                      |
-| **Model**        | Yes      | Enter the model manually or click **Auto Fetch Models** to detect available models                          |
-
-<p align="center">
-  <img src="doc/screenshots/settings_api_en.png" alt="API mode custom endpoint" width="700" />
-</p>
-
-> **Note:** API mode targets compatible `/chat/completions` endpoints. It does not guarantee support for provider-specific features beyond standard chat completion.
-
-### 3. Start Chatting
-
-- In the **Library Panel**, select an item and use the AIdea panel in the right sidebar
-- In the **PDF or EPUB Reader**, open a document and use the AIdea panel in the reader sidebar
-- Type your question and press **Send** or hit `Enter`
-
-### 4. Use Quick Actions
-
-Click shortcut buttons such as **Summarize**, **Explain**, or **Translate** for one-click actions. Right-click a shortcut to edit or remove it.
-
----
-
-## ⚙️ Configuration
-
-| Setting                         | Description                                                            | Default                              |
-| ------------------------------- | ---------------------------------------------------------------------- | ------------------------------------ |
-| **UI Language**                 | Plugin interface language                                              | Auto-detected, fallback EN           |
-| **System Prompt**               | Custom instructions for the model                                      | Empty                                |
-| **Show "Add Text"**             | Show the Add Text option in the reader selection popup                 | On                                   |
-| **Selection Translation**       | Translate selected reader text with automatic bounded document context | On                                   |
-| **Selection Translation Model** | Dedicated model for reader selection translation                       | First available model unless changed |
-| **Show All Models**             | Show all available models instead of a curated subset                  | Off                                  |
-| **Tab Bar**                     | Show or hide the tab navigation bar                                    | Hidden                               |
-
----
-
-## 🔒 Privacy & Security
-
-- OAuth tokens are stored **locally only**
-- API requests are sent **directly** to the selected provider or configured endpoint
-- AIdea **does not collect usage telemetry or user data**
-- Chat history and memory remain in Zotero's local database
-- The code is fully available for inspection on [GitHub](https://github.com/chrislucy838-collab/zotero-research-copilot)
-
----
-
-## 🗺️ Roadmap
-
-Planned directions for future releases include:
-
-- **One-click architecture diagrams**, for generating structural visualizations from paper content
-
-> 💡 Feature requests are welcome through this project's [Issues](https://github.com/chrislucy838-collab/zotero-research-copilot/issues).
-
----
-
-## 🛠️ Development
+## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Development mode
-npm start
-
-# Build production XPI
-npm run build
-
-# Run tests
-npm run test:unit
+npm run build       # TypeScript check and official production XPI build
+npm run test:unit   # Unit tests that do not require a running Zotero UI
+npm start           # Development server/profile workflow
 ```
 
----
+The generated build directory and XPI are intentionally ignored by Git. Releases are produced by GitHub Actions when a new `v*` tag is pushed; the XPI is attached to the versioned GitHub Release and `update.json` is maintained in the `release` prerelease.
 
-## 📄 License
+Useful project documents:
 
-[AGPL-3.0-or-later](./LICENSE)
+- [Customization notes](./CUSTOMIZATION.md)
+- [Architecture guide](./doc/ARCHITECTURE_EN.md)
+- [中文架构说明](./doc/ARCHITECTURE_CN.md)
+- [Third-party notices](./THIRD_PARTY_NOTICES.md)
 
-This project is derived from [llm-for-zotero](https://github.com/yilewang/llm-for-zotero) by Yile Wang. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for attribution details.
+## License and attribution
 
----
-
-## ⭐ Star History
-
-<a href="https://star-history.com/#chrislucy838-collab/zotero-research-copilot&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=chrislucy838-collab/zotero-research-copilot&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=chrislucy838-collab/zotero-research-copilot&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=chrislucy838-collab/zotero-research-copilot&type=Date" />
- </picture>
-</a>
-
----
+Zotero Research Copilot is distributed under [AGPL-3.0-or-later](./LICENSE). It is an independent build derived from open-source work, including [llm-for-zotero](https://github.com/yilewang/llm-for-zotero) and source from the AIdea project. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for the attribution and additional licenses.
 
 <p align="center">
-  Author: <strong>zhile</strong>
+  Maintained for the Zotero Research Copilot project
 </p>

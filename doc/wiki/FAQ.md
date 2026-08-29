@@ -1,41 +1,49 @@
 # FAQ
 
+## Which Zotero versions are supported?
+
+The current distribution targets Zotero **10.0–10.x**, as declared by the plugin manifest. Other versions may work or fail depending on Zotero APIs and are not the supported target.
+
 ## Do I need an API key?
 
-Usually no. AIdea is designed around OAuth login flows so you can use supported providers with your existing account.
+No, when using a supported OAuth provider. In API Mode, an API key is required only when the configured endpoint requires authentication.
 
-## Which providers are supported?
+## Which API endpoints can I use?
 
-OpenAI (ChatGPT), Google Gemini, Qwen, and GitHub Copilot.
+Use an OpenAI-compatible endpoint that exposes the operations required by the feature you want, normally `/models` and `/chat/completions`. Compatibility with chat completions alone does not guarantee image, reasoning, or other provider-specific features.
 
-## Do I need Node.js?
+## Where are credentials and conversations stored?
 
-Only for some provider flows, mainly OpenAI and Gemini. The plugin can install the required environment automatically. Qwen and GitHub Copilot do not require this extra step.
+Credentials, settings, chat history, memory, and attachment metadata are kept in Zotero's local preferences/database/data directory. The selected context and files are sent to the provider when a request is made.
 
-## Where does my chat history live?
+## Does the project collect telemetry?
 
-Chat history is stored locally in Zotero's database.
+The plugin does not include a project-owned telemetry service or proxy. Third-party providers still receive requests according to their own policies.
 
-## Where are tokens stored?
+## Why does a paper search return incomplete results?
 
-Authentication data is stored locally on the user's machine.
+OpenAlex, Semantic Scholar, and Crossref expose different metadata. A record may have no abstract, DOI, or open-access PDF. Search results are best-effort and should be checked before import.
 
-## Does AIdea collect user data?
+## Why was a PDF not attached after import?
 
-The project states that it does not collect user data and that API traffic goes directly between the user and the selected provider.
+PDF retrieval depends on an open-access URL supplied by the index and on Zotero's importer. Metadata can be imported even when no downloadable PDF is available.
 
-## Why can't I see models after login?
+## Can the plugin read an entire PDF or EPUB?
 
-Try `Refresh Models` first. If that still does not work, remove auth and sign in again. Also verify that your provider account actually has access to the expected models.
+It extracts document text and retrieves bounded relevant context. A whole-document request may include more context when appropriate, but the normal path avoids sending an entire book by default.
 
-## Why is the answer not grounded in the paper?
+## How do I add another paper to a conversation?
 
-For the best results, select a passage in the PDF and use `Add Text` before asking a question about that section.
+Type `@` in the Discussion composer and search for a Zotero item. You can also use the attachment menu to choose papers from a Zotero collection.
 
-## Is this only for English papers?
+## Why can a model not understand my screenshot?
 
-No. AIdea supports both English and Chinese interfaces, and the workflows are useful for multilingual reading and translation tasks.
+The selected model and endpoint must support image input. An image attachment does not add multimodal capability to a text-only model.
 
-## Is AIdea open source?
+## Is selection translation the same as full-document translation?
 
-Yes. The repository is public on GitHub under `AGPL-3.0-or-later`.
+Selection translation is wired into the reader selection popup and translates selected PDF/EPUB text. The repository also contains a PDF translation controller, but it is not advertised as part of the currently supported three-tab end-user interface.
+
+## How can I report a problem?
+
+Include the Zotero version, plugin version, provider/API mode, model ID, and a redacted description of the error. Never include API keys, OAuth tokens, cookies, or private documents. Report it through [Issues](https://github.com/chrislucy838-collab/zotero-research-copilot/issues) or discuss it in [Discussions](https://github.com/chrislucy838-collab/zotero-research-copilot/discussions).

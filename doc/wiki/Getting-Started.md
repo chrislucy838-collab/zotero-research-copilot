@@ -1,68 +1,79 @@
 # Getting Started
 
-This page walks through the shortest path from installation to your first successful AI chat in Zotero.
+## 1. Install the plugin
 
-## 1. Install AIdea
+1. Download `Zotero-Research-Copilot-<version>.xpi` from the [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases) page.
+2. In Zotero, open **Tools → Add-ons**.
+3. Open the gear menu and choose **Install Add-on From File…**.
+4. Select the XPI and restart Zotero if prompted.
 
-1. Download the latest release package from the repository Releases page.
-2. In Zotero, open `Tools -> Add-ons`.
-3. Click the gear menu and choose `Install Add-on From File...`.
-4. Select the `.xpi` file and restart Zotero.
+The supported distribution targets Zotero **10.0–10.x**.
 
-## 2. Open Settings
+## 2. Open the panel
 
-After restart, open the AIdea settings page from Zotero:
+After restarting Zotero, the Zotero Research Copilot section is available in:
 
-- `Tools -> Add-ons -> AIdea -> Settings`
-- On some setups: `Edit -> Settings -> AIdea`
+- the Library item pane after selecting an item;
+- the PDF reader sidebar;
+- the EPUB reader sidebar.
 
-## 3. Set Up One Provider
+The panel contains three tabs:
 
-On a provider card, the normal order is:
+- **Discussion**: chat, context, history, attachments, and exports;
+- **Discover**: search public scholarly indexes and import selected records;
+- **Setting**: connection, model, language, translation, and advanced options.
 
-`Install/Update Env -> OAuth Login -> Refresh Models`
+## 3. Configure a model
 
-Notes:
+Open the **Setting** tab and choose either an OAuth provider or **API Mode**.
 
-- OpenAI and Gemini need the environment install step.
-- Qwen and GitHub Copilot do not need extra runtime installation.
-- After login, use `Refresh Models` so the plugin can load the models available to your account.
+For OAuth, the normal sequence is:
 
-## 4. Open the AI Panel
+```text
+Install/Update Env → OAuth Login → Refresh Models
+```
 
-You can use AIdea in two main places:
+For API Mode, fill in an API Base URL and Model. Add an API Key only when the endpoint requires authentication.
 
-- Zotero library side panel
-- PDF reader side panel
+## 4. Ask about a paper
 
-Select an item or open a PDF, then locate the AIdea panel on the right side.
+Open an item or document, then ask a question in the Discussion tab. The panel can use the active document as context. In a reader, select text and click **Add Text** to attach the passage explicitly.
 
-## 5. Ask Your First Question
+To compare papers:
 
-Try a simple prompt such as:
+1. Type `@` in the composer and search for another Zotero item, or
+2. use the attachment menu to add papers from a collection.
 
-- "Summarize this paper in 5 bullet points."
-- "Explain the core method in plain language."
-- "What are the limitations mentioned by the authors?"
+The selected paper chips show which documents are included in the request.
 
-## 6. Add Grounded Context
+## 5. Save and continue work
 
-When reading a PDF:
+Use the conversation history controls to create, rename, pin, branch, retry, edit, or delete conversations. Use the response menu to copy a response or save it as a Zotero note. The export menu can copy or save a complete chat history.
 
-1. Select text in the reader.
-2. Click `Add Text`.
-3. Send a question about the selected passage.
+## 6. Discover papers
 
-This helps the model answer with direct grounding in the paper content.
+Open **Discover**, enter a keyword, title, author, or DOI, and select one or more indexes:
 
-## 7. Use Quick Actions
+- OpenAlex
+- Semantic Scholar
+- Crossref
 
-Quick actions are built-in shortcuts for common research tasks such as summarizing, translating, or extracting key points. You can customize them to match your workflow.
+Review the returned metadata and duplicate status, select records, choose **My Library** or a collection, and click **Import selected**. PDF retrieval is best effort and depends on the metadata source exposing an open-access URL.
 
-## If Something Does Not Work
+## 7. Translate a selection
 
-- Check that the provider is logged in
-- Run `Refresh Models`
-- Confirm Zotero version is 7 or later
-- Try reopening Zotero after setup
-- See [[FAQ]]
+Enable selection translation in Settings, choose a model and target language, then select text in a PDF or EPUB reader. Depending on the setting, translation starts automatically or can be started from the selection popup. The result can be copied or added to a Zotero note when those actions are enabled.
+
+PDF first use may create a local cold-start cache containing a compact overview and terminology. EPUB selection translation uses bounded context around the selection.
+
+## 8. Add files and images
+
+The composer supports text, Markdown, code, PDF, and image attachments through upload, paste, or drag and drop. The screenshot action captures a region from the active reader. Image input requires a model and endpoint that support multimodal content.
+
+## 9. Troubleshooting
+
+- **No models appear:** complete OAuth login and refresh models, or verify API Base URL and API Key in API Mode.
+- **A paper has no PDF:** the index may only provide metadata, or its open-access URL may be unavailable.
+- **Context is missing:** confirm the correct reader tab is active, then use **Add Text** or re-add the paper reference.
+- **OAuth fails:** run **Install/Update Env**, review the Settings console, and check the provider's account and terms.
+- **A feature is unavailable:** provider capabilities differ by model. Check the model selector and the endpoint's supported API shape.

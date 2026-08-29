@@ -1,56 +1,42 @@
-# AIdea
+# Zotero Research Copilot
 
-AIdea is a free and open-source AI assistant for Zotero. It lets you chat with AI directly inside Zotero, work with paper context, and sign in with supported providers using your existing account instead of manually configuring API keys.
+Zotero Research Copilot is an open-source AI research workspace for Zotero 10.x. It places a model-powered discussion panel beside Zotero items and PDF/EPUB readers, with local conversation history, document context, paper discovery, and configurable model connections.
 
-English | [中文](Home-zh-CN)
+## What it provides
 
-## What AIdea Does
+- Discussion in the Zotero Library item pane and PDF/EPUB reader sidebar
+- Bounded PDF/EPUB context and selected-text context
+- Multiple-paper context using `@` references or Zotero collections
+- Evidence-aware paper attribution and citation links when the answer contains supported markers
+- File upload, clipboard paste, drag and drop, reader-region screenshots, and multimodal input
+- OpenAlex, Semantic Scholar, and Crossref search in the Discover tab
+- Duplicate-aware metadata import into My Library or a Zotero collection
+- Selection translation for PDF and EPUB text
+- ChatGPT/Codex, Gemini CLI, and GitHub Copilot OAuth flows
+- OpenAI-compatible API endpoints for hosted or local models
+- Local chat history, memory, Markdown/LaTeX rendering, and Zotero note export
 
-- Chat with AI in the Zotero library side panel and PDF reader side panel
-- Attach selected PDF text as context for grounded Q&A
-- Use quick actions like summarize, explain, and translate
-- Export responses to Zotero notes with Markdown and LaTeX support
-- Keep persistent local chat history
-- Use a local memory system to carry useful context across conversations
-- Sign in with OpenAI, Gemini, Qwen, and GitHub Copilot
+## Start here
 
-## Why People Use It
+1. [Getting Started](./Getting-Started.md)
+2. [Providers and Authentication](./Providers-and-Authentication.md)
+3. [Features and Workflow](./Features-and-Workflow.md)
+4. [FAQ](./FAQ.md)
 
-AIdea is designed for research workflows. Instead of switching between Zotero, browsers, and external AI apps, you can stay inside your library while reading papers, selecting passages, and asking targeted questions.
+## Important scope notes
 
-## Supported Providers
+- The supported distribution targets Zotero **10.0–10.x**.
+- This project does not provide a project-owned model proxy or telemetry service.
+- Requests, selected context, uploaded files, and images go to the provider or endpoint chosen by the user.
+- Paper-index search uses public services and can fail or return incomplete metadata.
+- Open-access PDF attachment retrieval is best effort.
 
-| Provider         | Login Method                  | Extra Setup                             |
-| ---------------- | ----------------------------- | --------------------------------------- |
-| OpenAI (ChatGPT) | OAuth via Codex CLI           | Node.js environment installed by plugin |
-| Google Gemini    | In-plugin OAuth (PKCE)        | Node.js environment installed by plugin |
-| Qwen             | In-plugin OAuth (Device Code) | No extra runtime setup                  |
-| GitHub Copilot   | In-plugin OAuth (Device Code) | No extra runtime setup                  |
+## Links
 
-## Requirements
+- Repository: <https://github.com/chrislucy838-collab/zotero-research-copilot>
+- Releases: <https://github.com/chrislucy838-collab/zotero-research-copilot/releases>
+- Issues: <https://github.com/chrislucy838-collab/zotero-research-copilot/issues>
+- Discussions: <https://github.com/chrislucy838-collab/zotero-research-copilot/discussions>
+- [中文首页](./Home-zh-CN.md)
 
-- Zotero 7 or later
-- Node.js only for OpenAI and Gemini flows, with automatic setup handled by the plugin
-
-## Install
-
-1. Download the latest `.xpi` file from the GitHub Releases page.
-2. In Zotero, open `Tools -> Add-ons`.
-3. Choose `Install Add-on From File...`.
-4. Select the downloaded `.xpi`.
-5. Restart Zotero.
-
-## Start Here
-
-- New user: see [Getting Started](Getting-Started)
-- Provider setup: see [Providers and Authentication](Providers-and-Authentication)
-- Feature overview: see [Features and Workflow](Features-and-Workflow)
-- Common questions: see [FAQ](FAQ)
-- Chinese pages: see [Home zh-CN](Home-zh-CN)
-
-## Project Links
-
-- Repository: https://github.com/Visterainer/aidea-zotero
-- Releases: https://github.com/Visterainer/aidea-zotero/releases
-- Issues: https://github.com/Visterainer/aidea-zotero/issues
-- Chinese README: https://github.com/Visterainer/aidea-zotero/blob/master/doc/readme/README.zh-CN.md
+The project is an independent build derived from open-source Zotero AI work. See the repository's [license](../../LICENSE), [customization notes](../../CUSTOMIZATION.md), and [third-party notices](../../THIRD_PARTY_NOTICES.md).

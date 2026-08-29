@@ -1,56 +1,59 @@
 # Providers and Authentication
 
-AIdea supports multiple providers and uses OAuth-based login flows so users can sign in with existing accounts.
+Zotero Research Copilot supports provider-specific OAuth flows and a generic OpenAI-compatible API mode. Choose the path that matches your account and endpoint.
 
-## Overview
+## OAuth providers
 
-| Provider         | Login Flow             | Needs Env Install | Notes                                        |
-| ---------------- | ---------------------- | ----------------- | -------------------------------------------- |
-| OpenAI (ChatGPT) | OAuth via Codex CLI    | Yes               | Uses local environment setup                 |
-| Google Gemini    | In-plugin OAuth (PKCE) | Yes               | Uses local environment setup                 |
-| Qwen             | Device Code            | No                | Login happens in browser with code copy flow |
-| GitHub Copilot   | Device Code            | No                | Login happens in browser with code copy flow |
+| Provider       | Flow                    | Local requirement                                                      |
+| -------------- | ----------------------- | ---------------------------------------------------------------------- |
+| ChatGPT        | OpenAI Codex OAuth      | Node.js and the Codex CLI environment may be installed by the plugin.  |
+| Gemini         | Google Gemini CLI OAuth | Node.js and the Gemini CLI environment may be installed by the plugin. |
+| GitHub Copilot | Device Code OAuth       | No CLI setup step is required by the Copilot flow.                     |
 
-## Recommended Setup Order
+### Typical setup
 
-For each provider card:
+1. In Setting, click **Install/Update Env** for a provider that needs its CLI environment.
+2. Click **OAuth Login**.
+3. Complete authorization in the browser, or enter the displayed device code when prompted.
+4. Click **Refresh Models**.
+5. Select the models that should appear in Discussion and other model-aware features.
 
-1. `Install/Update Env`
-2. `OAuth Login`
-3. `Refresh Models`
+OAuth credentials are stored locally. The plugin communicates with provider APIs using the credentials resolved for the selected provider. OAuth access through CLI credentials may not be an officially endorsed use of an account; read the in-plugin notice and the provider's terms before continuing.
 
-For Qwen and GitHub Copilot, start from step 2.
+The environment updater can check for updates and may show a notification according to the configured update mode. It does not upload the credentials to the project repository.
 
-## What Each Button Does
+## OpenAI-compatible API mode
 
-### Install/Update Env
+API Mode uses one or more locally configured profiles. A profile can contain:
 
-Installs or updates the local runtime and CLI dependencies required by the provider flow. This is mainly relevant for OpenAI and Gemini.
+- provider label;
+- API Base URL;
+- API Key;
+- optional custom HTTP headers as JSON;
+- model IDs fetched from `/models` or added manually.
 
-### OAuth Login
+A typical setup is:
 
-Starts the provider login flow.
+```text
+API Base URL: https://api.example.com/v1
+Model: model-id
+API Key: optional, depending on the service
+```
 
-- OpenAI and Gemini open a browser-based sign-in flow.
-- Qwen and GitHub Copilot show an authorization code, copy it for you, and guide you to the browser flow.
+The endpoint normally needs to support:
 
-### Refresh Models
+- `GET /models` for model discovery, if automatic discovery is desired;
+- `POST /chat/completions` for standard streaming chat;
+- compatible multimodal or image-generation endpoints only when those operations are used.
 
-Loads the models currently available for the authenticated account. If login succeeds but models are missing, this is the first thing to try.
+Local endpoints such as Ollama, LM Studio, and vLLM may work when configured with their OpenAI-compatible API surface. Hosted gateways may require a custom header or a provider-specific model ID.
 
-### Remove Auth
+## Model selection
 
-Clears the saved local authentication state for that provider.
+The Settings pane can fetch available models, test model availability, select which models appear in the Discussion picker, and keep separate model choices for selection translation and other workflows. Model capability varies: reasoning, image input, image generation, and streaming support are not guaranteed for every model.
 
-## Security Notes
+## Data handling
 
-- Tokens are stored locally
-- API communication goes directly to the provider
-- The plugin does not rely on a separate AIdea-hosted backend for model traffic
+The plugin does not provide a project-owned API proxy or telemetry service. Requests go directly from Zotero to the selected provider or endpoint. The provider receives the context and attachments included in a request, so review its privacy and retention policy before sending sensitive research material.
 
-## Troubleshooting
-
-- If model list is empty, run `Refresh Models`
-- If login appears stuck, remove auth and log in again
-- If OpenAI or Gemini setup fails, rerun `Install/Update Env`
-- If the provider account itself has no access to a model, the plugin cannot expose it
+API keys, custom headers, and OAuth credentials should be configured after installation. They are intentionally excluded from the source repository and release package.

@@ -1,23 +1,21 @@
-### AIdea Wiki
-
-English
+### Zotero Research Copilot
 
 - [Home](Home)
 - [Getting Started](Getting-Started)
-- [Providers and Authentication](Providers-and-Authentication)
 - [Features and Workflow](Features-and-Workflow)
+- [Providers and Authentication](Providers-and-Authentication)
 - [FAQ](FAQ)
 
-中文
+### 中文
 
-- [Home zh-CN](Home-zh-CN)
-- [Getting Started zh-CN](Getting-Started-zh-CN)
-- [Providers and Authentication zh-CN](Providers-and-Authentication-zh-CN)
-- [Features and Workflow zh-CN](Features-and-Workflow-zh-CN)
-- [FAQ zh-CN](FAQ-zh-CN)
+- [中文首页](Home-zh-CN)
+- [快速开始](Getting-Started-zh-CN)
+- [功能与工作流](Features-and-Workflow-zh-CN)
+- [常见问题](FAQ-zh-CN)
 
-### Project
+### Links
 
-- [Releases](https://github.com/Visterainer/aidea-zotero/releases)
-- [Issues](https://github.com/Visterainer/aidea-zotero/issues)
-- [Repository](https://github.com/Visterainer/aidea-zotero)
+- [Repository](https://github.com/chrislucy838-collab/zotero-research-copilot)
+- [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases)
+- [Issues](https://github.com/chrislucy838-collab/zotero-research-copilot/issues)
+- [Discussions](https://github.com/chrislucy838-collab/zotero-research-copilot/discussions)

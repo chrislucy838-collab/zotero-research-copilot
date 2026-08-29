@@ -1,310 +1,155 @@
 <p align="center">
-  <img src="../../addon/content/icons/icon-96.png" alt="AIdea Logo" width="80" />
+  <img src="../../addon/content/icons/icon-96.png" alt="Zotero Research Copilot 图标" width="88" />
 </p>
 
-<h1 align="center">AIdea</h1>
+<h1 align="center">Zotero Research Copilot</h1>
+
+<p align="center">
+  在 Zotero 内完成论文阅读、讨论、检索与整理的 AI 研究工作区。
+</p>
 
 <p align="center">
   <a href="../../README.md">English</a>
-  ·
-  <a href="./README.zh-CN.md">简体中文</a>
-  ·
-  <a href="./README.zh-TW.md">繁體中文</a>
-  ·
-  <a href="./README.ja.md">日本語</a>
-  ·
-  <a href="./README.ko.md">한국어</a>
-  ·
-  <a href="./README.fr.md">Français</a>
+  · <a href="./README.zh-CN.md">简体中文</a>
+  · <a href="./README.zh-TW.md">繁體中文</a>
+  · <a href="./README.ja.md">日本語</a>
+  · <a href="./README.ko.md">한국어</a>
+  · <a href="./README.fr.md">Français</a>
 </p>
 
 <p align="center">
-  <strong>🌐 Website:</strong> <a href="https://visterainer.github.io/aidea-zotero/">https://visterainer.github.io/aidea-zotero/</a>
+  <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/releases"><strong>下载最新版 XPI</strong></a>
+  · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/issues">Issues</a>
+  · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/discussions">Discussions</a>
 </p>
 
-<p align="center">
-  <strong>免费开源的 Zotero AI 助手插件</strong><br/>
-  🔐 支持 OpenAI（ChatGPT）、Google Gemini、GitHub Copilot 的 OAuth 授权登录<br/>
-  ⚙️ 支持 OpenAI 兼容 API，以及通过 Ollama、LM Studio、vLLM 等接入本地或自托管模型
-</p>
+> **当前范围：**本发行版面向 Zotero 10.x。项目是基于开源 Zotero AI 项目独立构建的版本，原始署名和许可证保留在 [LICENSE](../../LICENSE)、[CUSTOMIZATION.md](../../CUSTOMIZATION.md) 与 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) 中。
 
-<p align="center">
-  <img alt="OpenAI ChatGPT" src="https://img.shields.io/badge/OpenAI-ChatGPT-10A37F?style=for-the-badge&logo=openai&logoColor=white" />
-  <img alt="Google Gemini" src="https://img.shields.io/badge/Google-Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" />
-  <img alt="GitHub Copilot" src="https://img.shields.io/badge/GitHub-Copilot-111111?style=for-the-badge&logo=github&logoColor=white" />
-</p>
+## 它能做什么
 
-<p align="center">
-  <img alt="OpenAI Compatible API" src="https://img.shields.io/badge/OpenAI-Compatible%20API-4B5563?style=flat-square&logo=openai&logoColor=white" />
-  <img alt="Ollama" src="https://img.shields.io/badge/Ollama-1F2937?style=flat-square&logoColor=white" />
-  <img alt="LM Studio" src="https://img.shields.io/badge/LM%20Studio-2563EB?style=flat-square&logoColor=white" />
-  <img alt="vLLM" src="https://img.shields.io/badge/vLLM-7C3AED?style=flat-square&logoColor=white" />
-</p>
+Zotero Research Copilot 会把 AI 对话放在你正在使用的 Zotero 条目或阅读器旁边。它可以结合当前论文、选中文本、其他论文、图片和上传文件作为上下文；聊天记录、记忆和相关元数据保存在 Zotero 本地数据中。
 
-<p align="center">
-  <a href="#-功能特性">功能特性</a> &nbsp;|&nbsp;
-  <a href="#-安装">安装</a> &nbsp;|&nbsp;
-  <a href="#-快速开始">快速开始</a> &nbsp;|&nbsp;
-  <a href="#-配置选项">配置选项</a> &nbsp;|&nbsp;
-  <a href="#-许可证">许可证</a>
-</p>
+### 研究对话
 
----
+- 在 Zotero 文库条目面板、PDF 阅读器或 EPUB 阅读器侧边栏中对话。
+- 将当前论文作为上下文，并通过 **Add Text** 加入阅读器中的选中文本。
+- 通过输入框中的 `@` 引用其他论文，也可以从 Zotero 文库中选择一个集合批量加入论文上下文。
+- 对话中保留论文归属和证据引用信息；模型输出符合引用格式时，面板可以将引用关联到相关证据。
+- 新建、继续、重命名、置顶、删除、分支、编辑、重试和导出对话，也可以把回复或完整聊天记录保存为 Zotero 笔记。
+- 使用可编辑的快捷操作执行总结、解释、比较、翻译等常见任务。
 
-## ✨ 功能特性
+### PDF 与 EPUB 上下文
 
-### 💬 侧边栏 AI 对话
+- 从 PDF 和 EPUB 附件中提取并检索有界上下文，默认不会因为提问而发送整本书。
+- EPUB 有目录结构时保留章节层级和阅读顺序。
+- 对明确的章节或段落请求优先进行本地章节路由，再检索相关文本片段。
+- 将当前阅读器文档和额外引用论文分开管理，让回答来源更容易辨认。
 
-在 Zotero 的侧边栏中直接与 AI 对话，**文库视图**、**PDF 阅读器**和 **EPUB 阅读器**中均可使用。提问、获取摘要、继续追问，都可以放在同一个研究工作流里完成。EPUB 对话会根据 EPUB 2/3 出版目录结构在本地进行有界检索，无需额外调用一次模型来规划章节。
+### 文件与图片
 
-<p align="center">
-  <img src="../screenshots/chat_panel_cn.png" alt="侧边栏对话" width="800" />
-</p>
+- 通过粘贴、拖拽或上传加入文本、Markdown、代码、PDF 和图片文件。
+- 从当前阅读器截图，用于讨论论文中的图、表或公式。
+- 使用支持图片输入的多模态模型分析图片。
+- 兼容的 provider 流程可能支持显式图片生成，实际可用性取决于 provider、模型和接口能力。
 
-### 📄 论文感知上下文
+### 论文发现与导入
 
-在 PDF 或 EPUB 阅读器中选中文本，点击 **Add Text** 即可将选中内容添加到上下文区域。AI 在回答时会优先结合这些原文内容，而不是只给出泛化总结。
+**Discover** 标签可以搜索公开学术索引，并在写入 Zotero 前让你审阅结果：
 
-### 📝 划词翻译
+- OpenAlex
+- Semantic Scholar
+- Crossref
 
-可直接在 Zotero PDF 或 EPUB 阅读器的划词弹窗中翻译选中文本。AIdea 会自动识别当前阅读器中的文档格式，无需手动切换。划词翻译复用对话框中的 OAuth/API 模型列表和调用方式，但可以单独启用，并独立选择模型、源语言和目标语言。
+结果会跨来源去重，并展示题目、作者、年份、期刊/会议、DOI 和已知的 PDF 可用性。你可以选择需要导入的记录，目标位置可以是 **My Library**、已有集合或新建集合。导入前会检查 Zotero 中是否已有对应条目。若来源提供可用的开放获取 PDF 地址，插件会尝试导入附件，但不能保证每篇论文都有可下载 PDF。
 
-PDF 首次使用划词翻译时，AIdea 会在本地生成包含精简概述和专业术语摘要的冷启动缓存。EPUB 划词翻译则直接使用以选中文本为锚点的有界图书上下文，不会额外执行冷启动请求。译文可以直接添加回 Zotero 笔记。
+### 划词翻译
 
-<p align="center">
-  <img src="../screenshots/selection_translation_popup.png" alt="PDF 阅读器划词翻译弹窗" width="800" />
-</p>
+- 在 PDF 或 EPUB 阅读器中选中文本后翻译。
+- PDF 首次使用时可以在本地准备论文概览和术语缓存，后续选区复用该缓存。
+- EPUB 使用围绕选区建立的有界上下文。
+- 可以在设置中配置自动翻译、源语言、目标语言、模型，以及是否显示复制和添加到笔记按钮。
 
-<p align="center">
-  <img src="../screenshots/selection_translation_settings.png" alt="划词翻译设置" width="800" />
-</p>
+## 连接模型
 
-### ⚡ 快捷操作按钮
+可以从对话面板的 **Setting** 标签配置模型，也可以打开 **工具 → 附加组件 → Zotero Research Copilot → 设置**。部分 Zotero 构建版本会把它显示在 **编辑 → 设置** 中。
 
-支持一键触发常用任务，如 **总结**、**解释**、**翻译** 等。快捷按钮可自由添加、编辑、排序和删除，以适配不同研究习惯。
+### OAuth 提供商
 
-### 🖼️ 多模态支持
+当前设置界面提供以下 OAuth 卡片：
 
-可在消息中附加截图、图表、示意图等图片内容。支持拖拽、从剪贴板粘贴，以及直接从 PDF 中截图。
+| 提供商         | 授权方式                | 说明                                    |
+| -------------- | ----------------------- | --------------------------------------- |
+| ChatGPT        | OpenAI Codex OAuth      | 需要时可由插件安装或更新本地 CLI 环境。 |
+| Gemini         | Google Gemini CLI OAuth | 需要时可由插件安装或更新本地 CLI 环境。 |
+| GitHub Copilot | Device Code OAuth       | 不需要 CLI 环境安装步骤。               |
 
-### 🔐 OAuth 账号登录（无需 API Key）
+通常按以下顺序操作：
 
-使用已有账号通过 OAuth 登录，无需手动管理 API Key。AIdea 针对不同服务商提供各自的授权流程，以便更直接地开始使用。
+1. 对需要本地环境的 provider 点击 **安装/更新环境**。
+2. 点击 **OAuth 登录**，在浏览器中完成授权。
+3. 点击 **刷新模型**，选择需要在对话框中显示的模型。
 
-### 📄 全文翻译
+OAuth 令牌保存在本地。通过 CLI 凭据使用 OAuth 可能不属于 provider 明确支持的使用方式，继续前请阅读插件中的提示并自行确认服务商条款。
 
-可直接在 Zotero 中翻译整篇论文，并导出 **双语对照 PDF** 或 **单语言 PDF**。全文翻译流程支持模型选择、输出路径配置，以及在侧边栏中的一站式执行。
+### OpenAI 兼容 API
 
-<p align="center">
-  <img src="../screenshots/translate_panel_cn.png" alt="全文翻译面板" width="800" />
-</p>
+切换主连接模式为 **API 方式**，填写：
 
-示例结果：
+| 字段         | 是否必填   | 示例                                                       |
+| ------------ | ---------- | ---------------------------------------------------------- |
+| API Base URL | 是         | `https://api.openai.com/v1` 或 `http://127.0.0.1:11434/v1` |
+| Model        | 是         | `gpt-4.1-mini` 或 `llama3.1:8b`                            |
+| API Key      | 取决于服务 | 本地未鉴权端点可以留空。                                   |
+| 自定义请求头 | 可选       | 以 JSON 形式填写非标准认证或网关请求头。                   |
 
-<p align="center">
-  <img src="../screenshots/translate_example_architecture.png" alt="双语论文翻译示例" width="800" />
-</p>
+端点通常需要提供 `/models` 和 `/chat/completions` 所需的接口形状。兼容 API 不代表一定支持 provider 的专有能力。只要接口行为符合要求，Ollama、LM Studio、vLLM、OpenRouter、DeepSeek 兼容网关及其他本地或托管服务都有可能使用。
 
-<p align="center">
-  <img src="../screenshots/translate_example_formula.png" alt="公式论文翻译示例" width="800" />
-</p>
-
-<p align="center">
-  <img src="../screenshots/translate_example_table.png" alt="表格与正文翻译示例" width="800" />
-</p>
-
-### 🌐 多服务商支持
-
-| 服务商                | 认证方式                    | 额外安装                |
-| --------------------- | --------------------------- | ----------------------- |
-| **OpenAI（ChatGPT）** | Codex CLI OAuth             | Node.js（插件自动安装） |
-| **Google Gemini**     | 插件内 OAuth（PKCE）        | Node.js（插件自动安装） |
-| **GitHub Copilot**    | 插件内 OAuth（Device Code） | 无需额外安装            |
-
-### 📝 笔记导出
-
-可一键将 AI 回复保存为 Zotero 笔记。回复采用 Markdown 格式，并支持 LaTeX 数学公式渲染。
-
-### 💾 持久化聊天记录
-
-所有对话都保存在 Zotero 的本地数据库中，可以在多个会话之间切换，继续之前的讨论，并管理本地聊天历史。
-
-### 🧠 记忆系统
-
-AIdea 会在多轮对话中捕捉和回忆有价值的信息，以便后续回答更具连续性和上下文相关性。
-
-- **自动捕捉**：识别自然对话中的偏好、事实、决定和关键实体
-- **按文库隔离**：不同 Zotero 文库之间的记忆互不干扰
-- **智能去重**：通过 Jaccard 相似度避免重复记忆
-- **相关性排序检索**：结合词元重叠、子串匹配、时间衰减和重要性进行排序
-- **提示注入防护**：防止无关或恶意内容写入记忆
-- **完全本地**：所有记忆保存在 Zotero 的 SQLite 数据库中
-
-### 🎨 丰富的渲染效果
-
-- 完整的 **Markdown** 渲染，包括标题、列表、代码块和表格
-- **LaTeX** 数学公式支持（KaTeX）
-- 代码块 **语法高亮**
-- 流畅的 **流式输出**
-
-### 🌍 语言支持
-
-插件界面当前支持 **12 种界面语言**：**English**、**简体中文**、**繁體中文**、**日本語**、**한국어**、**Français**、**Deutsch**、**Español**、**Русский**、**Português**、**العربية** 和 **हिन्दी**。全文翻译保留独立的目标语言列表，不受界面语言列表限制。
-
----
-
-## 📦 安装
+## 安装
 
 ### 环境要求
 
-- **Zotero 7 及以上**
-- **Node.js**，OpenAI 和 Gemini 需要时可由插件自动安装
+- Zotero **10.0–10.x**
+- 一个已经配置好的 OAuth provider 或 OpenAI 兼容 API 端点
+- 某些 OAuth 流程需要 Node.js 本地 CLI 环境，插件会提供环境安装指引
+- 使用公开学术索引检索、托管模型和 OAuth 时需要网络连接
 
-### 安装插件
+### 安装或升级
 
-1. 从 [Releases](https://github.com/Visterainer/aidea-zotero/releases) 下载最新的 `AIdea-x.x.x.xpi`
-2. 在 Zotero 中进入 **工具 → 附加组件**
-3. 点击齿轮图标 ⚙️，选择 **从文件安装附加组件...**
-4. 选择下载的 `.xpi` 文件
-5. 重启 Zotero
+1. 从 [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases) 下载 `Zotero-Research-Copilot-<版本>.xpi`。
+2. 在 Zotero 中打开 **工具 → 附加组件**。
+3. 点击齿轮菜单，选择 **从文件安装附加组件…**。
+4. 选择 XPI 文件，按提示重启 Zotero。
+5. 打开 Zotero Research Copilot 的 **Setting**，配置模型后开始对话。
 
-### 升级
+直接在旧版本上安装新版 XPI 即可升级。聊天记录、记忆和设置保存在 Zotero 本地数据中；测试开发版前仍建议备份重要的 Zotero 数据。
 
-直接安装新版 `.xpi` 文件即可覆盖旧版本。聊天记录、记忆数据和本地设置都会保留。
+## 隐私与安全
 
----
+- 插件没有自建遥测服务或项目代理。
+- API 请求从 Zotero 直接发送到用户选择的 provider 或端点。
+- API Key、自定义请求头和 OAuth 凭据由用户在本地配置，不会硬编码进源代码或 XPI。
+- 聊天记录、记忆和本地附件元数据保存在 Zotero 本地数据库/数据目录。
+- 使用第三方模型时，选中的上下文、上传文件和图片会按照该 provider 的 API 与隐私政策发送。
+- 请不要在不了解服务商数据处理方式的情况下发送密码、令牌或敏感文档。
 
-## 🚀 快速开始
-
-### 1. 打开设置
-
-进入 **工具 → 附加组件 → AIdea → 设置**。在较旧的 Zotero 版本中，也可能出现在 **编辑 → 首选项 → AIdea**。
-
-### 2. 选择连接方式
-
-AIdea 提供两种连接方式，可以只用其中一种，也可以同时使用。
-
-#### 方式一：OAuth 登录
-
-在每个服务商卡片中，通常按以下顺序完成设置：
-
-> **① `安装/更新环境`** → **② `OAuth 登录`** → **③ `刷新模型`**
-
-| 按钮                | 功能说明                                                                                                               |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **`安装/更新环境`** | 安装并配置所需 CLI 工具及运行环境，包括 Node.js 和 npm。GitHub Copilot 无需此步骤。                                    |
-| **`OAuth 登录`**    | 启动服务商对应的授权流程。OpenAI 和 Gemini 会直接打开浏览器。GitHub Copilot 会显示 device code，并打开浏览器完成授权。 |
-| **`刷新模型`**      | 登录成功后加载当前服务商可用的模型列表。                                                                               |
-| **`删除授权`**      | 清除本地保存的 OAuth 令牌。                                                                                            |
-
-<p align="center">
-  <img src="../screenshots/settings_oauth_models_cn.png" alt="OAuth 提供商与模型管理" width="700" />
-</p>
-
-> 💡 **提示：** 每个服务商通常只需配置一次。登录状态保存在本地，重启 Zotero 后仍然有效。
-
-#### 方式二：OpenAI 兼容 API 端点
-
-AIdea 也支持连接任意 **OpenAI 兼容聊天端点**，适合本地、自托管或第三方兼容服务，例如 Ollama、LM Studio、vLLM、DeepSeek、OpenRouter 或 Groq。
-
-在 **设置** 中切换到 **API Mode**，填写以下字段：
-
-| 字段             | 必填 | 说明                                                                                |
-| ---------------- | ---- | ----------------------------------------------------------------------------------- |
-| **API Base URL** | 是   | 兼容端点的基础地址，例如 `https://api.openai.com/v1` 或 `http://localhost:11434/v1` |
-| **API Key**      | 否   | 仅当端点需要认证时填写                                                              |
-| **Model**        | 是   | 可手动输入模型 ID，或点击 **自动获取模型** 获取可用模型                             |
-
-<p align="center">
-  <img src="../screenshots/settings_api_cn.png" alt="API 模式自定义端点" width="700" />
-</p>
-
-> **注意：** API 模式面向兼容 `/chat/completions` 的端点，不保证对服务商特有能力的完全兼容。
-
-### 3. 开始对话
-
-- 在 **文库面板** 中选择条目，并使用右侧 AIdea 面板
-- 在 **PDF 或 EPUB 阅读器** 中打开文档，并使用阅读器侧边栏中的 AIdea 面板
-- 输入问题并点击 **发送**，或按 `Enter`
-
-### 4. 使用快捷操作
-
-点击 **总结**、**解释**、**翻译** 等快捷按钮即可一键执行常见操作。右键点击快捷按钮可编辑或删除。
-
----
-
-## ⚙️ 配置选项
-
-| 设置项              | 说明                                                     | 默认值           |
-| ------------------- | -------------------------------------------------------- | ---------------- |
-| **界面语言**        | 插件界面语言                                             | EN               |
-| **系统提示词**      | 模型的自定义指令                                         | 空               |
-| **显示 "Add Text"** | 在阅读器选择菜单中显示 Add Text                          | 开启             |
-| **划词翻译**        | 在阅读器划词弹窗中翻译选中文本，并自动使用有界文档上下文 | 开启             |
-| **划词翻译模型**    | 用于阅读器划词翻译的独立模型                             | 默认使用可用模型 |
-| **显示所有模型**    | 显示全部模型而非精选模型                                 | 关闭             |
-| **标签栏**          | 显示或隐藏标签导航栏                                     | 隐藏             |
-
----
-
-## 🔒 隐私与安全
-
-- OAuth 令牌**仅保存在本地**
-- API 请求**直接发送**到所选服务商或你配置的端点
-- AIdea **不收集遥测或用户数据**
-- 聊天记录与记忆保存在 Zotero 的本地数据库中
-- 源码可在 [GitHub](https://github.com/Visterainer/aidea-zotero) 公开查看
-
----
-
-## 🗺️ 未来计划
-
-计划中的方向包括：
-
-- **一键生成框架图**：从论文内容中生成结构化可视图
-
-> 💡 欢迎通过 [Issue](https://github.com/Visterainer/aidea-zotero/issues) 提出需求建议。
-
----
-
-## 🛠️ 开发
+## 开发
 
 ```bash
-# 安装依赖
 npm install
-
-# 开发模式
-npm start
-
-# 构建生产版 XPI
-npm run build
-
-# 运行测试
-npm run test:unit
+npm run build       # TypeScript 检查并构建官方生产版 XPI
+npm run test:unit   # 运行不需要 Zotero UI 的单元测试
+npm start           # 启动开发服务和测试 profile 流程
 ```
 
----
+构建目录和 XPI 已被 Git 忽略。推送新的 `v*` 标签后，GitHub Actions 会生成版本 Release 并上传 XPI；`update.json` 会维护在 `release` 预发布中。
 
-## 📄 许可证
+更多文档：
 
-[AGPL-3.0-or-later](../../LICENSE)
+- [Customization notes](../../CUSTOMIZATION.md)
+- [English architecture guide](../ARCHITECTURE_EN.md)
+- [中文架构说明](../ARCHITECTURE_CN.md)
+- [Third-party notices](../../THIRD_PARTY_NOTICES.md)
 
-本项目基于 [llm-for-zotero](https://github.com/yilewang/llm-for-zotero) 演进而来。完整第三方声明见 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。
+## 许可证与来源
 
----
-
-## ⭐ Star History
-
-<a href="https://star-history.com/#Visterainer/aidea-zotero&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Visterainer/aidea-zotero&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Visterainer/aidea-zotero&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Visterainer/aidea-zotero&type=Date" />
- </picture>
-</a>
-
----
-
-<p align="center">
-  作者：<strong>zhile</strong>
-</p>
+Zotero Research Copilot 使用 [AGPL-3.0-or-later](../../LICENSE) 发布。项目是基于开源工作的独立构建版本，其中包括 [llm-for-zotero](https://github.com/yilewang/llm-for-zotero) 和 AIdea 项目的部分源代码。完整署名与附加许可证见 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。

@@ -1,56 +1,59 @@
-# Providers and Authentication zh-CN
+# 提供商与授权
 
-AIdea 支持多个 AI 服务商，并使用 OAuth 登录流程，让用户直接用已有账号完成授权。
+Zotero Research Copilot 支持提供商专用的 OAuth 流程，也支持通用的 OpenAI 兼容 API。请根据你的账号或接口选择连接方式。
 
-## 总览
+## OAuth 提供商
 
-| 服务商           | 登录方式                       | 是否需要环境安装 | 说明                         |
-| ---------------- | ------------------------------ | ---------------- | ---------------------------- |
-| OpenAI (ChatGPT) | 通过 Codex CLI 进行 OAuth 登录 | 是               | 依赖本地环境配置             |
-| Google Gemini    | 插件内 OAuth (PKCE)            | 是               | 依赖本地环境配置             |
-| Qwen             | Device Code                    | 否               | 浏览器授权，带验证码复制流程 |
-| GitHub Copilot   | Device Code                    | 否               | 浏览器授权，带验证码复制流程 |
+| 提供商         | 授权方式                | 本地要求                                              |
+| -------------- | ----------------------- | ----------------------------------------------------- |
+| ChatGPT        | OpenAI Codex OAuth      | 需要时插件可以安装或更新 Node.js 与 Codex CLI 环境。  |
+| Gemini         | Google Gemini CLI OAuth | 需要时插件可以安装或更新 Node.js 与 Gemini CLI 环境。 |
+| GitHub Copilot | Device Code OAuth       | Copilot 流程不需要 CLI 环境安装步骤。                 |
 
-## 推荐操作顺序
+### 常规设置流程
 
-在每个服务商卡片上按这个顺序执行：
+1. 对需要本地 CLI 环境的 provider 点击 **安装/更新环境**。
+2. 点击 **OAuth 登录**。
+3. 在浏览器中完成授权；如果显示 device code，按提示完成设备授权。
+4. 点击 **刷新模型**。
+5. 勾选需要显示在 Discussion 以及其他模型功能中的模型。
 
-1. `Install/Update Env`
-2. `OAuth Login`
-3. `Refresh Models`
+OAuth 凭据保存在本地。通过 CLI 凭据使用 OAuth 可能不属于服务商明确认可的账号使用方式；继续前请阅读插件里的授权提示和服务商条款。
 
-对于 Qwen 和 GitHub Copilot，可以直接从第 2 步开始。
+环境更新器可以按照设置检查本地 OAuth 环境，并根据更新模式显示通知。它不会把凭据上传到项目仓库。
 
-## 各个按钮的作用
+## OpenAI 兼容 API
 
-### Install/Update Env
+API 方式可以配置一个或多个本地模型配置。每个配置可以包含：
 
-安装或更新该服务商所需的本地运行时与 CLI 依赖。这个步骤主要用于 OpenAI 和 Gemini。
+- 提供商标签；
+- API Base URL；
+- API Key；
+- JSON 格式的自定义 HTTP 请求头；
+- 从 `/models` 获取或手动添加的模型 ID。
 
-### OAuth Login
+示例：
 
-启动服务商登录流程。
+```text
+API Base URL: https://api.example.com/v1
+Model: model-id
+API Key: 根据服务需要填写
+```
 
-- OpenAI 和 Gemini 会打开浏览器完成授权。
-- Qwen 和 GitHub Copilot 会显示授权码，自动复制并引导你在浏览器中完成登录。
+端点通常需要支持：
 
-### Refresh Models
+- `GET /models`，用于自动发现模型；
+- `POST /chat/completions`，用于标准流式对话；
+- 使用多模态或图片生成时所需的兼容接口。
 
-读取当前账号可用的模型列表。如果已经登录成功但看不到模型，先尝试这个按钮。
+只要暴露了预期的 OpenAI 兼容接口，Ollama、LM Studio、vLLM 等本地服务以及托管网关都有可能使用。某些网关可能需要自定义请求头或特定模型 ID。
 
-### Remove Auth
+## 模型选择
 
-清除该服务商在本地保存的认证状态。
+设置界面可以获取模型列表、测试模型可用性、选择显示在 Discussion 模型菜单中的模型，并为划词翻译等功能保存独立的模型选择。不同模型的推理、图片输入、图片生成和流式能力可能不同。
 
-## 安全说明
+## 数据处理
 
-- 令牌保存在本地
-- API 通信直接发生在用户与服务商之间
-- 插件并不依赖单独的 AIdea 中转后端来转发模型请求
+插件没有项目自建的 API 代理或遥测服务。请求从 Zotero 直接发送到用户选择的 provider 或端点。provider 会收到请求中包含的上下文和附件，发送敏感研究材料前请先查看其隐私和数据保留政策。
 
-## 故障排查
-
-- 模型列表为空时，先点 `Refresh Models`
-- 登录状态异常时，先 `Remove Auth` 再重新登录
-- OpenAI 或 Gemini 配置失败时，重新执行 `Install/Update Env`
-- 如果服务商账号本身没有某个模型的访问权限，插件也无法显示它
+API Key、自定义请求头和 OAuth 凭据应在安装后本地配置，它们不会写入源代码或 Release XPI。

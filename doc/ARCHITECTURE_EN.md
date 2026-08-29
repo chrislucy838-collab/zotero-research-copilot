@@ -47,15 +47,15 @@
 
 ## 1. Project Overview
 
-| Property           | Value                                   |
-| ------------------ | --------------------------------------- |
-| Name               | `aidea-for-zotero` (addonName: `AIdea`) |
-| Plugin ID          | `aidea@visterainer`                     |
-| Pref Prefix        | `extensions.zotero.aidea`               |
-| Target Environment | Zotero 7 (Firefox 115 ESR)              |
-| Language           | TypeScript → esbuild bundle → JS        |
-| Styling            | Vanilla CSS (no framework)              |
-| License            | AGPL-3.0-or-later                       |
+| Property           | Value                                                            |
+| ------------------ | ---------------------------------------------------------------- |
+| Name               | `zotero-research-copilot` (addonName: `Zotero Research Copilot`) |
+| Plugin ID          | `zotero-research-copilot@local`                                  |
+| Pref Prefix        | `extensions.zotero.zoteroResearchCopilot`                        |
+| Target Environment | Zotero 10.x                                                      |
+| Language           | TypeScript → esbuild bundle → JS                                 |
+| Styling            | Vanilla CSS (no framework)                                       |
+| License            | AGPL-3.0-or-later                                                |
 
 This plugin provides an **AI chat panel** in Zotero's PDF Reader / Library sidebar, supporting multiple models, multi-turn conversations, file uploads, screenshots, paper context references, and more.
 
@@ -64,9 +64,9 @@ This plugin provides an **AI chat panel** in Zotero's PDF Reader / Library sideb
 ## 2. Directory Structure
 
 ```
-Zotero_LLM_Plugin/
+zotero-research-copilot/
 ├── addon/                          # Static plugin resources (packed into XPI)
-│   ├── bootstrap.js                # Zotero 7 bootstrap entry
+│   ├── bootstrap.js                # Zotero bootstrap entry
 │   ├── manifest.json               # Plugin manifest
 │   ├── prefs.js                    # Default preference values
 │   ├── content/
@@ -107,15 +107,15 @@ npm run test:unit    # Run unit tests
 
 Defined in `zotero-plugin.config.ts`:
 
-1. **esbuild** bundles `src/index.ts` into `addon/content/scripts/aidea.js`
+1. **esbuild** bundles `src/index.ts` into `addon/content/scripts/zoteroResearchCopilot.js`
    - target: `firefox115`
    - bundle: `true`
-2. **zotero-plugin-scaffold** packs all `addon/` resources + bundled JS → `.scaffold/build/zotero-ai.xpi`
+2. **zotero-plugin-scaffold** packs all `addon/` resources + bundled JS → `.scaffold/build/Zotero-Research-Copilot-<version>.xpi`
 3. **tsc --noEmit** performs type checking
 
 ### 3.3 Deployment
 
-Build artifact: `.scaffold/build/zotero-ai.xpi`
+Build artifact: `.scaffold/build/Zotero-Research-Copilot-<version>.xpi`
 Install manually via Zotero → Tools → Add-ons.
 
 ---
@@ -124,11 +124,11 @@ Install manually via Zotero → Tools → Add-ons.
 
 ### 4.1 Entry Files
 
-| File           | Responsibility                                |
-| -------------- | --------------------------------------------- |
-| `src/index.ts` | Registers global `Zotero.AIdea` instance      |
-| `src/addon.ts` | `Addon` class, holds `data.initialized` state |
-| `src/hooks.ts` | Zotero plugin lifecycle hooks                 |
+| File           | Responsibility                                           |
+| -------------- | -------------------------------------------------------- |
+| `src/index.ts` | Registers global `Zotero.ZoteroResearchCopilot` instance |
+| `src/addon.ts` | `Addon` class, holds `data.initialized` state            |
+| `src/hooks.ts` | Zotero plugin lifecycle hooks                            |
 
 ### 4.2 Hook Flow
 
@@ -136,7 +136,6 @@ Install manually via Zotero → Tools → Add-ons.
 onStartup
   ├── Zotero.initializationPromise / unlockPromise / uiReadyPromise
   ├── initLocale()                   ← i18n
-  ├── ensureZoteroProxyFromSystem()  ← Auto-detect system proxy
   ├── initChatStore()                ← Initialize chat DB tables
   ├── initMemoryStore()              ← Initialize memory DB tables
   ├── initAttachmentRefStore()       ← Initialize attachment ref counting
@@ -698,7 +697,7 @@ Manages the plugin settings interface, including:
 - Clear all chat history (`clearAllChatHistory`)
 - Refresh all sidebar shortcuts (`refreshAllSidebarShortcuts`)
 
-Preference key prefix: `extensions.zotero.aidea.*`
+Current preference key prefix: `extensions.zotero.zoteroResearchCopilot.*`. Historical `aidea` keys may remain for migration compatibility.
 
 ---
 
@@ -754,7 +753,7 @@ Provides cross-session persistent memory capability for the AI.
 ### 26.1 Provider Types
 
 ```typescript
-type OAuthProviderId = "openai-codex" | "google-gemini-cli";
+type OAuthProviderId = "openai-codex" | "google-gemini-cli" | "github-copilot";
 ```
 
 ### 26.2 Key Functions
@@ -816,7 +815,7 @@ Returns reasoning configuration based on regex matching of model names. Supporte
 - Up to 10 (`MAX_EDITABLE_SHORTCUTS`)
 - Supports add/delete/edit/drag-reorder/context menu
 - Edit dialog via `openShortcutEditDialog()`
-- Persisted to preference `extensions.zotero.aidea.customShortcuts`
+- Persisted to preference `extensions.zotero.zoteroResearchCopilot.customShortcuts`
 
 ---
 
@@ -837,7 +836,7 @@ Returns reasoning configuration based on regex matching of model names. Supporte
 
 **Path**: `src/modules/contextPanel/i18n.ts` (5KB)
 
-Supports 12 UI languages: `en-US`, `zh-CN`, `zh-TW`, `ja-JP`, `ko-KR`, `fr-FR`, `de-DE`, `es-ES`, `ru-RU`, `pt-BR`, `ar-SA`, and `hi-IN`. Switchable via preference `extensions.zotero.aidea.uiLanguage`.
+Supports 12 UI languages: `en-US`, `zh-CN`, `zh-TW`, `ja-JP`, `ko-KR`, `fr-FR`, `de-DE`, `es-ES`, `ru-RU`, `pt-BR`, `ar-SA`, and `hi-IN`. Switchable via preference `extensions.zotero.zoteroResearchCopilot.uiLanguage`.
 
 Contains ~50 translation keys covering panel titles, button labels, status messages, model selection hints, etc.
 

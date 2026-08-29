@@ -47,15 +47,15 @@
 
 ## 1. 项目概览
 
-| 属性     | 值                                      |
-| -------- | --------------------------------------- |
-| 名称     | `aidea-for-zotero` (addonName: `AIdea`) |
-| 插件 ID  | `aidea@visterainer`                     |
-| 偏好前缀 | `extensions.zotero.aidea`               |
-| 目标环境 | Zotero 7 (Firefox 115 ESR)              |
-| 语言     | TypeScript → esbuild 打包 → JS          |
-| 样式     | 原生 CSS（无框架）                      |
-| 许可证   | AGPL-3.0-or-later                       |
+| 属性     | 值                                                                |
+| -------- | ----------------------------------------------------------------- |
+| 名称     | `zotero-research-copilot`（addonName: `Zotero Research Copilot`） |
+| 插件 ID  | `zotero-research-copilot@local`                                   |
+| 偏好前缀 | `extensions.zotero.zoteroResearchCopilot`                         |
+| 目标环境 | Zotero 10.x                                                       |
+| 语言     | TypeScript → esbuild 打包 → JS                                    |
+| 样式     | 原生 CSS（无框架）                                                |
+| 许可证   | AGPL-3.0-or-later                                                 |
 
 本插件在 Zotero 的 PDF 阅读器 / 文库侧边栏中提供一个 **AI 聊天面板**，支持多模型、多轮对话、文件上传、截图、论文上下文引用等功能。
 
@@ -64,9 +64,9 @@
 ## 2. 目录结构
 
 ```
-Zotero_LLM_Plugin/
+zotero-research-copilot/
 ├── addon/                          # 插件静态资源（直接打包进 XPI）
-│   ├── bootstrap.js                # Zotero 7 bootstrap 入口
+│   ├── bootstrap.js                # Zotero bootstrap 入口
 │   ├── manifest.json               # 插件清单
 │   ├── prefs.js                    # 默认偏好值
 │   ├── content/
@@ -107,15 +107,15 @@ npm run test:unit    # 运行单元测试
 
 定义在 `zotero-plugin.config.ts`：
 
-1. **esbuild** 将 `src/index.ts` 打包为 `addon/content/scripts/aidea.js`
+1. **esbuild** 将 `src/index.ts` 打包为 `addon/content/scripts/zoteroResearchCopilot.js`
    - target: `firefox115`
    - bundle: `true`
-2. **zotero-plugin-scaffold** 将 `addon/` 所有资源 + 打包后 JS → `.scaffold/build/zotero-ai.xpi`
+2. **zotero-plugin-scaffold** 将 `addon/` 所有资源 + 打包后 JS → `.scaffold/build/Zotero-Research-Copilot-<version>.xpi`
 3. **tsc --noEmit** 进行类型检查
 
 ### 3.3 部署
 
-构建产物：`.scaffold/build/zotero-ai.xpi`
+构建产物：`.scaffold/build/Zotero-Research-Copilot-<version>.xpi`
 手动拷贝到桌面或直接在 Zotero → Tools → Add-ons 安装。
 
 ---
@@ -124,11 +124,11 @@ npm run test:unit    # 运行单元测试
 
 ### 4.1 入口文件
 
-| 文件           | 职责                                     |
-| -------------- | ---------------------------------------- |
-| `src/index.ts` | 注册全局 `Zotero.AIdea` 实例             |
-| `src/addon.ts` | `Addon` 类，持有 `data.initialized` 状态 |
-| `src/hooks.ts` | Zotero 插件生命周期钩子                  |
+| 文件           | 职责                                         |
+| -------------- | -------------------------------------------- |
+| `src/index.ts` | 注册全局 `Zotero.ZoteroResearchCopilot` 实例 |
+| `src/addon.ts` | `Addon` 类，持有 `data.initialized` 状态     |
+| `src/hooks.ts` | Zotero 插件生命周期钩子                      |
 
 ### 4.2 钩子流程
 
@@ -137,7 +137,6 @@ onStartup
   ├── Zotero.initializationPromise / unlockPromise / uiReadyPromise
   ├── runLegacyMigrations()          ← 数据库迁移
   ├── initLocale()                   ← 国际化
-  ├── ensureZoteroProxyFromSystem()  ← 自动检测系统代理
   ├── initChatStore()                ← 初始化聊天数据库表
   ├── initMemoryStore()              ← 初始化记忆数据库表
   ├── initAttachmentRefStore()       ← 初始化附件引用计数
@@ -699,7 +698,7 @@ responseMenuTarget / promptMenuTarget;
 - 清除所有聊天记录（`clearAllChatHistory`）
 - 刷新所有侧边栏快捷指令（`refreshAllSidebarShortcuts`）
 
-偏好键前缀：`extensions.zotero.aidea.*`
+当前偏好键前缀：`extensions.zotero.zoteroResearchCopilot.*`。为兼容历史数据，部分旧版 `aidea` 键可能仍会保留。
 
 ---
 
@@ -755,7 +754,7 @@ responseMenuTarget / promptMenuTarget;
 ### 26.1 Provider 类型
 
 ```typescript
-type OAuthProviderId = "openai-codex" | "google-gemini-cli";
+type OAuthProviderId = "openai-codex" | "google-gemini-cli" | "github-copilot";
 ```
 
 ### 26.2 关键函数
@@ -817,7 +816,7 @@ type OAuthProviderId = "openai-codex" | "google-gemini-cli";
 - 最多 10 个（`MAX_EDITABLE_SHORTCUTS`）
 - 支持增/删/改/拖拽排序/右键菜单
 - 通过 `openShortcutEditDialog()` 弹出编辑对话框
-- 持久化到偏好 `extensions.zotero.aidea.customShortcuts`
+- 持久化到偏好 `extensions.zotero.zoteroResearchCopilot.customShortcuts`
 
 ---
 
@@ -838,7 +837,7 @@ type OAuthProviderId = "openai-codex" | "google-gemini-cli";
 
 **路径**: `src/modules/contextPanel/i18n.ts` (5KB)
 
-支持 12 种 UI 语言：`en-US`、`zh-CN`、`zh-TW`、`ja-JP`、`ko-KR`、`fr-FR`、`de-DE`、`es-ES`、`ru-RU`、`pt-BR`、`ar-SA`、`hi-IN`。通过偏好 `extensions.zotero.aidea.uiLanguage` 切换。
+支持 12 种 UI 语言：`en-US`、`zh-CN`、`zh-TW`、`ja-JP`、`ko-KR`、`fr-FR`、`de-DE`、`es-ES`、`ru-RU`、`pt-BR`、`ar-SA`、`hi-IN`。通过偏好 `extensions.zotero.zoteroResearchCopilot.uiLanguage` 切换。
 
 包含 ~50 个翻译键，覆盖面板标题、按钮文字、状态提示、模型选择提示等。
 
