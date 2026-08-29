@@ -1,6 +1,6 @@
 # AIdea Wiki Draft
 
-This folder contains draft pages for the GitHub Wiki of `liliMozi/openhanako`.
+This folder contains draft pages for the GitHub Wiki of `chrislucy838-collab/zotero-research-copilot`.
 
 Suggested upload order:
 

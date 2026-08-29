@@ -3,7 +3,7 @@
   "name": "__addonName__",
   "version": "__buildVersion__",
   "description": "__description__",
-  "homepage_url": "https://github.com/liliMozi/openhanako#readme",
+  "homepage_url": "https://github.com/chrislucy838-collab/zotero-research-copilot#readme",
   "author": "Zotero Research Copilot contributors; based on AIdea by zhile",
   "icons": {
     "48": "content/icons/icon-48.png",
@@ -12,7 +12,7 @@
   "applications": {
     "zotero": {
       "id": "__addonID__",
-      "update_url": "https://github.com/liliMozi/openhanako/releases/latest/download/update.json",
+      "update_url": "https://github.com/chrislucy838-collab/zotero-research-copilot/releases/download/release/update.json",
       "strict_min_version": "10.0",
       "strict_max_version": "10.99.99"
     }

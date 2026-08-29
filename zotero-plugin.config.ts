@@ -8,8 +8,8 @@ export default defineConfig({
   id: pkg.config.addonID,
   namespace: pkg.config.addonRef,
   xpiName: `Zotero-Research-Copilot-${pkg.version}`,
-  updateURL: "https://github.com/liliMozi/openhanako/releases/latest/download/update.json",
-  xpiDownloadLink: "https://github.com/liliMozi/openhanako/releases/latest/download/Zotero-Research-Copilot-{{version}}.xpi",
+  updateURL: "https://github.com/chrislucy838-collab/zotero-research-copilot/releases/download/release/update.json",
+  xpiDownloadLink: "https://github.com/chrislucy838-collab/zotero-research-copilot/releases/download/v{{version}}/Zotero-Research-Copilot-{{version}}.xpi",
 
   build: {
     assets: [

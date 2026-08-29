@@ -1,7 +1,7 @@
 {
   "name": "zotero-research-copilot",
   "type": "module",
-  "version": "0.10.5",
+  "version": "0.10.6",
   "description": "A local-first AI research assistant for Zotero using an OpenAI-compatible gateway",
   "config": {
     "addonName": "Zotero Research Copilot",
@@ -12,13 +12,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/liliMozi/openhanako.git"
+    "url": "https://github.com/chrislucy838-collab/zotero-research-copilot.git"
   },
   "author": "Zotero Research Copilot contributors; based on AIdea by zhile",
   "bugs": {
-    "url": "https://github.com/liliMozi/openhanako/issues"
+    "url": "https://github.com/chrislucy838-collab/zotero-research-copilot/issues"
   },
-  "homepage": "https://github.com/liliMozi/openhanako#readme",
+  "homepage": "https://github.com/chrislucy838-collab/zotero-research-copilot#readme",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "start": "zotero-plugin serve",
