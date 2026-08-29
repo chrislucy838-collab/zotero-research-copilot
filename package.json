@@ -1,7 +1,7 @@
 {
   "name": "zotero-research-copilot",
   "type": "module",
-  "version": "0.10.4",
+  "version": "0.10.5",
   "description": "A local-first AI research assistant for Zotero using an OpenAI-compatible gateway",
   "config": {
     "addonName": "Zotero Research Copilot",
