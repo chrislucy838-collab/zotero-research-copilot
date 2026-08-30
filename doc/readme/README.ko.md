@@ -16,27 +16,25 @@
 - **Discover** 탭에서 OpenAlex, Semantic Scholar, Crossref를 검색하고 확인 후 중복을 검사하여 Zotero에 가져오기.
 - 파일 붙여넣기·드래그·업로드 및 리더에서 그림/표/수식 영역 캡처.
 - PDF/EPUB 선택 영역 번역. 모델, 언어, 자동 실행, 복사/노트 작업을 설정 가능.
-- ChatGPT/Codex, Gemini CLI, GitHub Copilot OAuth 및 OpenAI 호환 API 지원.
+- OpenAI 호환 API를 통해 호스팅, 로컬 또는 자체 호스팅 모델에 연결.
 - 대화 기록과 메모리를 Zotero 로컬 데이터에 저장하고 Markdown, 표, 이미지, LaTeX 표시.
 
 ## 모델 연결
 
-**Tools → Add-ons → Zotero Research Copilot → Settings**를 엽니다. OAuth provider 또는 OpenAI 호환 API를 사용할 수 있습니다. OAuth의 일반적인 순서는 **Install/Update Env → OAuth Login → Refresh Models**입니다. API 모드에서는 API Base URL과 Model이 필수이며 API Key와 Custom Headers는 필요할 때 입력합니다.
-
-예: `https://api.openai.com/v1`, `http://127.0.0.1:11434/v1`. 보통 `/models`와 `/chat/completions` 형태를 제공해야 합니다.
+**Tools → Add-ons → Zotero Research Copilot → Settings**를 열고 API Base URL과 Model을 입력합니다. API Key와 Custom Headers는 필요할 때 입력합니다. 예: `https://api.openai.com/v1`, `http://127.0.0.1:11434/v1`. 보통 `/models`와 `/chat/completions` 형태를 제공해야 합니다.
 
 ## 설치
 
 1. [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases)에서 `Zotero-Research-Copilot-<version>.xpi`를 다운로드합니다.
 2. Zotero에서 **Tools → Add-ons → gear → Install Add-on From File…**을 엽니다.
 3. XPI를 선택하고 필요하면 Zotero를 재시작합니다.
-4. Zotero Research Copilot Settings에서 모델을 설정합니다.
+4. Zotero Research Copilot Settings에서 API를 설정합니다.
 
 지원 버전은 Zotero **10.0–10.x**입니다. 새 XPI를 기존 설치 위에 설치하여 업그레이드할 수 있습니다.
 
 ## 개인정보 및 라이선스
 
-API 요청은 Zotero에서 선택한 provider 또는 엔드포인트로 직접 전송됩니다. 플러그인 자체의 텔레메트리나 프록시는 없습니다. 키, OAuth 자격 증명, 사용자 지정 헤더는 소스나 XPI에 하드코딩되지 않습니다. 제3자 모델로 전송되는 컨텍스트와 파일은 해당 서비스의 정책을 따릅니다.
+API 요청은 Zotero에서 설정한 엔드포인트로 직접 전송됩니다. 플러그인 자체의 텔레메트리나 프록시는 없습니다. 키와 사용자 지정 헤더는 소스나 XPI에 하드코딩되지 않습니다. 제3자 모델로 전송되는 컨텍스트와 파일은 해당 서비스의 정책을 따릅니다.
 
 라이선스는 [AGPL-3.0-or-later](../../LICENSE)입니다. 자세한 출처 표시는 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)를 확인하세요.
 

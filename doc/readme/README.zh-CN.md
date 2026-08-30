@@ -73,23 +73,7 @@ Zotero Research Copilot 会把 AI 对话放在你正在使用的 Zotero 条目�
 
 可以从对话面板的 **Setting** 标签配置模型，也可以打开 **工具 → 附加组件 → Zotero Research Copilot → 设置**。部分 Zotero 构建版本会把它显示在 **编辑 → 设置** 中。
 
-### OAuth 提供商
-
-当前设置界面提供以下 OAuth 卡片：
-
-| 提供商         | 授权方式                | 说明                                    |
-| -------------- | ----------------------- | --------------------------------------- |
-| ChatGPT        | OpenAI Codex OAuth      | 需要时可由插件安装或更新本地 CLI 环境。 |
-| Gemini         | Google Gemini CLI OAuth | 需要时可由插件安装或更新本地 CLI 环境。 |
-| GitHub Copilot | Device Code OAuth       | 不需要 CLI 环境安装步骤。               |
-
-通常按以下顺序操作：
-
-1. 对需要本地环境的 provider 点击 **安装/更新环境**。
-2. 点击 **OAuth 登录**，在浏览器中完成授权。
-3. 点击 **刷新模型**，选择需要在对话框中显示的模型。
-
-OAuth 令牌保存在本地。通过 CLI 凭据使用 OAuth 可能不属于 provider 明确支持的使用方式，继续前请阅读插件中的提示并自行确认服务商条款。
+当前支持的连接方式是 **OpenAI 兼容 API**。
 
 ### OpenAI 兼容 API
 
@@ -109,9 +93,8 @@ OAuth 令牌保存在本地。通过 CLI 凭据使用 OAuth 可能不属于 prov
 ### 环境要求
 
 - Zotero **10.0–10.x**
-- 一个已经配置好的 OAuth provider 或 OpenAI 兼容 API 端点
-- 某些 OAuth 流程需要 Node.js 本地 CLI 环境，插件会提供环境安装指引
-- 使用公开学术索引检索、托管模型和 OAuth 时需要网络连接
+- 一个已经配置好的 OpenAI 兼容 API 端点
+- 使用公开学术索引检索和托管模型时需要网络连接
 
 ### 安装或升级
 
@@ -119,36 +102,29 @@ OAuth 令牌保存在本地。通过 CLI 凭据使用 OAuth 可能不属于 prov
 2. 在 Zotero 中打开 **工具 → 附加组件**。
 3. 点击齿轮菜单，选择 **从文件安装附加组件…**。
 4. 选择 XPI 文件，按提示重启 Zotero。
-5. 打开 Zotero Research Copilot 的 **Setting**，配置模型后开始对话。
+5. 打开 Zotero Research Copilot 的 **Setting**，配置 API 后开始对话。
 
 直接在旧版本上安装新版 XPI 即可升级。聊天记录、记忆和设置保存在 Zotero 本地数据中；测试开发版前仍建议备份重要的 Zotero 数据。
 
 ## 隐私与安全
 
 - 插件没有自建遥测服务或项目代理。
-- API 请求从 Zotero 直接发送到用户选择的 provider 或端点。
-- API Key、自定义请求头和 OAuth 凭据由用户在本地配置，不会硬编码进源代码或 XPI。
+- API 请求直接从 Zotero 发送到你配置的端点。
+- API Key 和自定义请求头由用户在本地配置，不会硬编码进源代码或 XPI。
 - 聊天记录、记忆和本地附件元数据保存在 Zotero 本地数据库/数据目录。
-- 使用第三方模型时，选中的上下文、上传文件和图片会按照该 provider 的 API 与隐私政策发送。
+- 使用第三方模型时，选中的上下文、上传文件和图片会按照该服务的 API 与隐私政策发送。
 - 请不要在不了解服务商数据处理方式的情况下发送密码、令牌或敏感文档。
 
 ## 开发
 
 ```bash
 npm install
-npm run build       # TypeScript 检查并构建官方生产版 XPI
-npm run test:unit   # 运行不需要 Zotero UI 的单元测试
-npm start           # 启动开发服务和测试 profile 流程
+npm run build
+npm run test:unit
+npm start
 ```
 
 构建目录和 XPI 已被 Git 忽略。推送新的 `v*` 标签后，GitHub Actions 会生成版本 Release 并上传 XPI；`update.json` 会维护在 `release` 预发布中。
-
-更多文档：
-
-- [Customization notes](../../CUSTOMIZATION.md)
-- [English architecture guide](../ARCHITECTURE_EN.md)
-- [中文架构说明](../ARCHITECTURE_CN.md)
-- [Third-party notices](../../THIRD_PARTY_NOTICES.md)
 
 ## 许可证与来源
 

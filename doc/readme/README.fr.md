@@ -16,12 +16,12 @@
 - Onglet **Discover** pour rechercher OpenAlex, Semantic Scholar et Crossref, dédupliquer les résultats et importer les références après vérification.
 - Collage, glisser-déposer, téléversement de fichiers et capture d'une zone du lecteur pour discuter de figures, tableaux ou formules.
 - Traduction du texte sélectionné dans les lecteurs PDF/EPUB avec modèle, langues et actions configurables.
-- OAuth ChatGPT/Codex, Gemini CLI et GitHub Copilot, ainsi que les API compatibles OpenAI.
+- Connexion à des modèles hébergés, locaux ou auto-hébergés via une API compatible OpenAI.
 - Historique et mémoire conservés dans les données locales de Zotero, avec rendu Markdown, tableaux, images et LaTeX.
 
 ## Connexion à un modèle
 
-Ouvrez **Tools → Add-ons → Zotero Research Copilot → Settings**. Pour OAuth, l'ordre habituel est **Install/Update Env → OAuth Login → Refresh Models**. En mode API, renseignez API Base URL et Model ; API Key et Custom Headers sont facultatifs selon le service.
+Ouvrez **Tools → Add-ons → Zotero Research Copilot → Settings**. En mode API, renseignez API Base URL et Model ; API Key et Custom Headers sont facultatifs selon le service.
 
 Exemples : `https://api.openai.com/v1` et `http://127.0.0.1:11434/v1`. Le service doit généralement fournir les formes d'API `/models` et `/chat/completions`.
 
@@ -30,13 +30,13 @@ Exemples : `https://api.openai.com/v1` et `http://127.0.0.1:11434/v1`. Le servic
 1. Téléchargez `Zotero-Research-Copilot-<version>.xpi` depuis [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases).
 2. Dans Zotero, ouvrez **Tools → Add-ons → gear → Install Add-on From File…**.
 3. Sélectionnez le XPI et redémarrez Zotero si nécessaire.
-4. Configurez le modèle dans les Settings de Zotero Research Copilot.
+4. Configurez l'API dans les Settings de Zotero Research Copilot.
 
 La version prise en charge est Zotero **10.0–10.x**. Un nouveau XPI peut être installé par-dessus l'ancien.
 
 ## Confidentialité et licence
 
-Les requêtes sont envoyées directement de Zotero au fournisseur ou à l'endpoint choisi. Le plugin n'ajoute ni télémétrie ni proxy propriétaire. Les clés et identifiants OAuth ne sont pas intégrés au code ou au XPI. Les données envoyées à un modèle tiers suivent la politique de ce service.
+Les requêtes sont envoyées directement de Zotero à l'endpoint configuré. Le plugin n'ajoute ni télémétrie ni proxy propriétaire. Les clés et en-têtes personnalisés ne sont pas intégrés au code ou au XPI. Les données envoyées à un modèle tiers suivent la politique de ce service.
 
 Le projet est distribué sous [AGPL-3.0-or-later](../../LICENSE). Consultez [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) pour les attributions complètes.
 

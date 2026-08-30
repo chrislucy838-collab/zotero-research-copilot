@@ -26,23 +26,13 @@
 - **Discover** 分頁搜尋 OpenAlex、Semantic Scholar 與 Crossref，審閱、去重後匯入 Zotero 或指定集合。
 - 支援貼上、拖曳、上傳檔案，以及從閱讀器擷取圖片區域討論圖表或公式。
 - 在 PDF/EPUB 閱讀器中進行劃詞翻譯，可設定模型、語言、自動翻譯與複製/加入筆記操作。
-- 支援 ChatGPT/Codex、Gemini CLI 與 GitHub Copilot OAuth，也支援 OpenAI 相容 API。
+- 支援 OpenAI 相容 API，可連接託管、本機或自託管模型。
 - 聊天記錄、記憶與附件中繼資料儲存在 Zotero 本機資料中。
 - 支援 Markdown、程式碼、表格、圖片與 LaTeX 渲染，以及 English、中文、日本語、한국어、Français、Deutsch、Español、Русский、Português、العربية、हिन्दी 介面。
 
 ## 連接模型
 
-在 **工具 → 附加元件 → Zotero Research Copilot → 設定** 中配置模型。可用兩種方式：
-
-### OAuth
-
-| 提供者         | 授權方式                | 備註                              |
-| -------------- | ----------------------- | --------------------------------- |
-| ChatGPT        | OpenAI Codex OAuth      | 需要時可安裝或更新本機 CLI 環境。 |
-| Gemini         | Google Gemini CLI OAuth | 需要時可安裝或更新本機 CLI 環境。 |
-| GitHub Copilot | Device Code OAuth       | 不需要 CLI 安裝步驟。             |
-
-通常依序執行 **安裝/更新環境 → OAuth 登入 → 刷新模型**。OAuth 憑據只儲存在本機；使用前請閱讀服務商條款與外掛中的提示。
+在 **工具 → 附加元件 → Zotero Research Copilot → 設定** 中配置模型。當前支援的連線方式是 **OpenAI 相容 API**。
 
 ### OpenAI 相容 API
 
@@ -59,7 +49,7 @@
 
 ## 安裝
 
-- 需求：Zotero **10.0–10.x**，以及一個已配置的 OAuth provider 或 OpenAI 相容端點。
+- 需求：Zotero **10.0–10.x**，以及一個已配置的 OpenAI 相容端點。
 - 從 [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases) 下載 `Zotero-Research-Copilot-<版本>.xpi`。
 - 在 Zotero 開啟 **工具 → 附加元件 → 齒輪 → 從檔案安裝附加元件…**，選取 XPI。
 - 重啟 Zotero，於 Zotero Research Copilot 設定中完成模型配置。
@@ -68,7 +58,7 @@
 
 ## 隱私與授權
 
-API 請求會直接從 Zotero 傳送到你選擇的服務商或端點。外掛不提供自建遙測或代理服務；第三方模型收到的上下文、檔案與圖片會依其 API 和隱私政策處理。API Key、OAuth 憑據與自訂標頭不會硬編碼在原始碼或 XPI 中。
+API 請求會直接從 Zotero 傳送到你配置的端點。外掛不提供自建遙測或代理服務；第三方模型收到的上下文、檔案與圖片會依其 API 和隱私政策處理。API Key 與自訂標頭不會硬編碼在原始碼或 XPI 中。
 
 Zotero Research Copilot 使用 [AGPL-3.0-or-later](../../LICENSE) 發布。來源與完整第三方聲明見 [CUSTOMIZATION.md](../../CUSTOMIZATION.md) 和 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。
 

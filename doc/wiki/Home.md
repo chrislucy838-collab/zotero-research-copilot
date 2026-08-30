@@ -12,14 +12,13 @@ Zotero Research Copilot is an open-source AI research workspace for Zotero 10.x.
 - OpenAlex, Semantic Scholar, and Crossref search in the Discover tab
 - Duplicate-aware metadata import into My Library or a Zotero collection
 - Selection translation for PDF and EPUB text
-- ChatGPT/Codex, Gemini CLI, and GitHub Copilot OAuth flows
-- OpenAI-compatible API endpoints for hosted or local models
+- Manual OpenAI-compatible API configuration for hosted or local models
 - Local chat history, memory, Markdown/LaTeX rendering, and Zotero note export
 
 ## Start here
 
 1. [Getting Started](./Getting-Started.md)
-2. [Providers and Authentication](./Providers-and-Authentication.md)
+2. [Provider Configuration](./Providers-and-Authentication.md)
 3. [Features and Workflow](./Features-and-Workflow.md)
 4. [FAQ](./FAQ.md)
 
@@ -27,7 +26,7 @@ Zotero Research Copilot is an open-source AI research workspace for Zotero 10.x.
 
 - The supported distribution targets Zotero **10.0–10.x**.
 - This project does not provide a project-owned model proxy or telemetry service.
-- Requests, selected context, uploaded files, and images go to the provider or endpoint chosen by the user.
+- Requests, selected context, uploaded files, and images go to the API endpoint configured by the user.
 - Paper-index search uses public services and can fail or return incomplete metadata.
 - Open-access PDF attachment retrieval is best effort.
 

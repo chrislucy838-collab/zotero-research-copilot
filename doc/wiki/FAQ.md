@@ -6,7 +6,7 @@ The current distribution targets Zotero **10.0–10.x**, as declared by the plug
 
 ## Do I need an API key?
 
-No, when using a supported OAuth provider. In API Mode, an API key is required only when the configured endpoint requires authentication.
+Only when the configured endpoint requires authentication. An unauthenticated local endpoint can leave the API Key field empty.
 
 ## Which API endpoints can I use?
 
@@ -14,11 +14,11 @@ Use an OpenAI-compatible endpoint that exposes the operations required by the fe
 
 ## Where are credentials and conversations stored?
 
-Credentials, settings, chat history, memory, and attachment metadata are kept in Zotero's local preferences/database/data directory. The selected context and files are sent to the provider when a request is made.
+API keys, settings, chat history, memory, and attachment metadata are kept in Zotero's local preferences/database/data directory. The selected context and files are sent to the configured endpoint when a request is made.
 
 ## Does the project collect telemetry?
 
-The plugin does not include a project-owned telemetry service or proxy. Third-party providers still receive requests according to their own policies.
+The plugin does not include a project-owned telemetry service or proxy. The configured endpoint still receives requests according to its own policies.
 
 ## Why does a paper search return incomplete results?
 
@@ -40,10 +40,6 @@ Type `@` in the Discussion composer and search for a Zotero item. You can also u
 
 The selected model and endpoint must support image input. An image attachment does not add multimodal capability to a text-only model.
 
-## Is selection translation the same as full-document translation?
-
-Selection translation is wired into the reader selection popup and translates selected PDF/EPUB text. The repository also contains a PDF translation controller, but it is not advertised as part of the currently supported three-tab end-user interface.
-
 ## How can I report a problem?
 
-Include the Zotero version, plugin version, provider/API mode, model ID, and a redacted description of the error. Never include API keys, OAuth tokens, cookies, or private documents. Report it through [Issues](https://github.com/chrislucy838-collab/zotero-research-copilot/issues) or discuss it in [Discussions](https://github.com/chrislucy838-collab/zotero-research-copilot/discussions).
+Include the Zotero version, plugin version, API mode, endpoint type, model ID, and a redacted description of the error. Never include API keys, cookies, or private documents. Report it through [Issues](https://github.com/chrislucy838-collab/zotero-research-copilot/issues) or discuss it in [Discussions](https://github.com/chrislucy838-collab/zotero-research-copilot/discussions).

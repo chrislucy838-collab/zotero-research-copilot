@@ -3,7 +3,7 @@
 - [Home](Home)
 - [Getting Started](Getting-Started)
 - [Features and Workflow](Features-and-Workflow)
-- [Providers and Authentication](Providers-and-Authentication)
+- [Provider Configuration](Providers-and-Authentication)
 - [FAQ](FAQ)
 
 ### 中文
@@ -11,6 +11,7 @@
 - [中文首页](Home-zh-CN)
 - [快速开始](Getting-Started-zh-CN)
 - [功能与工作流](Features-and-Workflow-zh-CN)
+- [提供商配置](Providers-and-Authentication-zh-CN)
 - [常见问题](FAQ-zh-CN)
 
 ### Links

@@ -16,27 +16,25 @@
 - **Discover** タブで OpenAlex、Semantic Scholar、Crossref を検索し、確認後に Zotero へ重複を避けてインポート。
 - ファイルの貼り付け・ドラッグ・アップロード、リーダーからの図表や数式の範囲キャプチャ。
 - PDF/EPUB の選択範囲翻訳。モデル、言語、自動実行、コピー/ノート操作を設定可能。
-- ChatGPT/Codex、Gemini CLI、GitHub Copilot OAuth と OpenAI 互換 API に対応。
+- OpenAI 互換 API に対応し、ホスト型・ローカル・セルフホスト型モデルに接続可能。
 - 会話履歴とメモリを Zotero のローカルデータに保存。Markdown、表、画像、LaTeX を表示。
 
 ## モデル接続
 
-**Tools → Add-ons → Zotero Research Copilot → Settings** を開きます。OAuth provider または OpenAI 互換 API を選択できます。OAuth の通常の手順は **Install/Update Env → OAuth Login → Refresh Models** です。API モードでは API Base URL と Model を必須入力し、API Key と Custom Headers は必要に応じて設定します。
-
-例: `https://api.openai.com/v1`、`http://127.0.0.1:11434/v1`。通常は `/models` と `/chat/completions` に対応するエンドポイントが必要です。
+**Tools → Add-ons → Zotero Research Copilot → Settings** を開き、API Base URL と Model を入力します。API Key と Custom Headers はサービスが必要とする場合に設定します。例: `https://api.openai.com/v1`、`http://127.0.0.1:11434/v1`。通常は `/models` と `/chat/completions` に対応するエンドポイントが必要です。
 
 ## インストール
 
 1. [Releases](https://github.com/chrislucy838-collab/zotero-research-copilot/releases) から `Zotero-Research-Copilot-<version>.xpi` をダウンロードします。
 2. Zotero の **Tools → Add-ons → gear → Install Add-on From File…** を開きます。
 3. XPI を選択し、必要なら Zotero を再起動します。
-4. Zotero Research Copilot の Settings でモデルを設定します。
+4. Zotero Research Copilot の Settings で API を設定します。
 
 対応バージョンは Zotero **10.0–10.x** です。新しい XPI を既存のインストールに重ねてアップグレードできます。
 
 ## プライバシーとライセンス
 
-API リクエストは Zotero から選択した provider またはエンドポイントへ直接送信されます。プラグイン独自のテレメトリやプロキシはありません。キー、OAuth 資格情報、カスタムヘッダーはソースや XPI にハードコードされません。第三者モデルに送信されるコンテキストやファイルは、そのサービスのポリシーに従います。
+API リクエストは Zotero から設定したエンドポイントへ直接送信されます。プラグイン独自のテレメトリやプロキシはありません。キーとカスタムヘッダーはソースや XPI にハードコードされません。第三者モデルに送信されるコンテキストやファイルは、そのサービスのポリシーに従います。
 
 ライセンスは [AGPL-3.0-or-later](../../LICENSE) です。詳しい帰属表示は [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) を参照してください。
 

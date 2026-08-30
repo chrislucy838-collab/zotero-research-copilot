@@ -12,14 +12,13 @@ Zotero Research Copilot 是面向 Zotero 10.x 的开源 AI 研究工作区。它
 - 在 Discover 标签搜索 OpenAlex、Semantic Scholar、Crossref
 - 去重后将论文元数据导入 My Library 或 Zotero 集合
 - PDF/EPUB 划词翻译
-- ChatGPT/Codex、Gemini CLI、GitHub Copilot OAuth
 - OpenAI 兼容 API，支持托管、本地或自托管模型
 - 本地聊天记录、记忆、Markdown/LaTeX 渲染和 Zotero 笔记导出
 
 ## 从这里开始
 
 1. [快速开始](./Getting-Started-zh-CN.md)
-2. [提供商与授权](./Providers-and-Authentication-zh-CN.md)
+2. [提供商配置](./Providers-and-Authentication-zh-CN.md)
 3. [功能与工作流](./Features-and-Workflow-zh-CN.md)
 4. [常见问题](./FAQ-zh-CN.md)
 
@@ -27,7 +26,7 @@ Zotero Research Copilot 是面向 Zotero 10.x 的开源 AI 研究工作区。它
 
 - 当前发行版面向 Zotero **10.0–10.x**。
 - 项目没有自建模型代理或遥测服务。
-- 请求、选中的上下文、文件和图片会发送到用户选择的 provider 或端点。
+- 请求、选中的上下文、文件和图片会发送到用户配置的 API 端点。
 - 学术索引搜索使用公开服务，可能出现失败或不完整元数据。
 - 开放获取 PDF 附件的获取属于尽力而为。
 

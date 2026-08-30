@@ -21,19 +21,11 @@ The panel contains three tabs:
 
 - **Discussion**: chat, context, history, attachments, and exports;
 - **Discover**: search public scholarly indexes and import selected records;
-- **Setting**: connection, model, language, translation, and advanced options.
+- **Setting**: API connection, model, language, translation, and advanced options.
 
-## 3. Configure a model
+## 3. Configure an API endpoint
 
-Open the **Setting** tab and choose either an OAuth provider or **API Mode**.
-
-For OAuth, the normal sequence is:
-
-```text
-Install/Update Env → OAuth Login → Refresh Models
-```
-
-For API Mode, fill in an API Base URL and Model. Add an API Key only when the endpoint requires authentication.
+Open the **Setting** tab and choose **API Mode**. Fill in an API Base URL and Model. Add an API Key only when the endpoint requires authentication. Custom HTTP headers can be provided as JSON for gateways with non-standard authentication.
 
 ## 4. Ask about a paper
 
@@ -72,8 +64,8 @@ The composer supports text, Markdown, code, PDF, and image attachments through u
 
 ## 9. Troubleshooting
 
-- **No models appear:** complete OAuth login and refresh models, or verify API Base URL and API Key in API Mode.
+- **No models appear:** verify API Base URL and API Key, then use the model refresh action.
 - **A paper has no PDF:** the index may only provide metadata, or its open-access URL may be unavailable.
 - **Context is missing:** confirm the correct reader tab is active, then use **Add Text** or re-add the paper reference.
-- **OAuth fails:** run **Install/Update Env**, review the Settings console, and check the provider's account and terms.
+- **A request fails:** check the endpoint URL, model ID, headers, and whether the selected model supports the requested operation.
 - **A feature is unavailable:** provider capabilities differ by model. Check the model selector and the endpoint's supported API shape.

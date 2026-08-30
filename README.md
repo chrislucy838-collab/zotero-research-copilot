@@ -84,25 +84,7 @@ The repository also contains a PDF translation controller and related runtime co
 
 Open **Tools → Add-ons → Zotero Research Copilot → Settings**. Depending on the Zotero build, the preference pane may also appear under **Edit → Settings**.
 
-There are two connection paths:
-
-### OAuth providers
-
-The Settings pane currently exposes OAuth cards for:
-
-| Provider       | Flow                    | Notes                                                                      |
-| -------------- | ----------------------- | -------------------------------------------------------------------------- |
-| ChatGPT        | OpenAI Codex OAuth      | The plugin can install/update the required local environment and CLI flow. |
-| Gemini         | Google Gemini CLI OAuth | The plugin can install/update the required local environment and CLI flow. |
-| GitHub Copilot | Device Code OAuth       | Does not require the Node.js setup step used by the CLI-based flows.       |
-
-Typical order:
-
-1. Click **Install/Update Env** when the provider requires its local CLI environment.
-2. Click **OAuth Login** and complete the provider's browser authorization.
-3. Click **Refresh Models**, then select the models that should appear in the chat picker.
-
-OAuth tokens are kept locally by the plugin. OAuth access through CLI credentials may not be an officially endorsed use of a provider account; read the warning in the plugin before continuing and check the provider's terms.
+The supported connection path is **OpenAI-compatible API**.
 
 ### OpenAI-compatible API
 
@@ -122,9 +104,8 @@ The endpoint must provide the API shape required by the selected operation, norm
 ### Requirements
 
 - Zotero **10.0–10.x**
-- A configured OAuth provider or OpenAI-compatible endpoint
-- Node.js for the provider flows that require a local CLI environment; the plugin can guide you through setup
-- Internet access for OAuth, hosted model APIs, and scholarly-index searches
+- A configured OpenAI-compatible endpoint
+- Internet access for hosted model APIs and scholarly-index searches
 
 ### Install or upgrade
 
@@ -140,7 +121,7 @@ Install a newer XPI over the existing installation to upgrade. The plugin stores
 
 - The plugin does not include a telemetry service or a project-owned proxy.
 - API requests go from Zotero to the provider or endpoint selected by the user.
-- API keys, custom headers, and OAuth credentials are configured locally and are not hardcoded into the source or release XPI.
+- API keys and custom headers are configured locally and are not hardcoded into the source or release XPI.
 - Chat history, memory, and local attachment metadata are stored in Zotero's local database/data directory.
 - When you use a third-party model, the selected context, uploaded files, and images are sent to that provider according to its API and privacy policy.
 - Do not include secrets or confidential documents in a request unless you understand the provider's data handling.
