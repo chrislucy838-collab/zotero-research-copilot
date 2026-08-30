@@ -23,7 +23,7 @@
   · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/discussions">Discussions</a>
 </p>
 
-> **当前范围：**本发行版面向 Zotero 10.x。项目是基于开源 Zotero AI 项目独立构建的版本，原始署名和许可证保留在 [LICENSE](../../LICENSE)、[CUSTOMIZATION.md](../../CUSTOMIZATION.md) 与 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) 中。
+> **支持版本：**Zotero 10.x。
 
 ## 它能做什么
 
@@ -50,7 +50,6 @@ Zotero Research Copilot 会把 AI 对话放在你正在使用的 Zotero 条目�
 - 通过粘贴、拖拽或上传加入文本、Markdown、代码、PDF 和图片文件。
 - 从当前阅读器截图，用于讨论论文中的图、表或公式。
 - 使用支持图片输入的多模态模型分析图片。
-- 兼容的 provider 流程可能支持显式图片生成，实际可用性取决于 provider、模型和接口能力。
 
 ### 论文发现与导入
 
@@ -104,28 +103,17 @@ Zotero Research Copilot 会把 AI 对话放在你正在使用的 Zotero 条目�
 4. 选择 XPI 文件，按提示重启 Zotero。
 5. 打开 Zotero Research Copilot 的 **Setting**，配置 API 后开始对话。
 
-直接在旧版本上安装新版 XPI 即可升级。聊天记录、记忆和设置保存在 Zotero 本地数据中；测试开发版前仍建议备份重要的 Zotero 数据。
+直接在旧版本上安装新版 XPI 即可升级。聊天记录、记忆和设置保存在 Zotero 本地数据中；升级前建议备份重要数据。
 
 ## 隐私与安全
 
-- 插件没有自建遥测服务或项目代理。
+- 插件没有遥测服务或代理。
 - API 请求直接从 Zotero 发送到你配置的端点。
-- API Key 和自定义请求头由用户在本地配置，不会硬编码进源代码或 XPI。
+- API Key 和自定义请求头由用户在插件设置中本地配置。
 - 聊天记录、记忆和本地附件元数据保存在 Zotero 本地数据库/数据目录。
 - 使用第三方模型时，选中的上下文、上传文件和图片会按照该服务的 API 与隐私政策发送。
 - 请不要在不了解服务商数据处理方式的情况下发送密码、令牌或敏感文档。
 
-## 开发
+## 许可证
 
-```bash
-npm install
-npm run build
-npm run test:unit
-npm start
-```
-
-构建目录和 XPI 已被 Git 忽略。推送新的 `v*` 标签后，GitHub Actions 会生成版本 Release 并上传 XPI；`update.json` 会维护在 `release` 预发布中。
-
-## 许可证与来源
-
-Zotero Research Copilot 使用 [AGPL-3.0-or-later](../../LICENSE) 发布。项目是基于开源工作的独立构建版本，其中包括 [llm-for-zotero](https://github.com/yilewang/llm-for-zotero) 和 AIdea 项目的部分源代码。完整署名与附加许可证见 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。
+Zotero Research Copilot 使用 [AGPL-3.0-or-later](../../LICENSE) 许可证发布。

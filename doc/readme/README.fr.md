@@ -4,7 +4,7 @@
 <p align="center"><a href="../../README.md">English</a> · <a href="./README.zh-CN.md">简体中文</a> · <a href="./README.zh-TW.md">繁體中文</a> · <a href="./README.ja.md">日本語</a> · <a href="./README.ko.md">한국어</a> · <a href="./README.fr.md">Français</a></p>
 <p align="center"><a href="https://github.com/chrislucy838-collab/zotero-research-copilot/releases"><strong>Télécharger le dernier XPI</strong></a> · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/issues">Issues</a> · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/discussions">Discussions</a></p>
 
-> **Périmètre actuel :** cette version cible Zotero 10.x. Il s'agit d'une construction indépendante dérivée de projets Zotero AI open source ; les attributions et licences originales sont conservées dans [LICENSE](../../LICENSE), [CUSTOMIZATION.md](../../CUSTOMIZATION.md) et [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md).
+> **Version prise en charge :** Zotero 10.x.
 
 ## Fonctionnalités
 
@@ -36,15 +36,6 @@ La version prise en charge est Zotero **10.0–10.x**. Un nouveau XPI peut être
 
 ## Confidentialité et licence
 
-Les requêtes sont envoyées directement de Zotero à l'endpoint configuré. Le plugin n'ajoute ni télémétrie ni proxy propriétaire. Les clés et en-têtes personnalisés ne sont pas intégrés au code ou au XPI. Les données envoyées à un modèle tiers suivent la politique de ce service.
+Les requêtes sont envoyées directement de Zotero à l'endpoint configuré. Le plugin n'ajoute ni télémétrie ni proxy propriétaire. Les clés et en-têtes personnalisés sont configurés localement. Les données envoyées à un modèle tiers suivent la politique de ce service.
 
-Le projet est distribué sous [AGPL-3.0-or-later](../../LICENSE). Consultez [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) pour les attributions complètes.
-
-## Développement
-
-```bash
-npm install
-npm run build
-npm run test:unit
-npm start
-```
+Le projet est distribué sous la licence [AGPL-3.0-or-later](../../LICENSE).

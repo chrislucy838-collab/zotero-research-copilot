@@ -23,7 +23,7 @@
   · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/discussions">Discussions</a>
 </p>
 
-> **Current scope:** this distribution targets Zotero 10.x. It is an independent build derived from open-source Zotero AI projects; the original attribution and licenses are retained in [LICENSE](./LICENSE), [CUSTOMIZATION.md](./CUSTOMIZATION.md), and [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+> **Supported version:** Zotero 10.x.
 
 ## What it does
 
@@ -50,7 +50,6 @@ Zotero Research Copilot keeps an AI conversation beside the Zotero item or reade
 - Paste, drag, or upload text, Markdown, code, PDF, and image files through the composer.
 - Capture a region from the active reader to discuss a figure, table, or chart.
 - Use multimodal models when the selected provider and model support image input.
-- Explicit image generation is supported for compatible provider flows; availability depends on the provider, model, and endpoint.
 
 ### Paper discovery and import
 
@@ -69,14 +68,11 @@ Results are deduplicated across sources and show metadata, DOI, venue, authors, 
 - EPUB selection translation uses bounded context around the selected passage.
 - Configure automatic translation, source and target languages, the model, and whether the popup offers copy or note actions.
 
-The repository also contains a PDF translation controller and related runtime code. It is not part of the currently supported three-tab interface, so it is deliberately not presented as a stable end-user feature here.
+### Interface and local data
 
-### Current interface and local persistence
-
-- Conversations, attachments, memory, and related metadata are stored locally in Zotero's SQLite data.
-- Per-library conversation scope prevents unrelated libraries from sharing paper context.
-- Memory retrieval uses local storage, deduplication, relevance ranking, and prompt-injection filtering.
-- The supported panel currently exposes **Discussion**, **Discover**, and **Setting** tabs. Experimental modules that are not wired into this interface are not advertised as supported features.
+- The panel provides **Discussion**, **Discover**, and **Setting** tabs.
+- Conversations, attachments, memory, and related metadata are stored locally in Zotero's data directory.
+- Each Zotero library keeps its conversation context separate.
 - Responses render Markdown, code blocks, tables, links, images, and LaTeX; responses and complete chat histories can be saved to Zotero notes.
 - The interface supports English, Simplified Chinese, Traditional Chinese, Japanese, Korean, French, German, Spanish, Russian, Portuguese, Arabic, and Hindi.
 
@@ -115,39 +111,17 @@ The endpoint must provide the API shape required by the selected operation, norm
 4. Select the downloaded XPI and restart Zotero if prompted.
 5. Configure a provider in **Zotero Research Copilot Settings** before starting a chat.
 
-Install a newer XPI over the existing installation to upgrade. The plugin stores its chat history, memory, and settings in Zotero's local data; nevertheless, back up important Zotero data before testing development builds.
+Install a newer XPI over the existing installation to upgrade. The plugin stores its chat history, memory, and settings in Zotero's local data; back up important Zotero data before upgrading.
 
 ## Privacy and security
 
 - The plugin does not include a telemetry service or a project-owned proxy.
 - API requests go from Zotero to the provider or endpoint selected by the user.
-- API keys and custom headers are configured locally and are not hardcoded into the source or release XPI.
+- API keys and custom headers are entered locally in the plugin settings.
 - Chat history, memory, and local attachment metadata are stored in Zotero's local database/data directory.
-- When you use a third-party model, the selected context, uploaded files, and images are sent to that provider according to its API and privacy policy.
+- When you use an external model, the selected context, uploaded files, and images are sent to its API according to that service's privacy policy.
 - Do not include secrets or confidential documents in a request unless you understand the provider's data handling.
 
-## Development
+## License
 
-```bash
-npm install
-npm run build       # TypeScript check and official production XPI build
-npm run test:unit   # Unit tests that do not require a running Zotero UI
-npm start           # Development server/profile workflow
-```
-
-The generated build directory and XPI are intentionally ignored by Git. Releases are produced by GitHub Actions when a new `v*` tag is pushed; the XPI is attached to the versioned GitHub Release and `update.json` is maintained in the `release` prerelease.
-
-Useful project documents:
-
-- [Customization notes](./CUSTOMIZATION.md)
-- [Architecture guide](./doc/ARCHITECTURE_EN.md)
-- [中文架构说明](./doc/ARCHITECTURE_CN.md)
-- [Third-party notices](./THIRD_PARTY_NOTICES.md)
-
-## License and attribution
-
-Zotero Research Copilot is distributed under [AGPL-3.0-or-later](./LICENSE). It is an independent build derived from open-source work, including [llm-for-zotero](https://github.com/yilewang/llm-for-zotero) and source from the AIdea project. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for the attribution and additional licenses.
-
-<p align="center">
-  Maintained for the Zotero Research Copilot project
-</p>
+Zotero Research Copilot is distributed under the [AGPL-3.0-or-later](./LICENSE) license.

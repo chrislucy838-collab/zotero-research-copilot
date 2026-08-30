@@ -4,7 +4,7 @@
 <p align="center"><a href="../../README.md">English</a> · <a href="./README.zh-CN.md">简体中文</a> · <a href="./README.zh-TW.md">繁體中文</a> · <a href="./README.ja.md">日本語</a> · <a href="./README.ko.md">한국어</a> · <a href="./README.fr.md">Français</a></p>
 <p align="center"><a href="https://github.com/chrislucy838-collab/zotero-research-copilot/releases"><strong>最新 XPI をダウンロード</strong></a> · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/issues">Issues</a> · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/discussions">Discussions</a></p>
 
-> **対応範囲:** 本ビルドは Zotero 10.x を対象とします。オープンソースの Zotero AI プロジェクトをもとにした独立ビルドであり、原著者の表示とライセンスは [LICENSE](../../LICENSE)、[CUSTOMIZATION.md](../../CUSTOMIZATION.md)、[THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) に保持されています。
+> **対応バージョン:** Zotero 10.x。
 
 ## 主な機能
 
@@ -34,15 +34,6 @@
 
 ## プライバシーとライセンス
 
-API リクエストは Zotero から設定したエンドポイントへ直接送信されます。プラグイン独自のテレメトリやプロキシはありません。キーとカスタムヘッダーはソースや XPI にハードコードされません。第三者モデルに送信されるコンテキストやファイルは、そのサービスのポリシーに従います。
+API リクエストは Zotero から設定したエンドポイントへ直接送信されます。プラグイン独自のテレメトリやプロキシはありません。キーとカスタムヘッダーはローカルで設定します。第三者モデルに送信されるコンテキストやファイルは、そのサービスのポリシーに従います。
 
-ライセンスは [AGPL-3.0-or-later](../../LICENSE) です。詳しい帰属表示は [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) を参照してください。
-
-## 開発
-
-```bash
-npm install
-npm run build
-npm run test:unit
-npm start
-```
+ライセンスは [AGPL-3.0-or-later](../../LICENSE) です。

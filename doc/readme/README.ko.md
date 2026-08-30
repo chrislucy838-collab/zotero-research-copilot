@@ -4,7 +4,7 @@
 <p align="center"><a href="../../README.md">English</a> · <a href="./README.zh-CN.md">简体中文</a> · <a href="./README.zh-TW.md">繁體中文</a> · <a href="./README.ja.md">日本語</a> · <a href="./README.ko.md">한국어</a> · <a href="./README.fr.md">Français</a></p>
 <p align="center"><a href="https://github.com/chrislucy838-collab/zotero-research-copilot/releases"><strong>최신 XPI 다운로드</strong></a> · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/issues">Issues</a> · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/discussions">Discussions</a></p>
 
-> **지원 범위:** 이 빌드는 Zotero 10.x를 대상으로 합니다. 오픈 소스 Zotero AI 프로젝트를 바탕으로 한 독립 빌드이며, 원본 저작자 표시와 라이선스는 [LICENSE](../../LICENSE), [CUSTOMIZATION.md](../../CUSTOMIZATION.md), [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)에 보존되어 있습니다.
+> **지원 버전:** Zotero 10.x.
 
 ## 주요 기능
 
@@ -34,15 +34,6 @@
 
 ## 개인정보 및 라이선스
 
-API 요청은 Zotero에서 설정한 엔드포인트로 직접 전송됩니다. 플러그인 자체의 텔레메트리나 프록시는 없습니다. 키와 사용자 지정 헤더는 소스나 XPI에 하드코딩되지 않습니다. 제3자 모델로 전송되는 컨텍스트와 파일은 해당 서비스의 정책을 따릅니다.
+API 요청은 Zotero에서 설정한 엔드포인트로 직접 전송됩니다. 플러그인 자체의 텔레메트리나 프록시는 없습니다. 키와 사용자 지정 헤더는 로컬에서 설정합니다. 제3자 모델로 전송되는 컨텍스트와 파일은 해당 서비스의 정책을 따릅니다.
 
-라이선스는 [AGPL-3.0-or-later](../../LICENSE)입니다. 자세한 출처 표시는 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)를 확인하세요.
-
-## 개발
-
-```bash
-npm install
-npm run build
-npm run test:unit
-npm start
-```
+라이선스는 [AGPL-3.0-or-later](../../LICENSE)입니다.

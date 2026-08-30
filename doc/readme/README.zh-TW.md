@@ -14,7 +14,7 @@
   <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/releases"><strong>下載最新版 XPI</strong></a> · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/issues">Issues</a> · <a href="https://github.com/chrislucy838-collab/zotero-research-copilot/discussions">Discussions</a>
 </p>
 
-> **目前範圍：**本版本以 Zotero 10.x 為目標。這是基於開源 Zotero AI 專案的獨立建置版本；原始署名與授權保留於 [LICENSE](../../LICENSE)、[CUSTOMIZATION.md](../../CUSTOMIZATION.md) 及 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。
+> **支援版本：**Zotero 10.x。
 
 ## 功能
 
@@ -54,19 +54,10 @@
 - 在 Zotero 開啟 **工具 → 附加元件 → 齒輪 → 從檔案安裝附加元件…**，選取 XPI。
 - 重啟 Zotero，於 Zotero Research Copilot 設定中完成模型配置。
 
-安裝新版 XPI 可直接升級。聊天記錄、記憶與設定位於 Zotero 本機資料中，但測試開發版前仍建議備份重要資料。
+安裝新版 XPI 可直接升級。聊天記錄、記憶與設定位於 Zotero 本機資料中，升級前建議備份重要資料。
 
 ## 隱私與授權
 
-API 請求會直接從 Zotero 傳送到你配置的端點。外掛不提供自建遙測或代理服務；第三方模型收到的上下文、檔案與圖片會依其 API 和隱私政策處理。API Key 與自訂標頭不會硬編碼在原始碼或 XPI 中。
+API 請求會直接從 Zotero 傳送到你配置的端點。外掛不提供自建遙測或代理服務；第三方模型收到的上下文、檔案與圖片會依其 API 和隱私政策處理。API Key 與自訂標頭會由你在本機設定。
 
-Zotero Research Copilot 使用 [AGPL-3.0-or-later](../../LICENSE) 發布。來源與完整第三方聲明見 [CUSTOMIZATION.md](../../CUSTOMIZATION.md) 和 [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md)。
-
-## 開發
-
-```bash
-npm install
-npm run build
-npm run test:unit
-npm start
-```
+Zotero Research Copilot 使用 [AGPL-3.0-or-later](../../LICENSE) 授權發布。
