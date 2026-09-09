@@ -82,6 +82,10 @@ describe("contextPanel normalizers", function () {
       citationKey: "KeyA",
       firstCreator: undefined,
       year: undefined,
+      sourceId: undefined,
+      sourceLabel: undefined,
+      sourceKind: undefined,
+      availability: undefined,
     });
   });
 
@@ -114,6 +118,10 @@ describe("contextPanel normalizers", function () {
       citationKey: undefined,
       firstCreator: undefined,
       year: undefined,
+      sourceId: undefined,
+      sourceLabel: undefined,
+      sourceKind: undefined,
+      availability: undefined,
     });
     assert.isUndefined(rows[1]);
     assert.deepEqual(rows[2], {
@@ -123,6 +131,10 @@ describe("contextPanel normalizers", function () {
       citationKey: undefined,
       firstCreator: undefined,
       year: "2020-11-12",
+      sourceId: undefined,
+      sourceLabel: undefined,
+      sourceKind: undefined,
+      availability: undefined,
     });
     assert.isUndefined(rows[3]);
   });

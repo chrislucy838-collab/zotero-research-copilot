@@ -51,8 +51,8 @@ describe("constants — safeguard limits", function () {
     });
 
     it("should reject extremely large documents (> FULL_CONTEXT_CHAR_LIMIT)", function () {
-      // A 300-page thesis is roughly 900K chars — should trigger retrieval fallback
-      const veryLargeDocument = 900000;
+      // A very large thesis over 1.2M chars should trigger retrieval fallback
+      const veryLargeDocument = 1500000;
       assert.isAbove(veryLargeDocument, FULL_CONTEXT_CHAR_LIMIT);
     });
   });

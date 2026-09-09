@@ -79,6 +79,13 @@ describe("paper discovery normalization", function () {
   });
 
   it("does not wait forever for a Zotero operation", async () => {
-    await assert.isRejected(__paperImporterTest.waitForZoteroOperation(new Promise(() => undefined), 1000, "Test operation"), "Test operation timed out after 1s");
+    let error: unknown;
+    try {
+      await __paperImporterTest.waitForZoteroOperation(new Promise(() => undefined), 1000, "Test operation");
+    } catch (caught) {
+      error = caught;
+    }
+    assert.instanceOf(error, Error);
+    assert.equal((error as Error).message, "Test operation timed out after 1s");
   });
 });

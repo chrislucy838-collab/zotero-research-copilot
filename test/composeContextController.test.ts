@@ -22,7 +22,7 @@ describe("composeContextController", function () {
         firstCreator: "Smith",
         year: "2023",
       } as any);
-      assert.include(label, "📝 Test Paper");
+      assert.include(label, "📝 Paper 1 · Test Paper");
     });
 
     it("should fallback to 'Paper' if title is missing", function () {
@@ -34,7 +34,7 @@ describe("composeContextController", function () {
         firstCreator: "Smith",
         year: "2023",
       } as any);
-      assert.include(label, "📝 Paper");
+      assert.include(label, "📝 Paper 1 · Paper");
     });
   });
 
@@ -49,9 +49,10 @@ describe("composeContextController", function () {
         year: "2024",
       } as any);
       const lines = title.split("\n");
-      assert.equal(lines.length, 2);
-      assert.equal(lines[0], "Deep Learning Review");
-      assert.equal(lines[1], "Smith et al. · 2024");
+      assert.equal(lines.length, 3);
+      assert.equal(lines[0], "Paper 1");
+      assert.equal(lines[1], "Deep Learning Review");
+      assert.equal(lines[2], "Smith et al. · 2024");
     });
 
     it("should handle missing metadata gracefully", function () {
@@ -64,8 +65,9 @@ describe("composeContextController", function () {
         year: "",
       } as any);
       const lines = title.split("\n");
-      assert.equal(lines.length, 1);
-      assert.equal(lines[0], "Deep Learning Review");
+      assert.equal(lines.length, 2);
+      assert.equal(lines[0], "Paper 1");
+      assert.equal(lines[1], "Deep Learning Review");
     });
   });
 });

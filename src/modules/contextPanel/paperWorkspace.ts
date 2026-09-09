@@ -1,7 +1,10 @@
 import type { PaperContextRef } from "./types";
 
 function text(value: unknown): string {
-  return String(value ?? "").replace(/\s+/g, " ").trim();
+  return String(value ?? "")
+    .replace(/\\[rnt]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function field(item: Zotero.Item, name: string): string {
