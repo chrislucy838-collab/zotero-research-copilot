@@ -88,12 +88,13 @@ Switch the primary connection mode to **API Mode** and configure:
 
 | Field          | Required                | Example                                                     |
 | -------------- | ----------------------- | ----------------------------------------------------------- |
+| API type       | Yes                     | `OpenAI Compatible` or `OpenAI Responses`                   |
 | API Base URL   | Yes                     | `https://api.openai.com/v1` or `http://127.0.0.1:11434/v1`  |
 | Model          | Yes                     | `gpt-4.1-mini` or `llama3.1:8b`                             |
 | API Key        | Depends on the endpoint | Leave empty for an unauthenticated local endpoint.          |
 | Custom headers | Optional                | JSON headers for gateways with non-standard authentication. |
 
-The endpoint must provide the API shape required by the selected operation, normally `/models` and `/chat/completions`. Provider-specific features are not guaranteed by compatibility alone. Local, self-hosted, and hosted gateways such as Ollama, LM Studio, vLLM, OpenRouter, DeepSeek-compatible gateways, and similar services may work when they expose the expected API.
+Choose **OpenAI Compatible** for the Chat Completions API, or **OpenAI Responses** for the Responses API. The endpoint must provide the API shape required by the selected operation, normally `/models` plus `/chat/completions` or `/responses`. Local, self-hosted, and hosted gateways such as Ollama, LM Studio, vLLM, OpenRouter, DeepSeek-compatible gateways, and similar services may work when they expose the selected API.
 
 ## Installation
 

@@ -21,7 +21,7 @@
 
 ## モデル接続
 
-**Tools → Add-ons → Zotero Research Copilot → Settings** を開き、API Base URL と Model を入力します。API Key と Custom Headers はサービスが必要とする場合に設定します。例: `https://api.openai.com/v1`、`http://127.0.0.1:11434/v1`。通常は `/models` と `/chat/completions` に対応するエンドポイントが必要です。
+**Tools → Add-ons → Zotero Research Copilot → Settings** を開き、API type で **OpenAI Compatible** または **OpenAI Responses** を選び、API Base URL と Model を入力します。API Key と Custom Headers はサービスが必要とする場合に設定します。例: `https://api.openai.com/v1`、`http://127.0.0.1:11434/v1`。通常は `/models` と `/chat/completions` に対応するエンドポイントが必要です。
 
 ## インストール
 

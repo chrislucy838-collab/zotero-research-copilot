@@ -7,7 +7,8 @@ Zotero Research Copilot currently uses manually configured OpenAI-compatible API
 Open the **Setting** tab in the panel or open **Tools → Add-ons → Zotero Research Copilot → Settings**. Configure the provider profile with:
 
 - **Provider name**: a label shown in the model list;
-- **API Base URL**: the root URL of the compatible endpoint;
+- **API type**: choose **OpenAI Compatible** for Chat Completions or **OpenAI Responses** for the Responses API;
+- **API Base URL**: the root URL of the selected endpoint;
 - **API Key**: optional when the endpoint does not require authentication;
 - **Custom headers**: optional JSON headers for gateways with non-standard authentication;
 - **Model**: fetched from `/models` or entered manually.
@@ -24,8 +25,9 @@ Model: llama3.1:8b
 The endpoint normally needs to support:
 
 - `GET /models` for model discovery, if automatic discovery is desired;
-- `POST /chat/completions` for standard streaming chat;
-- compatible multimodal or image-generation endpoints only when those operations are used.
+- `POST /chat/completions` when **OpenAI Compatible** is selected;
+- `POST /responses` when **OpenAI Responses** is selected;
+- compatible multimodal endpoints only when those operations are used.
 
 Local endpoints such as Ollama, LM Studio, and vLLM may work when configured with their OpenAI-compatible API surface. Hosted gateways may require a custom header or a provider-specific model ID.
 

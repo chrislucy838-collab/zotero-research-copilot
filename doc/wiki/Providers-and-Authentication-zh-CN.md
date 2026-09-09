@@ -7,7 +7,8 @@ Zotero Research Copilot 当前使用手动配置的 OpenAI 兼容 API 端点。�
 打开面板中的 **Setting** 标签，或进入 **工具 → 附加组件 → Zotero Research Copilot → 设置**，配置模型连接：
 
 - **提供商名称**：显示在模型列表中的标签；
-- **API Base URL**：兼容端点的基础地址；
+- **API 类型**：选择 **OpenAI Compatible** 使用 Chat Completions，或选择 **OpenAI Responses** 使用 Responses API；
+- **API Base URL**：所选端点的基础地址；
 - **API Key**：端点不要求认证时可以留空；
 - **自定义请求头**：为非标准认证网关填写 JSON 格式的 HTTP 请求头；
 - **Model**：从 `/models` 获取，或手动输入模型 ID。
@@ -24,8 +25,9 @@ Model：llama3.1:8b
 端点通常需要支持：
 
 - `GET /models`，用于自动获取模型列表；
-- `POST /chat/completions`，用于标准流式对话；
-- 使用多模态或图片生成时所需的兼容接口。
+- 选择 **OpenAI Compatible** 时使用 `POST /chat/completions`；
+- 选择 **OpenAI Responses** 时使用 `POST /responses`；
+- 使用多模态时所需的兼容接口。
 
 只要暴露了预期的 OpenAI 兼容接口，Ollama、LM Studio、vLLM 等本地服务以及托管网关都有可能使用。某些网关可能需要自定义请求头或特定模型 ID。
 

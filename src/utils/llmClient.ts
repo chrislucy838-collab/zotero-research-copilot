@@ -34,6 +34,7 @@ import type {
   RuntimeReasoningOption,
 } from "./reasoningProfiles";
 import { getProviderConfig } from "./providerConfig";
+import { isResponsesApiType } from "./apiType";
 import {
   API_ENDPOINT,
   RESPONSES_ENDPOINT,
@@ -256,10 +257,19 @@ export function getApiConfig(overrides?: {
 }) {
   const primaryProfile = getApiProfiles().primary;
   const provider = getProviderConfig();
-  const apiBase = (overrides?.apiBase || primaryProfile.apiBase || provider.apiBase)
+  const apiBase = (
+    overrides?.apiBase ||
+    primaryProfile.apiBase ||
+    provider.apiBase
+  )
     .trim()
     .replace(/\/+$/, "");
-  const apiKey = (overrides?.apiKey || primaryProfile.apiKey || provider.apiKey || "").trim();
+  const apiKey = (
+    overrides?.apiKey ||
+    primaryProfile.apiKey ||
+    provider.apiKey ||
+    ""
+  ).trim();
   const model = (overrides?.model || primaryProfile.model).trim();
   const embeddingModel = getPref("embeddingModel") || DEFAULT_EMBEDDING_MODEL;
   const customSystemPrompt = getPref("systemPrompt") || "";
@@ -274,6 +284,7 @@ export function getApiConfig(overrides?: {
   return {
     apiBase,
     apiKey,
+    apiType: provider.apiType,
     model,
     headers: provider.headers,
     embeddingModel,
@@ -744,7 +755,10 @@ async function uploadAttachmentForResponses(params: {
   throwIfAborted(params.signal);
 
   const headers = getProviderCustomHeaders();
-  if (params.apiKey && !Object.keys(headers).some((key) => key.toLowerCase() === "authorization")) {
+  if (
+    params.apiKey &&
+    !Object.keys(headers).some((key) => key.toLowerCase() === "authorization")
+  ) {
     headers.Authorization = `Bearer ${params.apiKey}`;
   }
   const uploadPurposes = ["assistants", "user_data"];
@@ -845,7 +859,8 @@ function estimateProviderContentTokens(content: MessageContent): number {
 
 function estimateProviderMessageTokens(messages: ChatMessage[]): number {
   return messages.reduce(
-    (total, message) => total + estimateProviderContentTokens(message.content) + 4,
+    (total, message) =>
+      total + estimateProviderContentTokens(message.content) + 4,
     0,
   );
 }
@@ -1971,14 +1986,14 @@ export async function callImageGeneration(
  * Call LLM API (non-streaming)
  */
 export async function callLLM(params: ChatParams): Promise<string> {
-  const { apiBase, apiKey, model, systemPrompt } = getApiConfig({
+  const { apiBase, apiKey, apiType, model, systemPrompt } = getApiConfig({
     apiBase: params.apiBase,
     apiKey: params.apiKey,
     model: params.model,
   });
   const messages = buildMessages(params, systemPrompt);
   params.onContextEstimate?.(estimateProviderMessageTokens(messages), messages);
-  const useResponses = isResponsesBase(apiBase);
+  const useResponses = isResponsesApiType(apiType) || isResponsesBase(apiBase);
   const responseFileIds = useResponses
     ? await uploadFilesForResponses({
         apiBase,
@@ -2220,14 +2235,14 @@ export async function callLLMStream(
     return completed.output.text;
   };
 
-  const { apiBase, apiKey, model, systemPrompt } = getApiConfig({
+  const { apiBase, apiKey, apiType, model, systemPrompt } = getApiConfig({
     apiBase: params.apiBase,
     apiKey: params.apiKey,
     model: params.model,
   });
   const messages = buildMessages(params, systemPrompt);
   params.onContextEstimate?.(estimateProviderMessageTokens(messages), messages);
-  const useResponses = isResponsesBase(apiBase);
+  const useResponses = isResponsesApiType(apiType) || isResponsesBase(apiBase);
   const responseFileIds = useResponses
     ? await uploadFilesForResponses({
         apiBase,
@@ -2816,5 +2831,3 @@ async function parseResponsesStream(
 
   return fullText;
 }
-
-

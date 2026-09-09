@@ -1,6 +1,11 @@
 import { config } from "../../package.json";
 import { fetchCustomEndpointModels } from "../utils/cpaModels";
-import { getProviderConfig, parseProviderHeaders, setProviderConfig } from "../utils/providerConfig";
+import { API_TYPE_OPTIONS } from "../utils/apiType";
+import {
+  getProviderConfig,
+  parseProviderHeaders,
+  setProviderConfig,
+} from "../utils/providerConfig";
 
 function prefKey(name: string): string {
   return `${config.prefsPrefix}.${name}`;
@@ -29,25 +34,40 @@ export async function bootstrapProviderSettings(
 ): Promise<void> {
   container.replaceChildren();
   const root = el(doc, "div", { class: "zrc-provider-settings" });
-  const title = el(doc, "h2", { textContent: "OpenAI-compatible provider" });
+  const title = el(doc, "h2", { textContent: "API provider" });
   const hint = el(doc, "p", {
     textContent:
-      "Configure any OpenAI-compatible API. API keys and custom headers stay in Zotero preferences.",
+      "Choose the API request type, then configure the endpoint. API keys and custom headers stay in Zotero preferences.",
   });
   const provider = getProviderConfig();
-  const savedModel = String(Zotero.Prefs.get(prefKey("model"), true) ?? "").trim();
+  const savedModel = String(
+    Zotero.Prefs.get(prefKey("model"), true) ?? "",
+  ).trim();
   const form = el(doc, "div");
   form.style.cssText = "display:grid;gap:10px;max-width:760px;padding:16px;";
 
+  const nameLabel = el(doc, "label", { textContent: "Provider name" });
+  const name = el(doc, "input", { type: "text", value: provider.name });
+  const apiTypeLabel = el(doc, "label", { textContent: "API type" });
+  const apiType = el(doc, "select", { id: "zrc-api-type" });
+  for (const option of API_TYPE_OPTIONS) {
+    apiType.append(
+      el(doc, "option", {
+        value: option.value,
+        textContent: `${option.label} — ${option.description}`,
+      }),
+    );
+  }
+  apiType.value = provider.apiType;
   const baseLabel = el(doc, "label", { textContent: "API base URL" });
   const base = el(doc, "input", {
     type: "url",
     value: provider.apiBase,
     placeholder: "https://api.example.com/v1",
   });
-  const nameLabel = el(doc, "label", { textContent: "Provider name" });
-  const name = el(doc, "input", { type: "text", value: provider.name });
-  const headersLabel = el(doc, "label", { textContent: "Custom headers (JSON)" });
+  const headersLabel = el(doc, "label", {
+    textContent: "Custom headers (JSON)",
+  });
   const headers = el(doc, "textarea", { type: "text" });
   headers.value = JSON.stringify(provider.headers, null, 2);
   const keyLabel = el(doc, "label", { textContent: "API key" });
@@ -63,15 +83,27 @@ export async function bootstrapProviderSettings(
   const renderModels = (entries: Array<{ id: string; label?: string }>) => {
     model.replaceChildren();
     for (const entry of entries) {
-      model.append(el(doc, "option", {
-        value: entry.id,
-        textContent: entry.label || entry.id,
-      }));
+      model.append(
+        el(doc, "option", {
+          value: entry.id,
+          textContent: entry.label || entry.id,
+        }),
+      );
     }
     if (savedModel && !entries.some((entry) => entry.id === savedModel)) {
-      model.append(el(doc, "option", { value: savedModel, textContent: `${savedModel} (saved)` }));
+      model.append(
+        el(doc, "option", {
+          value: savedModel,
+          textContent: `${savedModel} (saved)`,
+        }),
+      );
     }
-    model.append(el(doc, "option", { value: "__manual__", textContent: "Enter model ID manually…" }));
+    model.append(
+      el(doc, "option", {
+        value: "__manual__",
+        textContent: "Enter model ID manually…",
+      }),
+    );
     if (savedModel && entries.some((entry) => entry.id === savedModel)) {
       model.value = savedModel;
     } else if (savedModel) {
@@ -87,15 +119,25 @@ export async function bootstrapProviderSettings(
   status.style.cssText = "min-height:1.4em;";
   const actions = el(doc, "div");
   actions.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;";
-  const fetchButton = el(doc, "button", { type: "button", textContent: "Fetch models" });
+  const fetchButton = el(doc, "button", {
+    type: "button",
+    textContent: "Fetch models",
+  });
   const saveButton = el(doc, "button", { type: "button", textContent: "Save" });
   actions.append(fetchButton, saveButton);
 
   const persist = () => {
     const apiBase = base.value.trim().replace(/\/+$/, "");
     const customHeaders = parseProviderHeaders(headers.value);
-    setProviderConfig({ name: name.value, apiBase, apiKey: key.value, headers: customHeaders });
-    const selectedModel = model.value === "__manual__" ? manualModel.value : model.value;
+    setProviderConfig({
+      name: name.value,
+      apiType: apiType.value as typeof provider.apiType,
+      apiBase,
+      apiKey: key.value,
+      headers: customHeaders,
+    });
+    const selectedModel =
+      model.value === "__manual__" ? manualModel.value : model.value;
     setPref("model", selectedModel.trim());
     setPref("modelPrimary", selectedModel.trim());
     status.textContent = "Saved.";
@@ -106,7 +148,11 @@ export async function bootstrapProviderSettings(
     fetchButton.disabled = true;
     status.textContent = "Fetching models…";
     try {
-      const models = await fetchCustomEndpointModels(base.value, key.value, parseProviderHeaders(headers.value));
+      const models = await fetchCustomEndpointModels(
+        base.value,
+        key.value,
+        parseProviderHeaders(headers.value),
+      );
       renderModels(models);
       setPref("providerModelCache", JSON.stringify(models));
       setPref("cpaModelCache", JSON.stringify(models));
@@ -124,10 +170,26 @@ export async function bootstrapProviderSettings(
     persist();
   });
   manualModel.addEventListener("change", persist);
-  for (const input of [base, key]) input.addEventListener("change", persist);
+  for (const input of [base, key, apiType])
+    input.addEventListener("change", persist);
 
-  form.append(nameLabel, name, baseLabel, base, keyLabel, key, headersLabel, headers, modelLabel, model, manualModel, actions, status);
+  form.append(
+    nameLabel,
+    name,
+    apiTypeLabel,
+    apiType,
+    baseLabel,
+    base,
+    keyLabel,
+    key,
+    headersLabel,
+    headers,
+    modelLabel,
+    model,
+    manualModel,
+    actions,
+    status,
+  );
   root.append(title, hint, form);
   container.append(root);
 }
-

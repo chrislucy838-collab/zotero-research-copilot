@@ -80,12 +80,13 @@ Zotero Research Copilot 会把 AI 对话放在你正在使用的 Zotero 条目�
 
 | 字段         | 是否必填   | 示例                                                       |
 | ------------ | ---------- | ---------------------------------------------------------- |
+| API 类型     | 是         | `OpenAI Compatible` 或 `OpenAI Responses`                  |
 | API Base URL | 是         | `https://api.openai.com/v1` 或 `http://127.0.0.1:11434/v1` |
 | Model        | 是         | `gpt-4.1-mini` 或 `llama3.1:8b`                            |
 | API Key      | 取决于服务 | 本地未鉴权端点可以留空。                                   |
 | 自定义请求头 | 可选       | 以 JSON 形式填写非标准认证或网关请求头。                   |
 
-端点通常需要提供 `/models` 和 `/chat/completions` 所需的接口形状。兼容 API 不代表一定支持 provider 的专有能力。只要接口行为符合要求，Ollama、LM Studio、vLLM、OpenRouter、DeepSeek 兼容网关及其他本地或托管服务都有可能使用。
+选择 **OpenAI Compatible** 使用 Chat Completions API，选择 **OpenAI Responses** 使用 Responses API。端点通常需要提供 `/models`，以及对应的 `/chat/completions` 或 `/responses` 接口。只要接口行为符合要求，Ollama、LM Studio、vLLM、OpenRouter、DeepSeek 兼容网关及其他本地或托管服务都有可能使用。
 
 ## 安装
 

@@ -1,6 +1,7 @@
 import { assert } from "chai";
 
-type PrefHelpersModule = typeof import("../src/modules/contextPanel/prefHelpers");
+type PrefHelpersModule =
+  typeof import("../src/modules/contextPanel/prefHelpers");
 type LlmClientModule = typeof import("../src/utils/llmClient");
 type StateModule = typeof import("../src/modules/contextPanel/state");
 
@@ -12,7 +13,8 @@ let state: StateModule;
 let prefStore: PrefStore;
 
 const key = (name: string) => `${PREF_PREFIX}.${name}`;
-const setPref = (name: string, value: unknown) => prefStore.set(key(name), value);
+const setPref = (name: string, value: unknown) =>
+  prefStore.set(key(name), value);
 
 describe("OpenAI-compatible provider preferences", function () {
   before(async function () {
@@ -23,7 +25,10 @@ describe("OpenAI-compatible provider preferences", function () {
         set: (name: string, value: unknown) => prefStore.set(name, value),
       },
     };
-    (globalThis as any).ztoolkit = { getGlobal: () => undefined, log: () => undefined };
+    (globalThis as any).ztoolkit = {
+      getGlobal: () => undefined,
+      log: () => undefined,
+    };
     prefHelpers = await import("../src/modules/contextPanel/prefHelpers");
     llmClient = await import("../src/utils/llmClient");
     state = await import("../src/modules/contextPanel/state");
@@ -72,8 +77,10 @@ describe("OpenAI-compatible provider preferences", function () {
     setPref("primaryConnectionMode", "custom");
     setPref("apiBase", "https://provider.example/v1/");
     setPref("apiKey", "provider-key");
+    setPref("apiType", "openai-responses");
     setPref("model", "provider-model");
     const result = llmClient.getApiConfig();
+    assert.equal(result.apiType, "openai-responses");
     assert.equal(result.apiBase, "https://provider.example/v1");
     assert.equal(result.apiKey, "provider-key");
     assert.equal(result.model, "provider-model");

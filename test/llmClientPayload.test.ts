@@ -4,6 +4,7 @@ type LlmClientModule = typeof import("../src/utils/llmClient");
 
 let llmClient: LlmClientModule;
 let originalFetch: typeof globalThis.fetch | undefined;
+const prefValues = new Map<string, unknown>();
 
 function buildOpenAICompatSseResponse(text: string): Response {
   const body =
@@ -30,11 +31,11 @@ describe("llmClient payload parameter policy", function () {
     originalFetch = globalThis.fetch;
     (globalThis as any).Zotero = {
       Prefs: {
-        get() {
-          return "";
+        get(name: string) {
+          return prefValues.get(name) ?? "";
         },
-        set() {
-          return undefined;
+        set(name: string, value: unknown) {
+          prefValues.set(name, value);
         },
       },
     };
@@ -50,6 +51,7 @@ describe("llmClient payload parameter policy", function () {
 
   afterEach(function () {
     globalThis.fetch = originalFetch as typeof globalThis.fetch;
+    prefValues.clear();
   });
 
   it("omits temperature and token fields for chat completions when not provided", async function () {
@@ -126,6 +128,34 @@ describe("llmClient payload parameter policy", function () {
 
     assert.equal(seenPayload?.max_completion_tokens, 2345);
     assert.notProperty(seenPayload, "max_tokens");
+  });
+
+  it("uses the selected Responses API type with a plain base URL", async function () {
+    let seenUrl = "";
+    prefValues.set(
+      "extensions.zotero.zoteroResearchCopilot.apiType",
+      "openai-responses",
+    );
+    globalThis.fetch = (async (
+      url: string | URL | Request,
+      _init?: RequestInit,
+    ) => {
+      seenUrl = String(url);
+      return buildResponsesSseResponse("OK");
+    }) as typeof globalThis.fetch;
+
+    const result = await llmClient.callLLMStream(
+      {
+        prompt: "Hello",
+        model: "gpt-5.1",
+        apiBase: "https://api.example.test/v1",
+        apiKey: "test-key",
+      },
+      () => undefined,
+    );
+
+    assert.equal(result, "OK");
+    assert.equal(seenUrl, "https://api.example.test/v1/responses");
   });
 
   it("omits max_output_tokens for Responses API when not provided", async function () {
