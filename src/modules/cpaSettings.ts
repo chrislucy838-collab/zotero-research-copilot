@@ -54,7 +54,7 @@ export async function bootstrapProviderSettings(
     apiType.append(
       el(doc, "option", {
         value: option.value,
-        textContent: `${option.label} — ${option.description}`,
+        textContent: option.label,
       }),
     );
   }
@@ -152,6 +152,7 @@ export async function bootstrapProviderSettings(
         base.value,
         key.value,
         parseProviderHeaders(headers.value),
+        apiType.value as typeof provider.apiType,
       );
       renderModels(models);
       setPref("providerModelCache", JSON.stringify(models));

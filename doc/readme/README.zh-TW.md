@@ -32,7 +32,7 @@
 
 ## 連接模型
 
-在 **工具 → 附加元件 → Zotero Research Copilot → 設定** 中配置模型。選擇 **OpenAI Compatible** 使用 Chat Completions，或選擇 **OpenAI Responses** 使用 Responses API。
+在 **工具 → 附加元件 → Zotero Research Copilot → 設定** 中配置模型。API type 可選擇 **OpenAI Compatible**、**Google Gemini**、**Anthropic Messages**、**OpenAI Responses** 或 **ChatGPT Codex (Plus/Pro)**，請選擇與端點相符的協定。
 
 ### OpenAI 相容 API
 

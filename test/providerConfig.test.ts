@@ -45,6 +45,6 @@ describe("provider configuration", function () {
     (globalThis as any).Zotero = {
       Prefs: { get: () => undefined },
     };
-    assert.equal(getProviderConfig().apiType, "openai-compatible");
+    assert.equal(getProviderConfig().apiType, "openai-completions");
   });
 });

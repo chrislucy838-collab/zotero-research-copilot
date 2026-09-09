@@ -21,7 +21,7 @@
 
 ## Connexion à un modèle
 
-Ouvrez **Tools → Add-ons → Zotero Research Copilot → Settings** et choisissez **OpenAI Compatible** pour Chat Completions ou **OpenAI Responses** pour Responses API. Renseignez API Base URL et Model ; API Key et Custom Headers sont facultatifs selon le service.
+Ouvrez **Tools → Add-ons → Zotero Research Copilot → Settings** et choisissez le type d'API correspondant à votre endpoint : **OpenAI Compatible**, **Google Gemini**, **Anthropic Messages**, **OpenAI Responses** ou **ChatGPT Codex (Plus/Pro)**. Renseignez API Base URL et Model ; API Key et Custom Headers sont facultatifs selon le service.
 
 Exemples : `https://api.openai.com/v1` et `http://127.0.0.1:11434/v1`. Le service doit généralement fournir les formes d'API `/models` et `/chat/completions`.
 

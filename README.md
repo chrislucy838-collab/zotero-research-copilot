@@ -80,9 +80,15 @@ Results are deduplicated across sources and show metadata, DOI, venue, authors, 
 
 Open **Tools → Add-ons → Zotero Research Copilot → Settings**. Depending on the Zotero build, the preference pane may also appear under **Edit → Settings**.
 
-The supported connection path is **OpenAI-compatible API**.
+The Settings page provides an **API type** selector. Choose the protocol that matches your endpoint:
 
-### OpenAI-compatible API
+- **OpenAI Compatible**
+- **Google Gemini**
+- **Anthropic Messages**
+- **OpenAI Responses**
+- **ChatGPT Codex (Plus/Pro)**
+
+### API configuration
 
 Switch the primary connection mode to **API Mode** and configure:
 

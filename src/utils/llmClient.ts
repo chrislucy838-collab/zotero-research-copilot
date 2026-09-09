@@ -35,6 +35,7 @@ import type {
 } from "./reasoningProfiles";
 import { getProviderConfig } from "./providerConfig";
 import { isResponsesApiType } from "./apiType";
+import { callNativeApi, isNativeApiType } from "./nativeApi";
 import {
   API_ENDPOINT,
   RESPONSES_ENDPOINT,
@@ -1993,6 +1994,21 @@ export async function callLLM(params: ChatParams): Promise<string> {
   });
   const messages = buildMessages(params, systemPrompt);
   params.onContextEstimate?.(estimateProviderMessageTokens(messages), messages);
+  if (isNativeApiType(apiType)) {
+    return callNativeApi({
+      apiType,
+      apiBase,
+      apiKey,
+      model,
+      headers: getProviderCustomHeaders(),
+      messages,
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+      stream: false,
+      signal: params.signal,
+      fetchImpl: getFetch(),
+    });
+  }
   const useResponses = isResponsesApiType(apiType) || isResponsesBase(apiBase);
   const responseFileIds = useResponses
     ? await uploadFilesForResponses({
@@ -2242,6 +2258,24 @@ export async function callLLMStream(
   });
   const messages = buildMessages(params, systemPrompt);
   params.onContextEstimate?.(estimateProviderMessageTokens(messages), messages);
+  if (isNativeApiType(apiType)) {
+    const nativeText = await callNativeApi({
+      apiType,
+      apiBase,
+      apiKey,
+      model,
+      headers: getProviderCustomHeaders(),
+      messages,
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+      stream: true,
+      signal: params.signal,
+      fetchImpl: getFetch(),
+      onDelta: rawOnDelta,
+      onReasoning: rawOnReasoning,
+    });
+    return finishNormalizedOutput(nativeText);
+  }
   const useResponses = isResponsesApiType(apiType) || isResponsesBase(apiBase);
   const responseFileIds = useResponses
     ? await uploadFilesForResponses({

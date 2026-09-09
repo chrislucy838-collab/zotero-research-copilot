@@ -1,13 +1,13 @@
 # 提供商配置
 
-Zotero Research Copilot 当前使用手动配置的 OpenAI 兼容 API 端点。项目没有自建的模型代理。
+Zotero Research Copilot 支持手动配置 API 端点，设置页提供五种协议格式：OpenAI Compatible、Google Gemini、Anthropic Messages、OpenAI Responses 和 ChatGPT Codex (Plus/Pro)。项目没有自建的模型代理。
 
 ## 配置端点
 
 打开面板中的 **Setting** 标签，或进入 **工具 → 附加组件 → Zotero Research Copilot → 设置**，配置模型连接：
 
 - **提供商名称**：显示在模型列表中的标签；
-- **API 类型**：选择 **OpenAI Compatible** 使用 Chat Completions，或选择 **OpenAI Responses** 使用 Responses API；
+- **API 类型**：选择端点实际实现的协议：**OpenAI Compatible**、**Google Gemini**、**Anthropic Messages**、**OpenAI Responses** 或 **ChatGPT Codex (Plus/Pro)**；
 - **API Base URL**：所选端点的基础地址；
 - **API Key**：端点不要求认证时可以留空；
 - **自定义请求头**：为非标准认证网关填写 JSON 格式的 HTTP 请求头；

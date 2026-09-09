@@ -1,13 +1,13 @@
 # Provider Configuration
 
-Zotero Research Copilot currently uses manually configured OpenAI-compatible API endpoints. The project does not provide a project-owned proxy.
+Zotero Research Copilot supports manually configured API endpoints using the same five protocol formats as the Settings selector: OpenAI Compatible, Google Gemini, Anthropic Messages, OpenAI Responses, and ChatGPT Codex (Plus/Pro). The project does not provide a project-owned proxy.
 
 ## Configure an endpoint
 
 Open the **Setting** tab in the panel or open **Tools → Add-ons → Zotero Research Copilot → Settings**. Configure the provider profile with:
 
 - **Provider name**: a label shown in the model list;
-- **API type**: choose **OpenAI Compatible** for Chat Completions or **OpenAI Responses** for the Responses API;
+- **API type**: choose the protocol implemented by the endpoint: **OpenAI Compatible**, **Google Gemini**, **Anthropic Messages**, **OpenAI Responses**, or **ChatGPT Codex (Plus/Pro)**;
 - **API Base URL**: the root URL of the selected endpoint;
 - **API Key**: optional when the endpoint does not require authentication;
 - **Custom headers**: optional JSON headers for gateways with non-standard authentication;

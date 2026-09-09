@@ -21,7 +21,7 @@
 
 ## 모델 연결
 
-**Tools → Add-ons → Zotero Research Copilot → Settings**를 열고 API type에서 **OpenAI Compatible** 또는 **OpenAI Responses**를 선택한 뒤 API Base URL과 Model을 입력합니다. API Key와 Custom Headers는 필요할 때 입력합니다. 예: `https://api.openai.com/v1`, `http://127.0.0.1:11434/v1`. 보통 `/models`와 `/chat/completions` 형태를 제공해야 합니다.
+**Tools → Add-ons → Zotero Research Copilot → Settings**를 열고 API type에서 **OpenAI Compatible**, **Google Gemini**, **Anthropic Messages**, **OpenAI Responses** 또는 **ChatGPT Codex (Plus/Pro)**를 선택한 뒤 API Base URL과 Model을 입력합니다. API Key와 Custom Headers는 필요할 때 입력합니다. 예: `https://api.openai.com/v1`, `http://127.0.0.1:11434/v1`. 보통 `/models`와 `/chat/completions` 형태를 제공해야 합니다.
 
 ## 설치
 

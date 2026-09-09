@@ -72,9 +72,15 @@ Zotero Research Copilot 会把 AI 对话放在你正在使用的 Zotero 条目�
 
 可以从对话面板的 **Setting** 标签配置模型，也可以打开 **工具 → 附加组件 → Zotero Research Copilot → 设置**。部分 Zotero 构建版本会把它显示在 **编辑 → 设置** 中。
 
-当前支持的连接方式是 **OpenAI 兼容 API**。
+设置页面提供 **API 类型** 选择，请选择与端点匹配的协议：
 
-### OpenAI 兼容 API
+- **OpenAI Compatible**
+- **Google Gemini**
+- **Anthropic Messages**
+- **OpenAI Responses**
+- **ChatGPT Codex (Plus/Pro)**
+
+### API 配置
 
 切换主连接模式为 **API 方式**，填写：
 
