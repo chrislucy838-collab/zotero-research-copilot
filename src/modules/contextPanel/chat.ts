@@ -123,10 +123,7 @@ import {
 } from "./paperContext";
 import { formatPaperCitationLabel } from "./paperAttribution";
 import { normalizeEvidenceBlocks, type EvidenceBlock } from "./evidence";
-import {
-  getCitationBlocks,
-  linkEvidenceCitations,
-} from "./evidenceCitations";
+import { getCitationBlocks, linkEvidenceCitations } from "./evidenceCitations";
 import { highlightEvidenceInReader } from "./evidenceHighlight";
 import {
   estimateHistoryTokens,
@@ -554,8 +551,12 @@ function createReadonlyContextRemovePlaceholder(
   return placeholder;
 }
 
-async function openEvidencePage(evidence: EvidenceBlock | EvidenceBlock[]): Promise<void> {
-  const evidenceBlocks = (Array.isArray(evidence) ? evidence : [evidence]).filter(
+async function openEvidencePage(
+  evidence: EvidenceBlock | EvidenceBlock[],
+): Promise<void> {
+  const evidenceBlocks = (
+    Array.isArray(evidence) ? evidence : [evidence]
+  ).filter(
     (block) =>
       Number.isFinite(block.pageIndex) &&
       (block.pageIndex as number) >= 0 &&
@@ -571,7 +572,9 @@ async function openEvidencePage(evidence: EvidenceBlock | EvidenceBlock[]): Prom
     });
     const reader =
       openedReader ||
-      readerAPI._readers?.find((candidate) => candidate.itemID === first.contextItemId);
+      readerAPI._readers?.find(
+        (candidate) => candidate.itemID === first.contextItemId,
+      );
     if (reader) {
       await highlightEvidenceInReader(reader, evidenceBlocks);
     }
@@ -735,7 +738,9 @@ function toPanelMessage(message: StoredChatMessage): Message {
     reasoningSummary: message.reasoningSummary,
     reasoningDetails: message.reasoningDetails,
     contextRefs: message.contextRefs,
-    evidenceBlocks: normalizeEvidenceBlocks(message.contextRefs?.evidenceBlocks),
+    evidenceBlocks: normalizeEvidenceBlocks(
+      message.contextRefs?.evidenceBlocks,
+    ),
   };
 }
 
@@ -883,13 +888,15 @@ export async function copyTextToClipboard(
 
   // Zotero's internal helper works from both Reader and Library sidebars and
   // does not depend on the browser permission model of navigator.clipboard.
-  const zotero = (globalThis as typeof globalThis & {
-    Zotero?: {
-      Utilities?: {
-        Internal?: { copyTextToClipboard?: (value: string) => void };
+  const zotero = (
+    globalThis as typeof globalThis & {
+      Zotero?: {
+        Utilities?: {
+          Internal?: { copyTextToClipboard?: (value: string) => void };
+        };
       };
-    };
-  }).Zotero;
+    }
+  ).Zotero;
   const internalCopy = zotero?.Utilities?.Internal?.copyTextToClipboard;
   if (typeof internalCopy === "function") {
     try {
@@ -949,7 +956,8 @@ export async function exportMarkdownToFile(
 ): Promise<string | null> {
   const safeText = sanitizeText(markdownText).trim();
   if (!safeText) throw new Error("No chat history available to export");
-  const baseName = suggestedName.replace(/[\\?%*:|\"<>/]/g, "_").trim() ||
+  const baseName =
+    suggestedName.replace(/[\\?%*:|\"<>/]/g, "_").trim() ||
     "zotero-research-copilot-chat";
   const fileName = baseName.replace(/(?:\.md)+$/i, "") + ".md";
   const parentWindow = body.ownerDocument?.defaultView || undefined;
@@ -963,9 +971,15 @@ export async function exportMarkdownToFile(
   if (selectedPath === false) return null;
   const selectedPathText = String(selectedPath);
   const path = selectedPathText.replace(/(?:\.md)+$/i, "") + ".md";
-  const zotero = (globalThis as typeof globalThis & {
-    Zotero?: { File?: { putContentsAsync?: (filePath: string, text: string) => Promise<void> } };
-  }).Zotero;
+  const zotero = (
+    globalThis as typeof globalThis & {
+      Zotero?: {
+        File?: {
+          putContentsAsync?: (filePath: string, text: string) => Promise<void>;
+        };
+      };
+    }
+  ).Zotero;
   if (typeof zotero?.File?.putContentsAsync !== "function") {
     throw new Error("Zotero file service is unavailable");
   }
@@ -1079,7 +1093,10 @@ export async function exportGeneratedImageDataUrl(
   const parsed = parseGeneratedImageDataUrl(body, dataUrl);
   if (!parsed) throw new Error("Invalid generated image data");
   const { FilePickerHelper } = await import("zotero-plugin-toolkit");
-  const dirPath = await new FilePickerHelper("Select Save Directory", "folder").open();
+  const dirPath = await new FilePickerHelper(
+    "Select Save Directory",
+    "folder",
+  ).open();
   if (dirPath === false) return null;
   return writeGeneratedImageFileToDirectory(
     dirPath as string,
@@ -1214,7 +1231,9 @@ export function resolveEffectiveRequestConfig(params: {
   if (!apiBase) missing.push("API Base URL");
   if (!model) missing.push("Model");
   if (missing.length > 0) {
-    throw new Error(`Provider requires ${missing.join(" and ")} before sending`);
+    throw new Error(
+      `Provider requires ${missing.join(" and ")} before sending`,
+    );
   }
 
   return { model, apiBase, apiKey, advanced: params.advanced };
@@ -1238,16 +1257,17 @@ async function buildCombinedContextForRequest(params: {
   throwIfRequestAborted(params.signal);
   const requestEvidenceBlocks: EvidenceBlock[] = [];
   // ── Get or create the conversation-level context pool ──
-  const pool: ConversationContextPoolEntry =
-    conversationContextPool.get(params.conversationKey) || {
-      basePdfContext: "",
-      basePdfItemId: null,
-      basePdfTitle: "",
-      basePdfRemoved: false,
-      baseDocumentKind: null,
-      baseDocumentSegmentIds: [],
-      supplementalContexts: new Map(),
-    };
+  const pool: ConversationContextPoolEntry = conversationContextPool.get(
+    params.conversationKey,
+  ) || {
+    basePdfContext: "",
+    basePdfItemId: null,
+    basePdfTitle: "",
+    basePdfRemoved: false,
+    baseDocumentKind: null,
+    baseDocumentSegmentIds: [],
+    supplementalContexts: new Map(),
+  };
   conversationContextPool.set(params.conversationKey, pool);
   requestEvidenceBlocks.push(...(pool.baseEvidenceBlocks || []));
   for (const entry of pool.supplementalContexts.values()) {
@@ -1543,7 +1563,8 @@ async function buildCombinedContextForRequest(params: {
       supplementalRemaining -= block.length;
       continue;
     }
-    const marker = "\n[This paper context was truncated by the multi-paper context budget.]";
+    const marker =
+      "\n[This paper context was truncated by the multi-paper context budget.]";
     const available = Math.max(0, supplementalRemaining - marker.length);
     boundedSupplementalBlocks.push(`${block.slice(0, available)}${marker}`);
     supplementalRemaining = 0;
@@ -1552,7 +1573,11 @@ async function buildCombinedContextForRequest(params: {
   const supplementalPaperContext = boundedSupplementalBlocks.length
     ? `Supplemental Paper Contexts:\n\n${boundedSupplementalBlocks.join("\n\n---\n\n")}`
     : "";
-  if (pdfContext.trim() && pool.basePdfItemId !== null && !pool.basePdfRemoved) {
+  if (
+    pdfContext.trim() &&
+    pool.basePdfItemId !== null &&
+    !pool.basePdfRemoved
+  ) {
     let baseSourceItemId = pool.basePdfItemId;
     try {
       const baseAttachment = getZoteroItem(pool.basePdfItemId);
@@ -2087,7 +2112,8 @@ async function compactConversationHistory(params: {
   const nonHistoryTokens =
     estimateTextTokens(params.combinedContext) +
     estimateTextTokens(params.currentQuestion);
-  const estimatedTokens = nonHistoryTokens + estimateHistoryTokens(usableHistory);
+  const estimatedTokens =
+    nonHistoryTokens + estimateHistoryTokens(usableHistory);
   const historyBudget = Math.max(
     CONTEXT_HARD_TRUNCATION_KEEP_TOKENS,
     getContextCompactionTriggerTokens() - nonHistoryTokens,
@@ -2098,11 +2124,12 @@ async function compactConversationHistory(params: {
   const cachedSummary = zoneBSummaryCache.get(params.conversationKey);
   const cachedBoundary = zoneBSummaryBoundaryCache.get(params.conversationKey);
   const boundaryIndex = cachedBoundary
-    ? usableHistory.findIndex((entry) => messageBudgetKey(entry) === cachedBoundary)
+    ? usableHistory.findIndex(
+        (entry) => messageBudgetKey(entry) === cachedBoundary,
+      )
     : -1;
-  const incrementalHistory = boundaryIndex >= 0
-    ? usableHistory.slice(boundaryIndex + 1)
-    : usableHistory;
+  const incrementalHistory =
+    boundaryIndex >= 0 ? usableHistory.slice(boundaryIndex + 1) : usableHistory;
 
   if (!shouldCompact && !cachedSummary) {
     return buildLLMHistoryMessages(
@@ -2160,7 +2187,7 @@ async function compactConversationHistory(params: {
     try {
       ztoolkit.log(
         `LLM: Compacting ${zoneBMessages.length} old messages into Zone B summary ` +
-          `(estimated context: ${estimatedTokens} tokens, trigger: ${getContextCompactionTriggerTokens()}, window: ${getContextWindowTokens()})`
+          `(estimated context: ${estimatedTokens} tokens, trigger: ${getContextCompactionTriggerTokens()}, window: ${getContextWindowTokens()})`,
       );
       const summary = await callLLM({
         prompt: COMPACTION_SUMMARY_PROMPT + summaryInput,
@@ -2194,7 +2221,10 @@ async function compactConversationHistory(params: {
       // Non-LLM safety fallback: keep a recent token-bounded tail and continue.
       if (!cachedSummary) {
         return buildLLMHistoryMessages(
-          hardTruncateHistory(zoneCMessages, CONTEXT_HARD_TRUNCATION_KEEP_TOKENS),
+          hardTruncateHistory(
+            zoneCMessages,
+            CONTEXT_HARD_TRUNCATION_KEEP_TOKENS,
+          ),
         );
       }
     }
@@ -2692,6 +2722,7 @@ export async function editUserMessageAndRetry(
         signal: panelAbortController?.signal,
         images: requestImages,
         attachments: fileAttachments,
+        sessionId: conversationKey,
         model: effectiveRequestConfig.model,
         apiBase: effectiveRequestConfig.apiBase,
         apiKey: effectiveRequestConfig.apiKey,
@@ -3052,6 +3083,7 @@ export async function retryLatestAssistantResponse(
         signal: panelAbortController?.signal,
         images: requestImages,
         attachments: fileAttachments,
+        sessionId: conversationKey,
         model: effectiveRequestConfig.model,
         apiBase: effectiveRequestConfig.apiBase,
         apiKey: effectiveRequestConfig.apiKey,
@@ -3455,6 +3487,7 @@ export async function sendQuestion(
         signal: panelAbortController?.signal,
         images: requestImages,
         attachments: requestFileAttachments,
+        sessionId: conversationKey,
         model: effectiveRequestConfig.model,
         apiBase: effectiveRequestConfig.apiBase,
         apiKey: effectiveRequestConfig.apiKey,
@@ -3527,15 +3560,20 @@ export async function sendQuestion(
 }
 
 function getConversationIndexTitle(text: string): string {
-  const firstLine = sanitizeText(text || "")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .find(Boolean) || "Untitled message";
-  return firstLine.length > 44 ? `${firstLine.slice(0, 44).trim()}…` : firstLine;
+  const firstLine =
+    sanitizeText(text || "")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find(Boolean) || "Untitled message";
+  return firstLine.length > 44
+    ? `${firstLine.slice(0, 44).trim()}…`
+    : firstLine;
 }
 
 export function refreshConversationIndex(body: Element): void {
-  const list = body.querySelector("#llm-conversation-index-list") as HTMLElement | null;
+  const list = body.querySelector(
+    "#llm-conversation-index-list",
+  ) as HTMLElement | null;
   const chatBox = body.querySelector("#llm-chat-box") as HTMLElement | null;
   if (!list || !chatBox) return;
   const hadEntries = list.childElementCount > 0;
@@ -3547,7 +3585,9 @@ export function refreshConversationIndex(body: Element): void {
     chatBox.querySelectorAll(".llm-message-wrapper.user[data-message-id]"),
   ) as HTMLElement[];
   for (const wrapper of userWrappers) {
-    const bubble = wrapper.querySelector(".llm-bubble.user") as HTMLElement | null;
+    const bubble = wrapper.querySelector(
+      ".llm-bubble.user",
+    ) as HTMLElement | null;
     const messageId = wrapper.dataset.messageId;
     if (!bubble || !messageId) continue;
     const ownerDocument = chatBox.ownerDocument;
@@ -4028,9 +4068,7 @@ export function refreshChat(body: Element, item?: Zotero.Item | null) {
           const bodyText = [
             paperContext.title,
             metaParts.join(" · "),
-            paperContext.availability
-              ? `(${paperContext.availability})`
-              : "",
+            paperContext.availability ? `(${paperContext.availability})` : "",
           ]
             .filter(Boolean)
             .join(" · ");
@@ -4363,9 +4401,13 @@ export function refreshChat(body: Element, item?: Zotero.Item | null) {
         } else {
           renderAssistantMarkdown(bubble);
           const evidenceBlocks = getAssistantEvidenceBlocks(history, index);
-          linkEvidenceCitations(bubble, evidenceBlocks, (_citation, matchingBlocks) => {
-            void openEvidencePage(matchingBlocks);
-          });
+          linkEvidenceCitations(
+            bubble,
+            evidenceBlocks,
+            (_citation, matchingBlocks) => {
+              void openEvidencePage(matchingBlocks);
+            },
+          );
         }
         bubble.addEventListener("contextmenu", (e: Event) => {
           const me = e as MouseEvent;
@@ -4593,4 +4635,3 @@ export function refreshChat(body: Element, item?: Zotero.Item | null) {
     cancelFollowBottomStabilization(win, conversationKey);
   }
 }
-

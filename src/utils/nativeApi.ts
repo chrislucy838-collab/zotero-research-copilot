@@ -5,6 +5,7 @@ import type {
   ImageContent,
 } from "./llmClient";
 import type { ApiType } from "./apiType";
+import { withOpenCodeSessionHeader } from "./apiSession";
 
 export type NativeApiReasoningEvent = {
   summary?: string;
@@ -25,6 +26,7 @@ type NativeApiOptions = {
   maxTokens?: number;
   stream: boolean;
   signal?: AbortSignal;
+  sessionId?: string | number;
   fetchImpl: typeof fetch;
   onDelta?: (delta: string) => void;
   onReasoning?: (event: NativeApiReasoningEvent) => void;
@@ -329,6 +331,11 @@ export async function callNativeApi(
   options: NativeApiOptions,
 ): Promise<string> {
   const request = requestFor(options);
+  request.headers = withOpenCodeSessionHeader(
+    options.apiBase,
+    request.headers,
+    options.sessionId,
+  );
   const response = await options.fetchImpl(request.url, {
     method: "POST",
     headers: request.headers,

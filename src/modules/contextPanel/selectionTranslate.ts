@@ -532,6 +532,7 @@ export async function translateSelectedTextForReader(params: {
         model: modelConfig.model,
         apiBase: modelConfig.apiBase,
         apiKey: modelConfig.apiKey,
+        sessionId: document.item.id,
         temperature: 0.2,
         maxTokens: 1200,
       },

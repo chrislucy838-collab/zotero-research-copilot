@@ -36,6 +36,7 @@ import type {
 import { getProviderConfig } from "./providerConfig";
 import { isResponsesApiType } from "./apiType";
 import { callNativeApi, isNativeApiType } from "./nativeApi";
+import { withOpenCodeSessionHeader } from "./apiSession";
 import {
   API_ENDPOINT,
   RESPONSES_ENDPOINT,
@@ -129,6 +130,8 @@ export type ChatParams = {
   maxTokens?: number;
   /** Local files to upload and attach when using Responses API */
   attachments?: ChatFileAttachment[];
+  /** Stable conversation identifier used by providers such as OpenCode Go. */
+  sessionId?: string | number;
   /** Called after the complete provider-visible message list is assembled. */
   onContextEstimate?: (tokens: number, messages: ChatMessage[]) => void;
 };
@@ -247,8 +250,16 @@ function getProviderCustomHeaders(): Record<string, string> {
   return getProviderConfig().headers;
 }
 
-function buildProviderHeaders(apiKey: string): Record<string, string> {
-  return buildHeaders(apiKey, getProviderCustomHeaders());
+function buildProviderHeaders(
+  apiKey: string,
+  apiBase = "",
+  sessionId?: string | number,
+): Record<string, string> {
+  return withOpenCodeSessionHeader(
+    apiBase,
+    buildHeaders(apiKey, getProviderCustomHeaders()),
+    sessionId,
+  );
 }
 
 export function getApiConfig(overrides?: {
@@ -735,6 +746,7 @@ function buildUploadRequest(params: {
 async function uploadAttachmentForResponses(params: {
   apiBase: string;
   apiKey: string;
+  sessionId?: string | number;
   attachment: ChatFileAttachment;
   signal?: AbortSignal;
 }): Promise<string> {
@@ -755,13 +767,11 @@ async function uploadAttachmentForResponses(params: {
   const bytes = await readLocalFileBytes(storedPath);
   throwIfAborted(params.signal);
 
-  const headers = getProviderCustomHeaders();
-  if (
-    params.apiKey &&
-    !Object.keys(headers).some((key) => key.toLowerCase() === "authorization")
-  ) {
-    headers.Authorization = `Bearer ${params.apiKey}`;
-  }
+  const headers = buildProviderHeaders(
+    params.apiKey,
+    params.apiBase,
+    params.sessionId,
+  );
   const uploadPurposes = ["assistants", "user_data"];
   let lastError = "Unknown file upload error";
   for (let index = 0; index < uploadPurposes.length; index++) {
@@ -817,6 +827,7 @@ async function uploadAttachmentForResponses(params: {
 async function uploadFilesForResponses(params: {
   apiBase: string;
   apiKey: string;
+  sessionId?: string | number;
   attachments: ChatFileAttachment[] | undefined;
   signal?: AbortSignal;
 }): Promise<string[]> {
@@ -830,6 +841,7 @@ async function uploadFilesForResponses(params: {
       const fileId = await uploadAttachmentForResponses({
         apiBase: params.apiBase,
         apiKey: params.apiKey,
+        sessionId: params.sessionId,
         attachment,
         signal: params.signal,
       });
@@ -1602,6 +1614,8 @@ function getTemperatureRecoveryPolicy(
 async function postWithTemperatureFallback(params: {
   url: string;
   apiKey: string;
+  apiBase?: string;
+  sessionId?: string | number;
   payload: Record<string, unknown>;
   logPayload?: (payload: Record<string, unknown>) => void;
   signal?: AbortSignal;
@@ -1615,7 +1629,11 @@ async function postWithTemperatureFallback(params: {
     params.logPayload?.(bodyPayload);
     return fetchWithTransientRetry(getFetch(), params.url, {
       method: "POST",
-      headers: buildProviderHeaders(params.apiKey),
+      headers: buildProviderHeaders(
+        params.apiKey,
+        params.apiBase,
+        params.sessionId,
+      ),
       body: JSON.stringify(bodyPayload),
       signal: params.signal,
     });
@@ -1688,6 +1706,8 @@ function getReasoningRecoverySelection(params: {
 async function postWithReasoningFallback(params: {
   url: string;
   apiKey: string;
+  apiBase?: string;
+  sessionId?: string | number;
   modelName?: string;
   initialReasoning: ReasoningConfig | undefined;
   buildPayload: (
@@ -1717,6 +1737,8 @@ async function postWithReasoningFallback(params: {
       return await postWithTemperatureFallback({
         url: params.url,
         apiKey: params.apiKey,
+        apiBase: params.apiBase,
+        sessionId: params.sessionId,
         payload,
         logPayload: params.logPayload,
         signal: params.signal,
@@ -2006,6 +2028,7 @@ export async function callLLM(params: ChatParams): Promise<string> {
       maxTokens: params.maxTokens,
       stream: false,
       signal: params.signal,
+      sessionId: params.sessionId,
       fetchImpl: getFetch(),
     });
   }
@@ -2014,6 +2037,7 @@ export async function callLLM(params: ChatParams): Promise<string> {
     ? await uploadFilesForResponses({
         apiBase,
         apiKey,
+        sessionId: params.sessionId,
         attachments: params.attachments,
         signal: params.signal,
       })
@@ -2042,6 +2066,8 @@ export async function callLLM(params: ChatParams): Promise<string> {
   const res = await postWithReasoningFallback({
     url,
     apiKey,
+    apiBase,
+    sessionId: params.sessionId,
     modelName: model,
     initialReasoning: params.reasoning,
     buildPayload,
@@ -2078,6 +2104,8 @@ function xhrStream(params: {
   XHRCtor: typeof XMLHttpRequest;
   url: string;
   apiKey: string;
+  apiBase?: string;
+  sessionId?: string | number;
   payload: Record<string, unknown>;
   signal?: AbortSignal;
   onDelta: (delta: string) => void;
@@ -2089,7 +2117,11 @@ function xhrStream(params: {
     const xhr = new XHRCtor();
     xhr.open("POST", url, true);
 
-    const headers = buildProviderHeaders(apiKey);
+    const headers = buildProviderHeaders(
+      apiKey,
+      params.apiBase,
+      params.sessionId,
+    );
     for (const [key, value] of Object.entries(headers)) {
       xhr.setRequestHeader(key, value);
     }
@@ -2270,6 +2302,7 @@ export async function callLLMStream(
       maxTokens: params.maxTokens,
       stream: true,
       signal: params.signal,
+      sessionId: params.sessionId,
       fetchImpl: getFetch(),
       onDelta: rawOnDelta,
       onReasoning: rawOnReasoning,
@@ -2281,6 +2314,7 @@ export async function callLLMStream(
     ? await uploadFilesForResponses({
         apiBase,
         apiKey,
+        sessionId: params.sessionId,
         attachments: params.attachments,
         signal: params.signal,
       })
@@ -2368,6 +2402,8 @@ export async function callLLMStream(
               XHRCtor,
               url,
               apiKey,
+              apiBase,
+              sessionId: params.sessionId,
               payload,
               signal: params.signal,
               onDelta: rawOnDelta,
@@ -2461,6 +2497,8 @@ export async function callLLMStream(
   const res = await postWithReasoningFallback({
     url,
     apiKey,
+    apiBase,
+    sessionId: params.sessionId,
     modelName: model,
     initialReasoning: params.reasoning,
     buildPayload,

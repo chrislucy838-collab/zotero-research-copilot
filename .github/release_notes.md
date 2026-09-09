@@ -1,5 +1,8 @@
 ## What's changed
 
+- Added automatic `x-opencode-session` headers for OpenCode Go requests, using a stable ID per conversation.
+- Preserved a user-supplied `x-opencode-session` custom header when present.
+
 - Aligned the Settings API type selector with the five protocol formats used by HanaAgent:
   - OpenAI Compatible
   - Google Gemini
@@ -13,6 +16,9 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 为 OpenCode Go 请求自动添加 `x-opencode-session`，并按对话保持稳定 ID。
+- 用户手动填写同名自定义请求头时保留用户配置。
 
 - 设置页的 API 类型选择现在与 HanaAgent 使用的五种协议格式一致：
   - OpenAI Compatible
