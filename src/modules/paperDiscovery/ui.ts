@@ -376,6 +376,11 @@ export async function bootstrapPaperDiscovery(
       )) as Zotero.Item[];
       preview = previewPaperCandidates(candidates, items);
       selected.clear();
+      references = [];
+      selectedReferences.clear();
+      selectAllReferencesButton.hidden = true;
+      clearReferenceSelectionButton.hidden = true;
+      searchButton.textContent = "Search";
       render();
       const unmatched = selectedIndexes.length - candidates.length;
       status.textContent = `Found ${candidates.length} of ${selectedIndexes.length} selected references${unmatched ? ` · ${unmatched} unmatched` : ""}.`;
@@ -397,6 +402,11 @@ export async function bootstrapPaperDiscovery(
     if (!selectedSources.length) return;
     searchButton.disabled = true;
     importButton.disabled = true;
+    references = [];
+    selectedReferences.clear();
+    selectAllReferencesButton.hidden = true;
+    clearReferenceSelectionButton.hidden = true;
+    searchButton.textContent = "Search";
     selected.clear();
     preview = [];
     updateImportButton();
