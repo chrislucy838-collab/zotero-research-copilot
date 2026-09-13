@@ -170,6 +170,7 @@ export async function bootstrapPaperDiscovery(
     const label = node(doc, "label");
     const checkbox = node(doc, "input") as HTMLInputElement;
     checkbox.type = "checkbox";
+    checkbox.style.cssText = "width:16px;height:16px;flex:0 0 16px;margin:0;";
     checkbox.checked = true;
     checkbox.dataset.source = source;
     label.append(checkbox, ` ${sourceLabel(source)}`);
@@ -183,6 +184,10 @@ export async function bootstrapPaperDiscovery(
   results.style.cssText = "display:flex;flex-direction:column;gap:8px;";
   const selectionStatus = node(doc, "div");
   selectionStatus.style.cssText = "font-size:11px;opacity:.8;min-height:1.2em;";
+  const setCheckboxSize = (checkbox: HTMLInputElement) => {
+    checkbox.style.cssText =
+      "width:16px;height:16px;min-width:16px;min-height:16px;flex:0 0 16px;box-sizing:border-box;margin:2px 0 0;";
+  };
   root.append(title, hint, controls, sources, status, selectionStatus, results);
   container.append(root);
 
@@ -239,6 +244,7 @@ export async function bootstrapPaperDiscovery(
         "border-radius:6px;padding:9px;display:flex;gap:8px;align-items:flex-start;";
       const checkbox = node(doc, "input") as HTMLInputElement;
       checkbox.type = "checkbox";
+      setCheckboxSize(checkbox);
       checkbox.checked = selectedReferences.has(index);
       checkbox.dataset.referenceIndex = String(index);
       checkbox.addEventListener("change", () => {
@@ -247,8 +253,9 @@ export async function bootstrapPaperDiscovery(
         const count = selectedReferences.size;
         selectionStatus.textContent = `${references.length} references found · ${count} selected for metadata search`;
       });
-      const text = node(doc, "span", `[${reference.index}] ${reference.text}`);
-      text.style.cssText = "font-size:12px;line-height:1.45;";
+      const text = node(doc, "span", reference.text);
+      text.style.cssText =
+        "font-size:12px;line-height:1.45;min-width:0;overflow-wrap:anywhere;";
       card.append(checkbox, text);
       results.append(card);
     });
@@ -267,6 +274,7 @@ export async function bootstrapPaperDiscovery(
       const header = node(doc, "label");
       const checkbox = node(doc, "input") as HTMLInputElement;
       checkbox.type = "checkbox";
+      setCheckboxSize(checkbox);
       checkbox.dataset.candidateIndex = String(index);
       checkbox.checked = selected.has(index);
       checkbox.disabled = preview[index]?.status === "duplicate";
