@@ -18,6 +18,7 @@
 - Fixed duplicated reference numbering and normalized Discover checkbox sizing.
 - Improved Extract references search with focused title queries, DOI lookups, fallback queries, and candidate ranking.
 - Fixed multiple numbered references being merged when PDF text extraction concatenates columns onto one line.
+- Improved reference splitting reliability for consecutive numbering and two-column PDF text.
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
@@ -40,4 +41,5 @@
 - 修复参考文献重复序号，并统一 Discover 复选框尺寸。
 - 改进 Extract references 检索，支持标题提取、DOI 精确查询、备用查询和候选排序。
 - 修复 PDF 文本提取把同一行中的多条编号参考文献合并成一条的问题。
+- 增强连续编号和双栏 PDF 文本的参考文献拆分可靠性。
 - 已通过完整单元测试和生产 XPI 构建验证。
