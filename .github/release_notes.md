@@ -22,6 +22,7 @@
 - Kept extracted references visible while accumulating search results, with incremental searches for newly selected references.
 - Separated extracted references from search results and added per-reference match status.
 - Placed search results above the extracted reference list for a shorter import workflow.
+- Improved reference matching with exact arXiv identification, title extraction, and strict candidate verification.
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
@@ -48,4 +49,5 @@
 - 搜索后保留已识别的参考文献列表，支持只检索新勾选的文献并累积结果。
 - 将识别列表与搜索结果分区显示，并为每条引用显示匹配状态。
 - 将搜索结果调整到参考文献列表上方，缩短导入操作路径。
+- 改进参考文献匹配，支持精确识别 arXiv、提取标题并严格验证候选论文。
 - 已通过完整单元测试和生产 XPI 构建验证。

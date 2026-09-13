@@ -9,6 +9,7 @@ export type ExtractedReference = {
   query: string;
   queries?: string[];
   doi?: string;
+  arxivId?: string;
   title?: string;
 };
 
@@ -16,6 +17,8 @@ const REFERENCE_HEADING =
   /^(?:references?|bibliography|works cited|literature cited|references and notes)\s*:?$/i;
 const ENTRY_PREFIX = /^\s*(?:\[(\d{1,4})\]|(\d{1,4})[.)])(?=\s|[^\d])\s*/;
 const DOI_PATTERN = /\b10\.\d{4,9}\/[\w.!#$%&'*+/=?^_`{|}~-]+/i;
+const ARXIV_PATTERN =
+  /(?:arxiv\.org\/(?:abs|pdf)\/|arxiv\s*:\s*|abs\/)(\d{4}\.\d{4,5})(?:v\d+)?/i;
 
 function cleanLine(value: unknown): string {
   return String(value ?? "")
@@ -28,6 +31,11 @@ function normalizeDoi(value: unknown): string | undefined {
   const match = String(value ?? "").match(DOI_PATTERN);
   if (!match) return undefined;
   return match[0].replace(/[.,;:)}\]]+$/, "").toLowerCase();
+}
+
+function normalizeArxivId(value: unknown): string | undefined {
+  const match = String(value ?? "").match(ARXIV_PATTERN);
+  return match?.[1];
 }
 
 function normalizeReferenceText(value: unknown): string {
@@ -59,10 +67,21 @@ function referenceTitle(text: string, doi?: string): string | undefined {
   const quoted = value.match(/["“](.{8,240}?)["”]/);
   if (quoted?.[1]) return quoted[1].trim();
 
+  // A preprint or repository marker usually follows the title directly.
+  // Taking the last sentence before that marker removes the author list.
+  const repositoryMarker = value.search(
+    /\b(?:arxiv(?:\s+preprint)?|coRR|corr)\b/i,
+  );
+  const beforeRepository =
+    repositoryMarker >= 0 ? value.slice(0, repositoryMarker).trim() : "";
+  const repositoryTitle = beforeRepository
+    ? beforeRepository.split(/\.\s+/).filter(Boolean).pop()
+    : undefined;
+
   // Many extracted references put the venue after a title sentence. Looking
   // for that boundary avoids sending author lists and page ranges as a query.
   const venueBoundary = value.match(
-    /(?:^|\.\s+)(.{8,240}?)\.\s+(?=(?:in|arxiv|ieee|acm|nature|science|journal|proceedings|advances|transactions|letters|review|conference|nips|iclr|cvpr|acl|emnlp|wmt|icml)\b)/i,
+    /(?:^|\.\s+)(.{8,240}?)\.\s+(?=(?:in|ieee|acm|nature|science|journal|proceedings|advances|transactions|letters|review|conference|neural computation|nips|iclr|cvpr|acl|emnlp|wmt|icml)\b)/i,
   )?.[1];
 
   // For author-year citations, the first sentence after the publication year
@@ -70,7 +89,14 @@ function referenceTitle(text: string, doi?: string): string | undefined {
   // the query sent to academic indexes.
   const afterYear = value.match(/\b(?:19|20)\d{2}\b[).,:;\s-]*(.+)/)?.[1];
   const firstSentence = afterYear?.match(/^(.{8,240}?)(?:\.\s+|$)/)?.[1];
-  const title = (firstSentence || venueBoundary || afterYear || value)
+  const title = (
+    quoted?.[1] ||
+    repositoryTitle ||
+    firstSentence ||
+    venueBoundary ||
+    afterYear ||
+    value
+  )
     .replace(/^[\s.,;:()-]+|[\s.,;:()-]+$/g, "")
     .trim();
   if (!title) return undefined;
@@ -81,6 +107,7 @@ function buildReferenceQueries(
   text: string,
   title: string | undefined,
   doi: string | undefined,
+  arxivId?: string,
 ): string[] {
   const compact = text.replace(/\s+/g, " ").trim();
   const shortPhrase = compact
@@ -92,7 +119,13 @@ function buildReferenceQueries(
     .trim()
     .split(/\.\s+/)[0]
     .trim();
-  const queries = [doi, title, shortPhrase, compact]
+  const queries = [
+    arxivId ? `arXiv:${arxivId}` : undefined,
+    doi,
+    title,
+    shortPhrase,
+    compact,
+  ]
     .map((value) =>
       String(value || "")
         .replace(/\s+/g, " ")
@@ -196,14 +229,16 @@ export function extractReferences(documentText: string): ExtractedReference[] {
     .map((entry, position) => {
       const text = cleanLine(entry);
       const doi = normalizeDoi(text);
+      const arxivId = normalizeArxivId(text);
       const title = referenceTitle(text, doi);
-      const queries = buildReferenceQueries(text, title, doi);
+      const queries = buildReferenceQueries(text, title, doi, arxivId);
       return {
         index: referenceNumber(text, position + 1),
         text,
         query: queries[0] || text,
         queries,
         doi,
+        arxivId,
         title,
       } satisfies ExtractedReference;
     })
@@ -242,6 +277,7 @@ export async function extractReferencesFromItem(
 export const __referenceExtractorTest = {
   cleanLine,
   normalizeDoi,
+  normalizeArxivId,
   referenceTitle,
   buildReferenceQueries,
   locateReferencesStart,

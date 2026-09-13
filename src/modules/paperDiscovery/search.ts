@@ -188,6 +188,7 @@ export type PaperReferenceQuery = {
   query: string;
   queries?: string[];
   doi?: string;
+  arxivId?: string;
   title?: string;
 };
 
@@ -198,6 +199,8 @@ function scoreReferenceCandidate(
   const expectedDoi = normalizeDoi(reference.doi);
   const candidateDoi = normalizeDoi(candidate.doi);
   if (expectedDoi && candidateDoi === expectedDoi) return 10000;
+  if (reference.arxivId && candidate.arxivId === reference.arxivId)
+    return 10000;
   const expectedTitle = normalizeTitle(reference.title || reference.query);
   const actualTitle = normalizeTitle(candidate.title);
   if (!expectedTitle || !actualTitle) return 0;
@@ -242,6 +245,25 @@ export async function searchPaperReference(
     ? options.sources
     : (["semanticScholar", "openalex", "crossref"] as PaperSource[]);
 
+  if (reference.arxivId) {
+    try {
+      const arxivCandidates = await fetchArxivPaper(
+        reference.arxivId,
+        options.signal,
+      );
+      if (arxivCandidates.length) {
+        return {
+          query: `arXiv:${reference.arxivId}`,
+          candidates: arxivCandidates,
+          providerErrors: {},
+        };
+      }
+    } catch {
+      // arXiv may rate-limit or be temporarily unavailable. Continue with
+      // DOI/provider/title fallbacks instead of failing the whole reference.
+    }
+  }
+
   if (reference.doi) {
     const exactResults = await Promise.all([
       sources.includes("openalex")
@@ -271,7 +293,12 @@ export async function searchPaperReference(
 
   const queries = Array.from(
     new Set(
-      [reference.title, ...(reference.queries || []), reference.query]
+      [
+        reference.arxivId ? `arXiv:${reference.arxivId}` : undefined,
+        reference.title,
+        ...(reference.queries || []),
+        reference.query,
+      ]
         .map((value) =>
           String(value || "")
             .replace(/\s+/g, " ")
@@ -289,7 +316,17 @@ export async function searchPaperReference(
     last = await searchPapers(query, options);
     if (last.candidates.length) {
       last.candidates = sortReferenceCandidates(last.candidates, reference);
-      return last;
+      const bestScore = reference.title
+        ? scoreReferenceCandidate(last.candidates[0], reference)
+        : 1;
+      // Do not present an arbitrary first result as a match when the title
+      // evidence is too weak. It is safer to report "unmatched" than to
+      // import a different paper under the current reference.
+      if (bestScore >= (reference.title ? 300 : 1)) return last;
+      last = {
+        ...last,
+        candidates: [],
+      };
     }
   }
   return last;

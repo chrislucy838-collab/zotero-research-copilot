@@ -73,6 +73,20 @@ describe("reference extraction", function () {
     assert.include(references[1].text, "Second paper title");
   });
 
+  it("extracts arXiv IDs and uses them as the primary query", () => {
+    const references = extractReferences(
+      [
+        ...Array.from({ length: 8 }, (_, index) => `Section ${index + 1}`),
+        "References",
+        "[1] Ba, J. L., Kiros, J. R., & Hinton, G. E. Layer normalization. arXiv:1607.06450.",
+        "[2] Bahdanau, D., Cho, K., & Bengio, Y. Neural machine translation by jointly learning to align and translate. arXiv:1409.0473.",
+      ].join("\n"),
+    );
+    assert.equal(references[0].arxivId, "1607.06450");
+    assert.equal(references[0].query, "arXiv:1607.06450");
+    assert.equal(references[1].arxivId, "1409.0473");
+  });
+
   it("extracts a quoted title as a focused search query", () => {
     const references = extractReferences(
       [
