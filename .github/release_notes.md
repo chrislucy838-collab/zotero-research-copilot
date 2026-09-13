@@ -13,6 +13,7 @@
 - Added protocol-aware model discovery for Gemini and Anthropic endpoints.
 - Kept legacy `openai-compatible` preferences compatible by migrating them to OpenAI Compatible.
 - Preserved the existing OpenAI Responses behavior and exact API type labels.
+- Added Discover's Extract references workflow for extracting bibliography entries, finding metadata, and importing selected matches.
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
@@ -30,4 +31,5 @@
 - Gemini 和 Anthropic 端点支持按协议获取模型列表。
 - 旧版 `openai-compatible` 配置会自动迁移为 OpenAI Compatible，原有配置继续可用。
 - 保留 OpenAI Responses 的现有行为和准确的 API 类型名称。
+- Discover 新增 Extract references 流程，可提取参考文献、检索元数据并导入选中的匹配结果。
 - 已通过完整单元测试和生产 XPI 构建验证。

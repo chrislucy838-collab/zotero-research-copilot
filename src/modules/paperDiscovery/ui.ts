@@ -1,28 +1,54 @@
 import { importPaperCandidates, previewPaperCandidates } from "./importer";
-import { createLibraryCollection, getActiveCollectionID, getLibraryCollectionOptions } from "./collections";
+import {
+  createLibraryCollection,
+  getActiveCollectionID,
+  getLibraryCollectionOptions,
+} from "./collections";
 import { searchPapers } from "./search";
+import {
+  extractReferencesFromItem,
+  type ExtractedReference,
+} from "./references";
 import type { PaperCandidate, PaperSource } from "./types";
 
-function node<T extends keyof HTMLElementTagNameMap>(doc: Document, tag: T, text = ""): HTMLElementTagNameMap[T] {
+function node<T extends keyof HTMLElementTagNameMap>(
+  doc: Document,
+  tag: T,
+  text = "",
+): HTMLElementTagNameMap[T] {
   const element = doc.createElement(tag);
   if (text) element.textContent = text;
   return element;
 }
 
 function sourceLabel(source: PaperSource): string {
-  return source === "semanticScholar" ? "Semantic Scholar" : source === "openalex" ? "OpenAlex" : source === "crossref" ? "Crossref" : "arXiv";
+  return source === "semanticScholar"
+    ? "Semantic Scholar"
+    : source === "openalex"
+      ? "OpenAlex"
+      : source === "crossref"
+        ? "Crossref"
+        : "arXiv";
 }
 
 function getAbortControllerCtor(doc: Document): new () => AbortController {
-  const fromToolkit = ztoolkit.getGlobal("AbortController") as new () => AbortController;
+  const fromToolkit = ztoolkit.getGlobal(
+    "AbortController",
+  ) as new () => AbortController;
   if (fromToolkit) return fromToolkit;
-  const fromWindow = (doc.defaultView as Window & {
-    AbortController?: new () => AbortController;
-  } | null)?.AbortController;
+  const fromWindow = (
+    doc.defaultView as
+      | (Window & {
+          AbortController?: new () => AbortController;
+        })
+      | null
+  )?.AbortController;
   if (fromWindow) return fromWindow;
-  const fromGlobal = (globalThis as typeof globalThis & {
-    AbortController?: new () => AbortController;
-  }).AbortController;
+  const fromGlobal = (
+    globalThis as typeof globalThis & {
+      AbortController?: new () => AbortController;
+    }
+  ).AbortController;
   if (fromGlobal) return fromGlobal;
   throw new Error("AbortController is unavailable in this Zotero context");
 }
@@ -31,23 +57,51 @@ export async function bootstrapPaperDiscovery(
   doc: Document,
   container: HTMLElement,
   libraryID: number,
+  currentItem?: Zotero.Item | null,
 ): Promise<void> {
   container.replaceChildren();
+  const extractableItem =
+    currentItem &&
+    (currentItem.isAttachment?.() || currentItem.isRegularItem?.())
+      ? currentItem
+      : null;
   const root = node(doc, "div");
   root.className = "zrc-paper-discovery";
-  root.style.cssText = "display:flex;flex-direction:column;gap:10px;padding:16px;overflow:auto;min-height:0;";
+  root.style.cssText =
+    "display:flex;flex-direction:column;gap:10px;padding:16px;overflow:auto;min-height:0;";
   const title = node(doc, "h2", "Discover papers");
-  const hint = node(doc, "p", "Search academic indexes, review the metadata, then confirm which papers to import into Zotero.");
+  const hint = node(
+    doc,
+    "p",
+    "Search academic indexes, review the metadata, then confirm which papers to import into Zotero.",
+  );
   hint.style.cssText = "margin:0;font-size:12px;";
   const controls = node(doc, "div");
-  controls.style.cssText = "display:flex;gap:6px;align-items:center;flex-wrap:wrap;";
+  controls.style.cssText =
+    "display:flex;gap:6px;align-items:center;flex-wrap:wrap;";
   const input = node(doc, "input") as HTMLInputElement;
   input.type = "search";
   input.placeholder = "Keywords, title, author, or DOI";
   input.style.cssText = "flex:1 1 260px;min-width:180px;padding:7px;";
   const searchButton = node(doc, "button", "Search") as HTMLButtonElement;
   searchButton.type = "button";
-  const importButton = node(doc, "button", "Import selected") as HTMLButtonElement;
+  searchButton.title =
+    "Search the entered query, or selected extracted references";
+  const extractButton = node(
+    doc,
+    "button",
+    "Extract references",
+  ) as HTMLButtonElement;
+  extractButton.type = "button";
+  extractButton.title = extractableItem
+    ? "Extract references from the current paper"
+    : "Open a paper or PDF reader first";
+  extractButton.disabled = !extractableItem;
+  const importButton = node(
+    doc,
+    "button",
+    "Import selected",
+  ) as HTMLButtonElement;
   importButton.type = "button";
   importButton.className = "zrc-paper-import-button";
   importButton.dataset.zrcAction = "import";
@@ -57,7 +111,11 @@ export async function bootstrapPaperDiscovery(
   const cancelButton = node(doc, "button", "Cancel") as HTMLButtonElement;
   cancelButton.type = "button";
   cancelButton.hidden = true;
-  const newCollectionButton = node(doc, "button", "New collection") as HTMLButtonElement;
+  const newCollectionButton = node(
+    doc,
+    "button",
+    "New collection",
+  ) as HTMLButtonElement;
   newCollectionButton.type = "button";
   const collectionLabel = node(doc, "label", "Import to: ");
   const collectionSelect = node(doc, "select") as HTMLSelectElement;
@@ -71,14 +129,44 @@ export async function bootstrapPaperDiscovery(
     collectionSelect.appendChild(option);
   }
   const activeCollectionID = getActiveCollectionID(libraryID);
-  if (activeCollectionID && collectionSelect.querySelector(`option[value="${activeCollectionID}"]`)) {
+  if (
+    activeCollectionID &&
+    collectionSelect.querySelector(`option[value="${activeCollectionID}"]`)
+  ) {
     collectionSelect.value = String(activeCollectionID);
   }
   collectionLabel.appendChild(collectionSelect);
-  controls.append(input, searchButton, importButton, cancelButton, newCollectionButton, collectionLabel);
+  const selectAllReferencesButton = node(
+    doc,
+    "button",
+    "Select all references",
+  ) as HTMLButtonElement;
+  selectAllReferencesButton.type = "button";
+  selectAllReferencesButton.hidden = true;
+  const clearReferenceSelectionButton = node(
+    doc,
+    "button",
+    "Clear reference selection",
+  ) as HTMLButtonElement;
+  clearReferenceSelectionButton.type = "button";
+  clearReferenceSelectionButton.hidden = true;
+  controls.append(
+    input,
+    searchButton,
+    extractButton,
+    selectAllReferencesButton,
+    clearReferenceSelectionButton,
+    importButton,
+    cancelButton,
+    newCollectionButton,
+    collectionLabel,
+  );
   const sources = node(doc, "div");
-  sources.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;font-size:12px;";
-  const sourceChecks = (['semanticScholar', 'openalex', 'crossref'] as PaperSource[]).map((source) => {
+  sources.style.cssText =
+    "display:flex;gap:10px;flex-wrap:wrap;font-size:12px;";
+  const sourceChecks = (
+    ["semanticScholar", "openalex", "crossref"] as PaperSource[]
+  ).map((source) => {
     const label = node(doc, "label");
     const checkbox = node(doc, "input") as HTMLInputElement;
     checkbox.type = "checkbox";
@@ -100,7 +188,9 @@ export async function bootstrapPaperDiscovery(
 
   let candidates: PaperCandidate[] = [];
   let preview: ReturnType<typeof previewPaperCandidates> = [];
+  let references: ExtractedReference[] = [];
   const selected = new Set<number>();
+  const selectedReferences = new Set<number>();
   let importController: AbortController | null = null;
   let isImporting = false;
   let importSequence = 0;
@@ -109,11 +199,12 @@ export async function bootstrapPaperDiscovery(
     // Derive the count from candidates rather than trusting a stale controller
     // or a stale checkbox event after Zotero redraws the panel.
     const selectableCount = candidates.reduce(
-      (count, candidate, index) => count + (preview[index]?.status === "duplicate" ? 0 : 1),
+      (count, candidate, index) =>
+        count + (preview[index]?.status === "duplicate" ? 0 : 1),
       0,
     );
-    const selectedCount = [...selected].filter((index) =>
-      candidates[index] && preview[index]?.status !== "duplicate",
+    const selectedCount = [...selected].filter(
+      (index) => candidates[index] && preview[index]?.status !== "duplicate",
     ).length;
     importButton.textContent = selectedCount
       ? `Import selected (${selectedCount})`
@@ -132,6 +223,37 @@ export async function bootstrapPaperDiscovery(
     status.dataset.selectedCount = String(selectedCount);
     selectionStatus.textContent = candidates.length
       ? `Available to import: ${selectableCount} · Selected: ${selectedCount}`
+      : references.length
+        ? `${references.length} references found · ${selectedReferences.size} selected for metadata search`
+        : "";
+  };
+
+  const renderReferences = () => {
+    results.replaceChildren();
+    selectAllReferencesButton.hidden = references.length === 0;
+    clearReferenceSelectionButton.hidden = references.length === 0;
+    references.forEach((reference, index) => {
+      const card = node(doc, "label");
+      card.className = "zrc-paper-card";
+      card.style.cssText =
+        "border-radius:6px;padding:9px;display:flex;gap:8px;align-items:flex-start;";
+      const checkbox = node(doc, "input") as HTMLInputElement;
+      checkbox.type = "checkbox";
+      checkbox.checked = selectedReferences.has(index);
+      checkbox.dataset.referenceIndex = String(index);
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) selectedReferences.add(index);
+        else selectedReferences.delete(index);
+        const count = selectedReferences.size;
+        selectionStatus.textContent = `${references.length} references found · ${count} selected for metadata search`;
+      });
+      const text = node(doc, "span", `[${reference.index}] ${reference.text}`);
+      text.style.cssText = "font-size:12px;line-height:1.45;";
+      card.append(checkbox, text);
+      results.append(card);
+    });
+    selectionStatus.textContent = references.length
+      ? `${references.length} references found · ${selectedReferences.size} selected for metadata search`
       : "";
   };
 
@@ -140,7 +262,8 @@ export async function bootstrapPaperDiscovery(
     candidates.forEach((candidate, index) => {
       const card = node(doc, "div");
       card.className = "zrc-paper-card";
-      card.style.cssText = "border-radius:6px;padding:9px;display:grid;gap:5px;";
+      card.style.cssText =
+        "border-radius:6px;padding:9px;display:grid;gap:5px;";
       const header = node(doc, "label");
       const checkbox = node(doc, "input") as HTMLInputElement;
       checkbox.type = "checkbox";
@@ -148,26 +271,34 @@ export async function bootstrapPaperDiscovery(
       checkbox.checked = selected.has(index);
       checkbox.disabled = preview[index]?.status === "duplicate";
       checkbox.addEventListener("change", () => {
-        if (checkbox.checked) selected.add(index); else selected.delete(index);
+        if (checkbox.checked) selected.add(index);
+        else selected.delete(index);
         updateImportButton();
       });
       const paperTitle = node(doc, "strong", candidate.title);
       header.append(checkbox, " ", paperTitle);
       const meta = [
-        candidate.authors.slice(0, 3).map((author) => author.name || author.lastName).join(", "),
+        candidate.authors
+          .slice(0, 3)
+          .map((author) => author.name || author.lastName)
+          .join(", "),
         candidate.year ? String(candidate.year) : "",
         candidate.venue || "",
         candidate.arxivId ? `arXiv: ${candidate.arxivId}` : "",
         candidate.doi ? `DOI: ${candidate.doi}` : "",
-      ].filter(Boolean).join(" · ");
+      ]
+        .filter(Boolean)
+        .join(" · ");
       const details = node(doc, "div", meta);
       details.style.cssText = "font-size:12px;";
-      const pdfLabel = candidate.pdfStatus === "available" || candidate.pdfUrl
-        ? `PDF available${candidate.pdfSource ? ` · ${candidate.pdfSource}` : ""}`
-        : "PDF unavailable";
-      const duplicateLabel = preview[index]?.status === "duplicate"
-        ? `Already in Zotero (#${preview[index]?.existingItemId})`
-        : "Will import";
+      const pdfLabel =
+        candidate.pdfStatus === "available" || candidate.pdfUrl
+          ? `PDF available${candidate.pdfSource ? ` · ${candidate.pdfSource}` : ""}`
+          : "PDF unavailable";
+      const duplicateLabel =
+        preview[index]?.status === "duplicate"
+          ? `Already in Zotero (#${preview[index]?.existingItemId})`
+          : "Will import";
       const source = node(
         doc,
         "div",
@@ -187,10 +318,82 @@ export async function bootstrapPaperDiscovery(
     });
   };
 
+  const performReferenceSearch = async () => {
+    const selectedIndexes = [...selectedReferences].filter(
+      (index) => references[index],
+    );
+    if (!selectedIndexes.length) {
+      status.textContent = "Select one or more references first.";
+      return;
+    }
+    searchButton.disabled = true;
+    extractButton.disabled = true;
+    status.textContent = `Searching metadata for ${selectedIndexes.length} references…`;
+    try {
+      const selectedSources = sourceChecks
+        .filter((check) => check.checked)
+        .map((check) => check.dataset.source as PaperSource);
+      if (!selectedSources.length) {
+        status.textContent = "Select at least one metadata source first.";
+        return;
+      }
+      const searched: Array<PaperCandidate | undefined> = [];
+      const batchSize = 4;
+      for (
+        let offset = 0;
+        offset < selectedIndexes.length;
+        offset += batchSize
+      ) {
+        const batch = selectedIndexes.slice(offset, offset + batchSize);
+        const matches = await Promise.all(
+          batch.map(async (index) => {
+            const reference = references[index];
+            try {
+              const result = await searchPapers(reference.query, {
+                sources: selectedSources,
+                limit: 3,
+              });
+              return result.candidates[0];
+            } catch {
+              return undefined;
+            }
+          }),
+        );
+        searched.push(...matches);
+        status.textContent = `Searching metadata… ${Math.min(
+          offset + batch.length,
+          selectedIndexes.length,
+        )}/${selectedIndexes.length}`;
+      }
+      candidates = searched.filter((candidate): candidate is PaperCandidate =>
+        Boolean(candidate),
+      );
+      const items = (await Zotero.Items.getAll(
+        libraryID,
+        true,
+        false,
+        false,
+      )) as Zotero.Item[];
+      preview = previewPaperCandidates(candidates, items);
+      selected.clear();
+      render();
+      const unmatched = selectedIndexes.length - candidates.length;
+      status.textContent = `Found ${candidates.length} of ${selectedIndexes.length} selected references${unmatched ? ` · ${unmatched} unmatched` : ""}.`;
+    } catch (error) {
+      status.textContent = `Reference search failed: ${error instanceof Error ? error.message : String(error)}`;
+    } finally {
+      searchButton.disabled = false;
+      extractButton.disabled = !extractableItem;
+      updateImportButton();
+    }
+  };
+
   const performSearch = async () => {
     const query = input.value.trim();
     if (!query) return;
-    const selectedSources = sourceChecks.filter((check) => check.checked).map((check) => check.dataset.source as PaperSource);
+    const selectedSources = sourceChecks
+      .filter((check) => check.checked)
+      .map((check) => check.dataset.source as PaperSource);
     if (!selectedSources.length) return;
     searchButton.disabled = true;
     importButton.disabled = true;
@@ -199,12 +402,22 @@ export async function bootstrapPaperDiscovery(
     updateImportButton();
     status.textContent = "Searching…";
     try {
-      const result = await searchPapers(query, { sources: selectedSources, limit: 12 });
+      const result = await searchPapers(query, {
+        sources: selectedSources,
+        limit: 12,
+      });
       candidates = result.candidates;
-      const items = await Zotero.Items.getAll(libraryID, true, false, false) as Zotero.Item[];
+      const items = (await Zotero.Items.getAll(
+        libraryID,
+        true,
+        false,
+        false,
+      )) as Zotero.Item[];
       preview = previewPaperCandidates(candidates, items);
       render();
-      const errors = Object.entries(result.providerErrors).map(([source, error]) => `${source}: ${error}`).join("; ");
+      const errors = Object.entries(result.providerErrors)
+        .map(([source, error]) => `${source}: ${error}`)
+        .join("; ");
       status.textContent = `${candidates.length} result${candidates.length === 1 ? "" : "s"} found.${errors ? ` ${errors}` : ""}`;
     } catch (error) {
       status.textContent = `Search failed: ${error instanceof Error ? error.message : String(error)}`;
@@ -214,12 +427,55 @@ export async function bootstrapPaperDiscovery(
     }
   };
 
+  selectAllReferencesButton.addEventListener("click", () => {
+    references.forEach((_reference, index) => selectedReferences.add(index));
+    renderReferences();
+  });
+  clearReferenceSelectionButton.addEventListener("click", () => {
+    selectedReferences.clear();
+    renderReferences();
+  });
+
+  extractButton.addEventListener("click", async () => {
+    if (!extractableItem) return;
+    extractButton.disabled = true;
+    searchButton.disabled = true;
+    status.textContent = "Extracting references from the current paper…";
+    try {
+      references = await extractReferencesFromItem(extractableItem);
+      selectedReferences.clear();
+      candidates = [];
+      preview = [];
+      selected.clear();
+      input.value = "";
+      searchButton.textContent = "Search selected references";
+      renderReferences();
+      status.textContent = `Extracted ${references.length} references. Select references, then click Search selected references to find metadata.`;
+    } catch (error) {
+      status.textContent = `Reference extraction failed: ${error instanceof Error ? error.message : String(error)}`;
+      results.replaceChildren();
+      references = [];
+      selectedReferences.clear();
+      selectAllReferencesButton.hidden = true;
+      clearReferenceSelectionButton.hidden = true;
+      searchButton.textContent = "Search";
+    } finally {
+      extractButton.disabled = !extractableItem;
+      searchButton.disabled = false;
+      updateImportButton();
+    }
+  });
+
   newCollectionButton.addEventListener("click", async () => {
     const name = doc.defaultView?.prompt("New Zotero collection name:");
     if (!name?.trim()) return;
     try {
       const parentID = Number(collectionSelect.value) || undefined;
-      const collection = await createLibraryCollection(libraryID, name, parentID);
+      const collection = await createLibraryCollection(
+        libraryID,
+        name,
+        parentID,
+      );
       const option = node(doc, "option", collection.name) as HTMLOptionElement;
       option.value = String(collection.id);
       collectionSelect.appendChild(option);
@@ -245,9 +501,19 @@ export async function bootstrapPaperDiscovery(
     updateImportButton();
   });
 
-  searchButton.addEventListener("click", () => void performSearch());
+  searchButton.addEventListener(
+    "click",
+    () =>
+      void (references.length && !input.value.trim()
+        ? performReferenceSearch()
+        : performSearch()),
+  );
   input.addEventListener("keydown", (event) => {
-    if ((event as KeyboardEvent).key === "Enter") void performSearch();
+    if ((event as KeyboardEvent).key === "Enter") {
+      void (references.length && !input.value.trim()
+        ? performReferenceSearch()
+        : performSearch());
+    }
   });
   const handleImport = async () => {
     status.textContent = "Import handler started…";
@@ -258,26 +524,34 @@ export async function bootstrapPaperDiscovery(
       isImporting = false;
       cancelButton.hidden = true;
       cancelButton.disabled = false;
-      status.textContent = "Stale import cancelled. You can start a new import now.";
+      status.textContent =
+        "Stale import cancelled. You can start a new import now.";
       updateImportButton();
       return;
     }
     // Re-read the visible checkboxes after any Zotero panel redraw.
     selected.clear();
-    results.querySelectorAll<HTMLInputElement>("input[type=checkbox]:checked").forEach((checkbox: HTMLInputElement) => {
-      const index = Number(checkbox.dataset.candidateIndex);
-      if (Number.isInteger(index) && preview[index]?.status !== "duplicate") selected.add(index);
-    });
+    results
+      .querySelectorAll<HTMLInputElement>("input[type=checkbox]:checked")
+      .forEach((checkbox: HTMLInputElement) => {
+        const index = Number(checkbox.dataset.candidateIndex);
+        if (Number.isInteger(index) && preview[index]?.status !== "duplicate")
+          selected.add(index);
+      });
     updateImportButton();
-    const selectedCandidates = candidates.filter((_candidate, index) => selected.has(index));
+    const selectedCandidates = candidates.filter((_candidate, index) =>
+      selected.has(index),
+    );
     if (!selectedCandidates.length) {
-      status.textContent = preview.length && preview.every((entry) => entry.status === "duplicate")
-        ? "No new papers to import: all results are already in Zotero."
-        : "Select one or more new papers first.";
+      status.textContent =
+        preview.length && preview.every((entry) => entry.status === "duplicate")
+          ? "No new papers to import: all results are already in Zotero."
+          : "Select one or more new papers first.";
       return;
     }
     if (libraryID <= 0) {
-      status.textContent = "Cannot import: no valid Zotero library is selected.";
+      status.textContent =
+        "Cannot import: no valid Zotero library is selected.";
       return;
     }
     const importedTitles = new Set<string>();
@@ -306,7 +580,10 @@ export async function bootstrapPaperDiscovery(
         onResult: (result) => {
           if (runToken !== importSequence) return;
           importedTitles.add(result.candidate.title);
-          const detail = result.pdfError || result.error ? ` (${result.pdfError || result.error})` : "";
+          const detail =
+            result.pdfError || result.error
+              ? ` (${result.pdfError || result.error})`
+              : "";
           status.textContent = `${result.status}: ${result.candidate.title.slice(0, 70)}${result.candidate.title.length > 70 ? "…" : ""}${detail}`;
         },
       });
@@ -318,20 +595,32 @@ export async function bootstrapPaperDiscovery(
           isImporting = false;
           cancelButton.hidden = true;
           cancelButton.disabled = false;
-          status.textContent = "Import safety timeout after 90s. Already-created items were kept.";
+          status.textContent =
+            "Import safety timeout after 90s. Already-created items were kept.";
           updateImportButton();
           reject(new Error("Import safety timeout after 90s"));
         }, IMPORT_WATCHDOG_MS);
       });
       const imported = await Promise.race([importTask, watchdog]);
       if (runToken !== importSequence) return;
-      const counts = imported.reduce((acc, result) => {
-        acc[result.status] += 1;
-        if (result.pdfStatus === "attached") acc.pdfAttached += 1;
-        if (result.pdfStatus === "unavailable") acc.pdfUnavailable += 1;
-        if (result.pdfStatus === "failed") acc.pdfFailed += 1;
-        return acc;
-      }, { imported: 0, duplicate: 0, failed: 0, cancelled: 0, pdfAttached: 0, pdfUnavailable: 0, pdfFailed: 0 });
+      const counts = imported.reduce(
+        (acc, result) => {
+          acc[result.status] += 1;
+          if (result.pdfStatus === "attached") acc.pdfAttached += 1;
+          if (result.pdfStatus === "unavailable") acc.pdfUnavailable += 1;
+          if (result.pdfStatus === "failed") acc.pdfFailed += 1;
+          return acc;
+        },
+        {
+          imported: 0,
+          duplicate: 0,
+          failed: 0,
+          cancelled: 0,
+          pdfAttached: 0,
+          pdfUnavailable: 0,
+          pdfFailed: 0,
+        },
+      );
       status.textContent = `Imported ${counts.imported}; PDF attached ${counts.pdfAttached}; PDF unavailable ${counts.pdfUnavailable}; PDF failed ${counts.pdfFailed}; skipped ${counts.duplicate} duplicate${counts.duplicate === 1 ? "" : "s"}; cancelled ${counts.cancelled}; failed ${counts.failed}.`;
     } catch (error) {
       if (runToken === importSequence) {
@@ -361,7 +650,9 @@ export async function bootstrapPaperDiscovery(
   let lastImportPointerDown = 0;
   const triggerImport = (event: Event, fromPointerDown: boolean) => {
     const target = event.target as Element | null;
-    const button = target?.closest("button[data-zrc-action=\"import\"]") as HTMLButtonElement | null;
+    const button = target?.closest(
+      'button[data-zrc-action="import"]',
+    ) as HTMLButtonElement | null;
     if (!button || !root.contains(button)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -378,6 +669,10 @@ export async function bootstrapPaperDiscovery(
       updateImportButton();
     });
   };
-  root.addEventListener("pointerdown", (event) => triggerImport(event, true), true);
+  root.addEventListener(
+    "pointerdown",
+    (event) => triggerImport(event, true),
+    true,
+  );
   root.addEventListener("click", (event) => triggerImport(event, false), true);
 }

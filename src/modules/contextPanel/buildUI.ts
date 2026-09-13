@@ -1094,6 +1094,7 @@ function buildUI(body: Element, item?: Zotero.Item | null) {
       doc,
       discoverElement,
       Number(item?.libraryID || resolveActiveLibraryID() || 0),
+      item,
     )
       .then(() => {
         discoverElement.dataset.discoveryState = "ready";

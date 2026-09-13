@@ -416,6 +416,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       panelDoc,
       discoverScroll,
       resolveLibraryIdFromItem(item),
+      basePaperItem,
     )
       .then(() => {
         discoverScroll.dataset.discoveryState = "ready";
