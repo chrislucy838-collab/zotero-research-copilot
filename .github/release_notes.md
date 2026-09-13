@@ -19,6 +19,8 @@
 - Improved Extract references search with focused title queries, DOI lookups, fallback queries, and candidate ranking.
 - Fixed multiple numbered references being merged when PDF text extraction concatenates columns onto one line.
 - Improved reference splitting reliability for consecutive numbering and two-column PDF text.
+- Kept extracted references visible while accumulating search results, with incremental searches for newly selected references.
+- Separated extracted references from search results and added per-reference match status.
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
@@ -42,4 +44,6 @@
 - 改进 Extract references 检索，支持标题提取、DOI 精确查询、备用查询和候选排序。
 - 修复 PDF 文本提取把同一行中的多条编号参考文献合并成一条的问题。
 - 增强连续编号和双栏 PDF 文本的参考文献拆分可靠性。
+- 搜索后保留已识别的参考文献列表，支持只检索新勾选的文献并累积结果。
+- 将识别列表与搜索结果分区显示，并为每条引用显示匹配状态。
 - 已通过完整单元测试和生产 XPI 构建验证。
