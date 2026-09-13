@@ -180,6 +180,12 @@ export async function bootstrapPaperDiscovery(
   const status = node(doc, "div");
   status.setAttribute("role", "status");
   status.style.cssText = "min-height:1.3em;font-size:12px;";
+  const referenceResults = node(doc, "div");
+  referenceResults.style.cssText =
+    "display:flex;flex-direction:column;gap:8px;";
+  const referenceDivider = node(doc, "div", "Search results");
+  referenceDivider.style.cssText =
+    "display:none;border-top:1px solid currentColor;padding-top:10px;font-size:12px;font-weight:600;opacity:.8;";
   const results = node(doc, "div");
   results.style.cssText = "display:flex;flex-direction:column;gap:8px;";
   const selectionStatus = node(doc, "div");
@@ -188,12 +194,24 @@ export async function bootstrapPaperDiscovery(
     checkbox.style.cssText =
       "width:16px;height:16px;min-width:16px;min-height:16px;flex:0 0 16px;box-sizing:border-box;margin:2px 0 0;";
   };
-  root.append(title, hint, controls, sources, status, selectionStatus, results);
+  root.append(
+    title,
+    hint,
+    controls,
+    sources,
+    status,
+    selectionStatus,
+    referenceResults,
+    referenceDivider,
+    results,
+  );
   container.append(root);
 
   let candidates: PaperCandidate[] = [];
   let preview: ReturnType<typeof previewPaperCandidates> = [];
   let references: ExtractedReference[] = [];
+  const referenceCandidates = new Map<number, PaperCandidate>();
+  const unmatchedReferences = new Set<number>();
   const selected = new Set<number>();
   const selectedReferences = new Set<number>();
   let importController: AbortController | null = null;
@@ -227,14 +245,16 @@ export async function bootstrapPaperDiscovery(
     status.dataset.importableCount = String(selectableCount);
     status.dataset.selectedCount = String(selectedCount);
     selectionStatus.textContent = candidates.length
-      ? `Available to import: ${selectableCount} · Selected: ${selectedCount}`
+      ? `Available to import: ${selectableCount} · Selected: ${selectedCount}${references.length ? ` · ${references.length} references detected` : ""}`
       : references.length
         ? `${references.length} references found · ${selectedReferences.size} selected for metadata search`
         : "";
+    referenceDivider.style.display =
+      references.length && candidates.length ? "block" : "none";
   };
 
   const renderReferences = () => {
-    results.replaceChildren();
+    referenceResults.replaceChildren();
     selectAllReferencesButton.hidden = references.length === 0;
     clearReferenceSelectionButton.hidden = references.length === 0;
     references.forEach((reference, index) => {
@@ -256,12 +276,27 @@ export async function bootstrapPaperDiscovery(
       const text = node(doc, "span", reference.text);
       text.style.cssText =
         "font-size:12px;line-height:1.45;min-width:0;overflow-wrap:anywhere;";
-      card.append(checkbox, text);
-      results.append(card);
+      const matchStatus = node(
+        doc,
+        "span",
+        unmatchedReferences.has(index)
+          ? " · No metadata match"
+          : referenceCandidates.has(index)
+            ? " · Match found below"
+            : "",
+      );
+      matchStatus.style.cssText =
+        "font-size:11px;opacity:.7;display:block;margin-top:3px;";
+      const content = node(doc, "span");
+      content.append(text, matchStatus);
+      card.append(checkbox, content);
+      referenceResults.append(card);
     });
     selectionStatus.textContent = references.length
       ? `${references.length} references found · ${selectedReferences.size} selected for metadata search`
       : "";
+    referenceDivider.style.display =
+      references.length && candidates.length ? "block" : "none";
   };
 
   const render = () => {
@@ -328,10 +363,12 @@ export async function bootstrapPaperDiscovery(
 
   const performReferenceSearch = async () => {
     const selectedIndexes = [...selectedReferences].filter(
-      (index) => references[index],
+      (index) => references[index] && !referenceCandidates.has(index),
     );
     if (!selectedIndexes.length) {
-      status.textContent = "Select one or more references first.";
+      status.textContent = referenceCandidates.size
+        ? "All selected references have already been searched. Select another reference to search."
+        : "Select one or more references first.";
       return;
     }
     searchButton.disabled = true;
@@ -373,9 +410,16 @@ export async function bootstrapPaperDiscovery(
           selectedIndexes.length,
         )}/${selectedIndexes.length}`;
       }
-      candidates = searched.filter((candidate): candidate is PaperCandidate =>
-        Boolean(candidate),
-      );
+      selectedIndexes.forEach((referenceIndex, position) => {
+        const candidate = searched[position];
+        if (candidate) {
+          referenceCandidates.set(referenceIndex, candidate);
+          unmatchedReferences.delete(referenceIndex);
+        } else {
+          unmatchedReferences.add(referenceIndex);
+        }
+      });
+      candidates = [...referenceCandidates.values()];
       const items = (await Zotero.Items.getAll(
         libraryID,
         true,
@@ -384,14 +428,13 @@ export async function bootstrapPaperDiscovery(
       )) as Zotero.Item[];
       preview = previewPaperCandidates(candidates, items);
       selected.clear();
-      references = [];
       selectedReferences.clear();
-      selectAllReferencesButton.hidden = true;
-      clearReferenceSelectionButton.hidden = true;
-      searchButton.textContent = "Search";
+      renderReferences();
       render();
-      const unmatched = selectedIndexes.length - candidates.length;
-      status.textContent = `Found ${candidates.length} of ${selectedIndexes.length} selected references${unmatched ? ` · ${unmatched} unmatched` : ""}.`;
+      const unmatched = selectedIndexes.filter((index) =>
+        unmatchedReferences.has(index),
+      ).length;
+      status.textContent = `Found ${candidates.length} total reference matches · ${unmatched ? `${unmatched} selected references unmatched` : "all selected references matched"}. You can select more references above.`;
     } catch (error) {
       status.textContent = `Reference search failed: ${error instanceof Error ? error.message : String(error)}`;
     } finally {
@@ -411,7 +454,11 @@ export async function bootstrapPaperDiscovery(
     searchButton.disabled = true;
     importButton.disabled = true;
     references = [];
+    referenceCandidates.clear();
+    unmatchedReferences.clear();
     selectedReferences.clear();
+    referenceResults.replaceChildren();
+    referenceDivider.style.display = "none";
     selectAllReferencesButton.hidden = true;
     clearReferenceSelectionButton.hidden = true;
     searchButton.textContent = "Search";
@@ -462,6 +509,8 @@ export async function bootstrapPaperDiscovery(
     try {
       references = await extractReferencesFromItem(extractableItem);
       selectedReferences.clear();
+      referenceCandidates.clear();
+      unmatchedReferences.clear();
       candidates = [];
       preview = [];
       selected.clear();
@@ -472,8 +521,12 @@ export async function bootstrapPaperDiscovery(
     } catch (error) {
       status.textContent = `Reference extraction failed: ${error instanceof Error ? error.message : String(error)}`;
       results.replaceChildren();
+      referenceResults.replaceChildren();
       references = [];
+      referenceCandidates.clear();
+      unmatchedReferences.clear();
       selectedReferences.clear();
+      referenceDivider.style.display = "none";
       selectAllReferencesButton.hidden = true;
       clearReferenceSelectionButton.hidden = true;
       searchButton.textContent = "Search";
