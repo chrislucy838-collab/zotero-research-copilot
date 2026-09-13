@@ -21,6 +21,7 @@
 - Improved reference splitting reliability for consecutive numbering and two-column PDF text.
 - Kept extracted references visible while accumulating search results, with incremental searches for newly selected references.
 - Separated extracted references from search results and added per-reference match status.
+- Placed search results above the extracted reference list for a shorter import workflow.
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
@@ -46,4 +47,5 @@
 - 增强连续编号和双栏 PDF 文本的参考文献拆分可靠性。
 - 搜索后保留已识别的参考文献列表，支持只检索新勾选的文献并累积结果。
 - 将识别列表与搜索结果分区显示，并为每条引用显示匹配状态。
+- 将搜索结果调整到参考文献列表上方，缩短导入操作路径。
 - 已通过完整单元测试和生产 XPI 构建验证。

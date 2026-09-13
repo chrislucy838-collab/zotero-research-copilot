@@ -180,14 +180,17 @@ export async function bootstrapPaperDiscovery(
   const status = node(doc, "div");
   status.setAttribute("role", "status");
   status.style.cssText = "min-height:1.3em;font-size:12px;";
+  const resultsHeading = node(doc, "div", "Search results");
+  resultsHeading.style.cssText =
+    "display:none;font-size:12px;font-weight:600;opacity:.8;";
+  const results = node(doc, "div");
+  results.style.cssText = "display:flex;flex-direction:column;gap:8px;";
+  const referenceDivider = node(doc, "div", "Extracted references");
+  referenceDivider.style.cssText =
+    "display:none;border-top:1px solid currentColor;padding-top:10px;font-size:12px;font-weight:600;opacity:.8;";
   const referenceResults = node(doc, "div");
   referenceResults.style.cssText =
     "display:flex;flex-direction:column;gap:8px;";
-  const referenceDivider = node(doc, "div", "Search results");
-  referenceDivider.style.cssText =
-    "display:none;border-top:1px solid currentColor;padding-top:10px;font-size:12px;font-weight:600;opacity:.8;";
-  const results = node(doc, "div");
-  results.style.cssText = "display:flex;flex-direction:column;gap:8px;";
   const selectionStatus = node(doc, "div");
   selectionStatus.style.cssText = "font-size:11px;opacity:.8;min-height:1.2em;";
   const setCheckboxSize = (checkbox: HTMLInputElement) => {
@@ -201,9 +204,10 @@ export async function bootstrapPaperDiscovery(
     sources,
     status,
     selectionStatus,
-    referenceResults,
-    referenceDivider,
+    resultsHeading,
     results,
+    referenceDivider,
+    referenceResults,
   );
   container.append(root);
 
@@ -249,8 +253,9 @@ export async function bootstrapPaperDiscovery(
       : references.length
         ? `${references.length} references found · ${selectedReferences.size} selected for metadata search`
         : "";
-    referenceDivider.style.display =
-      references.length && candidates.length ? "block" : "none";
+    const hasSearchResults = Boolean(references.length && candidates.length);
+    resultsHeading.style.display = hasSearchResults ? "block" : "none";
+    referenceDivider.style.display = hasSearchResults ? "block" : "none";
   };
 
   const renderReferences = () => {
@@ -295,8 +300,9 @@ export async function bootstrapPaperDiscovery(
     selectionStatus.textContent = references.length
       ? `${references.length} references found · ${selectedReferences.size} selected for metadata search`
       : "";
-    referenceDivider.style.display =
-      references.length && candidates.length ? "block" : "none";
+    const hasSearchResults = Boolean(references.length && candidates.length);
+    resultsHeading.style.display = hasSearchResults ? "block" : "none";
+    referenceDivider.style.display = hasSearchResults ? "block" : "none";
   };
 
   const render = () => {
@@ -459,6 +465,7 @@ export async function bootstrapPaperDiscovery(
     selectedReferences.clear();
     referenceResults.replaceChildren();
     referenceDivider.style.display = "none";
+    resultsHeading.style.display = "none";
     selectAllReferencesButton.hidden = true;
     clearReferenceSelectionButton.hidden = true;
     searchButton.textContent = "Search";
@@ -522,6 +529,8 @@ export async function bootstrapPaperDiscovery(
       status.textContent = `Reference extraction failed: ${error instanceof Error ? error.message : String(error)}`;
       results.replaceChildren();
       referenceResults.replaceChildren();
+      resultsHeading.style.display = "none";
+      referenceDivider.style.display = "none";
       references = [];
       referenceCandidates.clear();
       unmatchedReferences.clear();
