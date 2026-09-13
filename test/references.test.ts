@@ -57,6 +57,22 @@ describe("reference extraction", function () {
     );
   });
 
+  it("splits inline numbered references from PDF column extraction", () => {
+    const references = extractReferences(
+      [
+        ...Array.from({ length: 8 }, (_, index) => `Section ${index + 1}`),
+        "References",
+        "[1] First paper title. Journal A. [2] Second paper title. Journal B. [3] Third paper title. Journal C.",
+      ].join("\n"),
+    );
+    assert.lengthOf(references, 3);
+    assert.deepEqual(
+      references.map((reference) => reference.index),
+      [1, 2, 3],
+    );
+    assert.include(references[1].text, "Second paper title");
+  });
+
   it("extracts a quoted title as a focused search query", () => {
     const references = extractReferences(
       [

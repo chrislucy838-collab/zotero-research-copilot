@@ -14,7 +14,7 @@ export type ExtractedReference = {
 
 const REFERENCE_HEADING =
   /^(?:references?|bibliography|works cited|literature cited|references and notes)\s*:?$/i;
-const ENTRY_PREFIX = /^\s*(?:\[(\d{1,4})\]|(\d{1,4})[.)])\s+/;
+const ENTRY_PREFIX = /^\s*(?:\[(\d{1,4})\]|(\d{1,4})[.)])(?=\s|[^\d])\s*/;
 const DOI_PATTERN = /\b10\.\d{4,9}\/[\w.!#$%&'*+/=?^_`{|}~-]+/i;
 
 function cleanLine(value: unknown): string {
@@ -59,13 +59,18 @@ function referenceTitle(text: string, doi?: string): string | undefined {
   const quoted = value.match(/["“](.{8,240}?)["”]/);
   if (quoted?.[1]) return quoted[1].trim();
 
+  // Many extracted references put the venue after a title sentence. Looking
+  // for that boundary avoids sending author lists and page ranges as a query.
+  const venueBoundary = value.match(
+    /(?:^|\.\s+)(.{8,240}?)\.\s+(?=(?:in|arxiv|ieee|acm|nature|science|journal|proceedings|advances|transactions|letters|review|conference|nips|iclr|cvpr|acl|emnlp|wmt|icml)\b)/i,
+  )?.[1];
+
   // For author-year citations, the first sentence after the publication year
   // is usually the title. This removes author lists and venue/page tails from
   // the query sent to academic indexes.
   const afterYear = value.match(/\b(?:19|20)\d{2}\b[).,:;\s-]*(.+)/)?.[1];
-  if (!afterYear) return value.length > 240 ? `${value.slice(0, 237)}…` : value;
-  const firstSentence = afterYear.match(/^(.{8,240}?)(?:\.\s+|$)/)?.[1];
-  const title = (firstSentence || afterYear)
+  const firstSentence = afterYear?.match(/^(.{8,240}?)(?:\.\s+|$)/)?.[1];
+  const title = (firstSentence || venueBoundary || afterYear || value)
     .replace(/^[\s.,;:()-]+|[\s.,;:()-]+$/g, "")
     .trim();
   if (!title) return undefined;
@@ -77,14 +82,24 @@ function buildReferenceQueries(
   title: string | undefined,
   doi: string | undefined,
 ): string[] {
-  const queries = [doi, title, text]
+  const compact = text.replace(/\s+/g, " ").trim();
+  const shortPhrase = compact
+    .replace(ENTRY_PREFIX, "")
+    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/\b(?:19|20)\d{2}\b/g, "")
+    .replace(/[()\[\],;:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(/\.\s+/)[0]
+    .trim();
+  const queries = [doi, title, shortPhrase, compact]
     .map((value) =>
       String(value || "")
         .replace(/\s+/g, " ")
         .trim(),
     )
     .filter((value) => value.length >= 3);
-  return Array.from(new Set(queries)).slice(0, 3);
+  return Array.from(new Set(queries)).slice(0, 4);
 }
 
 function locateReferencesStart(lines: string[]): number {
@@ -93,6 +108,46 @@ function locateReferencesStart(lines: string[]): number {
     if (REFERENCE_HEADING.test(cleanLine(lines[index]))) return index + 1;
   }
   return -1;
+}
+
+function expandInlineReferenceMarkers(lines: string[]): string[] {
+  const joined = lines.join("\n");
+  const markerPattern =
+    /(?:^|\s)(?:\[\s*(\d{1,4})\s*\]|(\d{1,3})[.)])(?=\s|$)/g;
+  const markers: Array<{ start: number; number: number }> = [];
+  let match: RegExpExecArray | null;
+  while ((match = markerPattern.exec(joined))) {
+    const number = Number(match[1] || match[2]);
+    if (!Number.isInteger(number) || number <= 0) continue;
+    const previous = markers[markers.length - 1]?.number;
+    // A bibliography normally increases monotonically. This filters out
+    // page numbers and years that happen to look like numbered markers.
+    if (
+      previous !== undefined &&
+      (number <= previous || number - previous > 100)
+    ) {
+      continue;
+    }
+    markers.push({
+      start: match.index + match[0].search(/\S/),
+      number,
+    });
+  }
+  if (markers.length < 2) return lines;
+  const chunks: string[] = [];
+  for (let index = 0; index < markers.length; index += 1) {
+    const start = markers[index].start;
+    const end = markers[index + 1]?.start ?? joined.length;
+    const chunk = joined.slice(start, end).trim();
+    if (chunk) chunks.push(chunk);
+  }
+  return chunks;
+}
+
+function referenceNumber(text: string, fallback: number): number {
+  const match = text.match(ENTRY_PREFIX);
+  const parsed = Number(match?.[1] || match?.[2]);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 /**
@@ -109,7 +164,7 @@ export function extractReferences(documentText: string): ExtractedReference[] {
   const start = locateReferencesStart(lines);
   if (start < 0) return [];
 
-  const body = lines.slice(start);
+  const body = expandInlineReferenceMarkers(lines.slice(start));
   const numbered: string[] = [];
   let current = "";
   for (const rawLine of body) {
@@ -144,7 +199,7 @@ export function extractReferences(documentText: string): ExtractedReference[] {
       const title = referenceTitle(text, doi);
       const queries = buildReferenceQueries(text, title, doi);
       return {
-        index: position + 1,
+        index: referenceNumber(text, position + 1),
         text,
         query: queries[0] || text,
         queries,
