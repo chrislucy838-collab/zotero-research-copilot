@@ -7,6 +7,7 @@ export type ExtractedReference = {
   index: number;
   text: string;
   query: string;
+  queries?: string[];
   doi?: string;
   title?: string;
 };
@@ -49,11 +50,41 @@ function referenceTitle(text: string, doi?: string): string | undefined {
       "",
     );
   value = value
+    .replace(/https?:\/\/\S+/gi, "")
     .replace(/\s+/g, " ")
     .replace(/[.,;:]+$/, "")
     .trim();
-  if (!value) return undefined;
-  return value.length > 240 ? `${value.slice(0, 237)}…` : value;
+
+  // Quoted titles are common in IEEE, ACM, and humanities bibliographies.
+  const quoted = value.match(/["“](.{8,240}?)["”]/);
+  if (quoted?.[1]) return quoted[1].trim();
+
+  // For author-year citations, the first sentence after the publication year
+  // is usually the title. This removes author lists and venue/page tails from
+  // the query sent to academic indexes.
+  const afterYear = value.match(/\b(?:19|20)\d{2}\b[).,:;\s-]*(.+)/)?.[1];
+  if (!afterYear) return value.length > 240 ? `${value.slice(0, 237)}…` : value;
+  const firstSentence = afterYear.match(/^(.{8,240}?)(?:\.\s+|$)/)?.[1];
+  const title = (firstSentence || afterYear)
+    .replace(/^[\s.,;:()-]+|[\s.,;:()-]+$/g, "")
+    .trim();
+  if (!title) return undefined;
+  return title.length > 240 ? `${title.slice(0, 237)}…` : title;
+}
+
+function buildReferenceQueries(
+  text: string,
+  title: string | undefined,
+  doi: string | undefined,
+): string[] {
+  const queries = [doi, title, text]
+    .map((value) =>
+      String(value || "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter((value) => value.length >= 3);
+  return Array.from(new Set(queries)).slice(0, 3);
 }
 
 function locateReferencesStart(lines: string[]): number {
@@ -110,12 +141,15 @@ export function extractReferences(documentText: string): ExtractedReference[] {
     .map((entry, position) => {
       const text = cleanLine(entry);
       const doi = normalizeDoi(text);
+      const title = referenceTitle(text, doi);
+      const queries = buildReferenceQueries(text, title, doi);
       return {
         index: position + 1,
         text,
-        query: doi || text,
+        query: queries[0] || text,
+        queries,
         doi,
-        title: referenceTitle(text, doi),
+        title,
       } satisfies ExtractedReference;
     })
     .filter((entry) => {
@@ -154,5 +188,6 @@ export const __referenceExtractorTest = {
   cleanLine,
   normalizeDoi,
   referenceTitle,
+  buildReferenceQueries,
   locateReferencesStart,
 };

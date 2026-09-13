@@ -3,6 +3,7 @@ import {
   __referenceExtractorTest,
   extractReferences,
 } from "../src/modules/paperDiscovery/references";
+import { __paperDiscoveryTest } from "../src/modules/paperDiscovery/search";
 
 describe("reference extraction", function () {
   it("extracts numbered references and joins wrapped lines", () => {
@@ -22,6 +23,7 @@ describe("reference extraction", function () {
     assert.equal(references[0].doi, "10.1000/abc123");
     assert.equal(references[0].query, "10.1000/abc123");
     assert.equal(references[1].index, 2);
+    assert.isAtLeast(references[1].queries?.length || 0, 1);
   });
 
   it("deduplicates repeated DOI entries", () => {
@@ -49,6 +51,73 @@ describe("reference extraction", function () {
     const references = extractReferences(text);
     assert.lengthOf(references, 2);
     assert.include(references[1].query, "Doe, A.");
+    assert.include(
+      references[1].queries || [],
+      "Doe, A. A second unnumbered citation. Publisher, 2021",
+    );
+  });
+
+  it("extracts a quoted title as a focused search query", () => {
+    const references = extractReferences(
+      [
+        ...Array.from({ length: 8 }, (_, index) => `Section ${index + 1}`),
+        "References",
+        '1. Smith, J. (2020). "A focused title for discovery". Journal of Testing, 10(2), 1-9.',
+      ].join("\n"),
+    );
+    assert.equal(references[0].title, "A focused title for discovery");
+    assert.equal(references[0].query, "A focused title for discovery");
+  });
+
+  it("prioritizes a DOI lookup before generic search", async () => {
+    const originalOpenAlex = globalThis.ztoolkit;
+    const calls: string[] = [];
+    globalThis.ztoolkit = {
+      getGlobal: (name: string) => {
+        if (name !== "fetch") return undefined;
+        return async (url: string) => {
+          calls.push(url);
+          return {
+            ok: true,
+            json: async () => ({
+              id: "https://openalex.org/W1",
+              title: "Exact DOI paper",
+              authorships: [],
+              publication_year: 2020,
+              doi: "https://doi.org/10.1000/exact",
+            }),
+          };
+        };
+      },
+    } as typeof globalThis.ztoolkit;
+    try {
+      const result = await __paperDiscoveryTest.searchPaperReference(
+        {
+          query: "long citation text",
+          queries: ["long citation text"],
+          doi: "10.1000/exact",
+        },
+        { sources: ["openalex"] },
+      );
+      assert.lengthOf(result.candidates, 1);
+      assert.match(calls[0], /api\.openalex\.org\/works/);
+      assert.notInclude(calls[0], "search=");
+    } finally {
+      globalThis.ztoolkit = originalOpenAlex;
+    }
+  });
+
+  it("ranks the title-matching candidate first", () => {
+    const score = __paperDiscoveryTest.scoreReferenceCandidate(
+      {
+        source: "crossref",
+        sourceId: "match",
+        title: "A Focused Title for Discovery",
+        authors: [],
+      },
+      { query: "long citation", title: "A focused title for discovery" },
+    );
+    assert.equal(score, 5000);
   });
 
   it("requires a late reference heading to avoid matching body prose", () => {

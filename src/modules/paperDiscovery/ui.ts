@@ -4,7 +4,7 @@ import {
   getActiveCollectionID,
   getLibraryCollectionOptions,
 } from "./collections";
-import { searchPapers } from "./search";
+import { searchPaperReference, searchPapers } from "./search";
 import {
   extractReferencesFromItem,
   type ExtractedReference,
@@ -357,9 +357,9 @@ export async function bootstrapPaperDiscovery(
           batch.map(async (index) => {
             const reference = references[index];
             try {
-              const result = await searchPapers(reference.query, {
+              const result = await searchPaperReference(reference, {
                 sources: selectedSources,
-                limit: 3,
+                limit: 5,
               });
               return result.candidates[0];
             } catch {

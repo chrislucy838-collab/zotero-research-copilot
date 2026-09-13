@@ -16,6 +16,7 @@
 - Added Discover's Extract references workflow for extracting bibliography entries, finding metadata, and importing selected matches.
 - Added reference selection controls, unmatched-result reporting, and batched metadata searches.
 - Fixed duplicated reference numbering and normalized Discover checkbox sizing.
+- Improved Extract references search with focused title queries, DOI lookups, fallback queries, and candidate ranking.
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
@@ -36,4 +37,5 @@
 - Discover 新增 Extract references 流程，可提取参考文献、检索元数据并导入选中的匹配结果。
 - 新增参考文献全选/清空、未匹配提示和分批元数据检索。
 - 修复参考文献重复序号，并统一 Discover 复选框尺寸。
+- 改进 Extract references 检索，支持标题提取、DOI 精确查询、备用查询和候选排序。
 - 已通过完整单元测试和生产 XPI 构建验证。
