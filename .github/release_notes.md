@@ -1,5 +1,7 @@
 ## What's changed
 
+- Fixed Zotero compatibility metadata for Zotero 10.0.x, including the install and update manifest maximum version.
+
 - Fixed paper-chip navigation so double-clicking a reference changes only the left Reader document while preserving the original right-side chat conversation, history, fixed context papers, and draft.
 - Reused the original chat workspace for the one navigation transition without permanently binding it to other Reader tabs.
 
@@ -33,6 +35,8 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 修复 Zotero 10.0.x 的兼容性元数据，包含安装清单和自动更新清单中的版本上限。
 
 - 修复论文芯片导航：双击参考论文时只切换左侧 Reader 文档，右侧仍保留原论文对话、历史、固定论文集合和输入草稿。
 - 导航过程只临时复用原聊天工作区，不会永久绑定到其他 Reader 标签页。

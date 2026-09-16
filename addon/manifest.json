@@ -14,7 +14,7 @@
       "id": "__addonID__",
       "update_url": "https://github.com/chrislucy838-collab/zotero-research-copilot/releases/download/release/update.json",
       "strict_min_version": "10.0",
-      "strict_max_version": "10.99.99"
+      "strict_max_version": "10.0.*"
     }
   }
 }
