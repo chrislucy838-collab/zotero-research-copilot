@@ -118,6 +118,12 @@ import {
   setSelectedTextExpandedIndex,
 } from "./contextResolution";
 import { resolvePaperContextRefFromAttachment } from "./paperAttribution";
+import { getZoteroItem } from "../../utils/zoteroItems";
+import {
+  openPaperContextInReader,
+  preserveReaderConversationState,
+  resolvePaperNavigationAttachment,
+} from "./paperNavigation";
 import { relabelPaperSourceRefs } from "./paperSource";
 import { getReaderDocumentCapabilities } from "./documentContext";
 import { getDocumentAdapterForItem } from "./document/registry";
@@ -1900,6 +1906,11 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     );
     const isCurrentPaperContext = isPaperContextCurrent(paperContext);
     chip.classList.toggle("llm-paper-context-current", isCurrentPaperContext);
+    chip.dataset.paperContextIndex = `${options?.removableIndex ?? -1}`;
+    chip.dataset.paperItemId = `${paperContext.itemId}`;
+    chip.dataset.paperContextItemId = `${paperContext.contextItemId}`;
+    chip.title = `${formatPaperContextChipTitle(paperContext)}\nDouble-click to read`;
+    chip.style.cursor = "pointer";
     if (options?.autoLoaded) {
       chip.classList.add("llm-paper-context-chip-autoloaded");
       chip.dataset.autoLoaded = "true";
@@ -2032,6 +2043,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     if (!ownerDoc) return;
 
     type PaperDetailEntry = {
+      paperContext: PaperContextRef;
       label: string;
       meta: string;
       index: number;
@@ -2049,6 +2061,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
         .join(" · ");
       const label = paperContext.title || "PDF";
       return {
+        paperContext,
         label,
         meta,
         index,
@@ -2071,6 +2084,11 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
         "llm-paper-context-detail-item llm-selected-context-detail-item",
       );
       row.classList.toggle("llm-paper-context-current", entry.isCurrent);
+      row.dataset.paperContextIndex = `${entry.index}`;
+      row.dataset.paperItemId = `${entry.paperContext.itemId}`;
+      row.dataset.paperContextItemId = `${entry.paperContext.contextItemId}`;
+      row.title = `${entry.label}\nDouble-click to read`;
+      row.style.cursor = "pointer";
       const index = createElement(
         ownerDoc,
         "span",
@@ -2136,6 +2154,11 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
         "llm-selected-context llm-paper-context-chip llm-base-pdf-chip",
       );
       chip.classList.toggle("llm-paper-context-current", isCurrentBasePaper);
+      chip.dataset.paperContextIndex = "-2";
+      chip.dataset.paperItemId = `${pool.basePdfItemId}`;
+      chip.dataset.paperContextItemId = `${pool.basePdfItemId}`;
+      chip.title = `${basePdfTitle}\nDouble-click to read`;
+      chip.style.cursor = "pointer";
       chip.classList.add("collapsed");
       const chipHeader = createElement(
         ownerDoc,
@@ -7935,6 +7958,87 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
   }
 
   if (paperPreview) {
+    paperPreview.addEventListener("dblclick", (e: Event) => {
+      if (!item) return;
+      const target = e.target as Element | null;
+      if (!target || target.closest("button")) return;
+
+      const chip = target.closest(
+        ".llm-paper-context-chip",
+      ) as HTMLElement | null;
+      const row = target.closest(
+        ".llm-paper-context-detail-item",
+      ) as HTMLElement | null;
+      const source = chip || row;
+      if (!source || source.classList.contains("llm-paper-context-summary")) {
+        return;
+      }
+
+      const index = Number.parseInt(source.dataset.paperContextIndex || "", 10);
+      const sourceItemId = Number.parseInt(
+        source.dataset.paperItemId || "",
+        10,
+      );
+      const sourceContextItemId = Number.parseInt(
+        source.dataset.paperContextItemId || "",
+        10,
+      );
+      let paperContext: PaperContextRef | null = null;
+      if (index === -2) {
+        const baseItemId = sourceItemId;
+        const baseItem = Number.isFinite(baseItemId)
+          ? getZoteroItem(baseItemId)
+          : null;
+        paperContext = baseItem
+          ? resolvePaperContextRefFromAttachment(baseItem)
+          : null;
+        if (!paperContext && baseItem && baseItem.isAttachment?.()) {
+          paperContext = {
+            itemId: Number(baseItem.parentID) || baseItem.id,
+            contextItemId: baseItem.id,
+            title: String(baseItem.getField("title") || "Paper"),
+          };
+        }
+      } else if (index === -1) {
+        paperContext = resolveAutoLoadedPaperContext();
+      } else if (Number.isFinite(index) && index >= 0) {
+        paperContext =
+          normalizePaperContextEntries(
+            selectedPaperContextCache.get(item.id) || [],
+          )[index] || null;
+      }
+
+      if (!paperContext && sourceItemId > 0 && sourceContextItemId > 0) {
+        paperContext = {
+          itemId: sourceItemId,
+          contextItemId: sourceContextItemId,
+          title: source.title || "Paper",
+        };
+      }
+      if (!paperContext) return;
+      e.preventDefault();
+      e.stopPropagation();
+      // Flush the current draft/compose snapshot before Zotero re-renders the
+      // panel for the target Reader attachment.
+      saveDraftInput();
+      composeHook.save?.();
+      const panelSourceItemId = Number(item.id);
+      const navigationAttachment =
+        resolvePaperNavigationAttachment(paperContext);
+      preserveReaderConversationState(
+        panelSourceItemId,
+        Number(navigationAttachment?.id) || paperContext.contextItemId,
+        conversationKey,
+      );
+      void openPaperContextInReader(paperContext)
+        .then((attachmentID) => {
+          if (attachmentID && item) updatePaperPreview();
+        })
+        .catch((error) => {
+          ztoolkit.log("LLM: Failed to switch Reader paper", error);
+        });
+    });
+
     paperPreview.addEventListener("click", (e: Event) => {
       if (!item) return;
       const target = e.target as Element | null;

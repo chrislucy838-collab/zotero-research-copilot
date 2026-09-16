@@ -1,5 +1,9 @@
 ## What's changed
 
+- Added double-click navigation for paper context chips and expanded paper rows: the Zotero Reader switches to the selected paper without opening a new window or duplicate reader tab.
+- Preserved the active chat conversation, fixed paper context collection, attachments, screenshots, draft text, and compose state while switching the current paper for reading.
+- Added current-paper highlighting and Reader navigation tests.
+
 - Added automatic `x-opencode-session` headers for OpenCode Go requests, using a stable ID per conversation.
 - Preserved a user-supplied `x-opencode-session` custom header when present.
 
@@ -26,6 +30,10 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 新增论文上下文芯片和展开论文行的双击阅读：Zotero Reader 会切换到选中的论文，不打开新窗口，也不创建重复阅读标签页。
+- 切换阅读论文时保留当前对话、固定论文集合、附件、截图、输入草稿和组合状态；当前阅读论文会同步高亮。
+- 新增 Reader 导航与状态保持测试。
 
 - 为 OpenCode Go 请求自动添加 `x-opencode-session`，并按对话保持稳定 ID。
 - 用户手动填写同名自定义请求头时保留用户配置。
