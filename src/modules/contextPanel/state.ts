@@ -213,5 +213,54 @@ export const selectedImagePreviewExpandedCache = new Map<number, boolean>();
 export const selectedImagePreviewActiveIndexCache = new Map<number, number>();
 export const recentReaderSelectionCache = new Map<number, string>();
 export const draftInputCache = new Map<number, string>();
+
+export type ReaderChatWorkspaceState = {
+  host: HTMLElement;
+  item: Zotero.Item;
+  pendingAttachmentId: number | null;
+  activeAttachmentId: number | null;
+  activeTabId: string | null;
+};
+
+/** The chat surface that should remain attached while Reader papers change. */
+const readerChatWorkspaceByWindow = new WeakMap<
+  Window,
+  ReaderChatWorkspaceState
+>();
+
+export function setReaderChatWorkspace(
+  win: Window,
+  state: ReaderChatWorkspaceState,
+): void {
+  readerChatWorkspaceByWindow.set(win, state);
+}
+
+export function getReaderChatWorkspace(
+  win: Window,
+): ReaderChatWorkspaceState | null {
+  return readerChatWorkspaceByWindow.get(win) || null;
+}
+
+export function updateReaderChatWorkspaceNavigation(
+  win: Window,
+  navigation: {
+    pendingAttachmentId?: number | null;
+    activeAttachmentId?: number | null;
+    activeTabId?: string | null;
+  },
+): void {
+  const state = readerChatWorkspaceByWindow.get(win);
+  if (!state) return;
+  if (navigation.pendingAttachmentId !== undefined) {
+    state.pendingAttachmentId = navigation.pendingAttachmentId;
+  }
+  if (navigation.activeAttachmentId !== undefined) {
+    state.activeAttachmentId = navigation.activeAttachmentId;
+  }
+  if (navigation.activeTabId !== undefined) {
+    state.activeTabId = navigation.activeTabId;
+  }
+}
+
 /** Maps PDF item.id → active paper conversation key (1B range). */
 export const activePaperConversationByItem = new Map<number, number>();

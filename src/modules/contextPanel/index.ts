@@ -34,6 +34,8 @@ import {
   setReaderContextPanelRegistered,
   recentReaderSelectionCache,
   conversationContextPool,
+  getReaderChatWorkspace,
+  updateReaderChatWorkspaceNavigation,
 } from "./state";
 import { clearConversation as clearStoredConversation } from "../../utils/chatStore";
 import {
@@ -204,7 +206,16 @@ export function registerReaderContextPanel() {
                 renderItem = documentFromTab;
               }
             }
+            const workspace = getReaderChatWorkspace(win);
+            const isPendingNavigation =
+              workspace?.pendingAttachmentId === Number(renderItem.id);
             const host = getSharedReaderPanelHostForItem(win, renderItem);
+            updateReaderChatWorkspaceNavigation(win, {
+              activeAttachmentId: Number(renderItem.id) || null,
+              ...(isPendingNavigation
+                ? { pendingAttachmentId: Number(renderItem.id) || null }
+                : {}),
+            });
             if (!body.contains(host)) {
               body.textContent = "";
               body.appendChild(host);
@@ -264,13 +275,25 @@ export function registerReaderContextPanel() {
         }
       }
 
+      const workspace = getReaderChatWorkspace(win);
       const host = getSharedReaderPanelHostForItem(win, readerItem);
+      updateReaderChatWorkspaceNavigation(win, {
+        activeAttachmentId: Number(readerItem.id) || null,
+      });
 
-      // Defensive: ensure host is attached (in case onRender didn't fire)
+      // Keep the original chat workspace when a paper was opened from a
+      // context chip. Reader navigation changes the document surface, while
+      // the conversation remains owned by the paper where the chat started.
       if (!body.contains(host)) {
         body.textContent = "";
         body.appendChild(host);
         host.style.display = "flex";
+      }
+      if (workspace?.host === host) {
+        updateReaderChatWorkspaceNavigation(win, {
+          pendingAttachmentId: null,
+        });
+        return;
       }
 
       const { bootstrapSharedReaderPanel } = await import("./readerPanel");
@@ -366,7 +389,6 @@ export function registerReaderSelectionTracking() {
       return normalized !== "false" && normalized !== "0";
     };
     const showAddTextInPopup = isPopupOptionEnabled("showPopupAddText");
-
 
     const resolveSelectedTextForPopupAction = (): string => {
       const fromPopupDoc = getSelectionFromDocument(

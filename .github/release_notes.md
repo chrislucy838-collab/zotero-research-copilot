@@ -1,5 +1,8 @@
 ## What's changed
 
+- Fixed paper-chip navigation so double-clicking a reference changes only the left Reader document while preserving the original right-side chat conversation, history, fixed context papers, and draft.
+- Reused the original chat workspace for the one navigation transition without permanently binding it to other Reader tabs.
+
 - Added double-click navigation for paper context chips and expanded paper rows: the Zotero Reader switches to the selected paper without opening a new window or duplicate reader tab.
 - Preserved the active chat conversation, fixed paper context collection, attachments, screenshots, draft text, and compose state while switching the current paper for reading.
 - Added current-paper highlighting and Reader navigation tests.
@@ -30,6 +33,9 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 修复论文芯片导航：双击参考论文时只切换左侧 Reader 文档，右侧仍保留原论文对话、历史、固定论文集合和输入草稿。
+- 导航过程只临时复用原聊天工作区，不会永久绑定到其他 Reader 标签页。
 
 - 新增论文上下文芯片和展开论文行的双击阅读：Zotero Reader 会切换到选中的论文，不打开新窗口，也不创建重复阅读标签页。
 - 切换阅读论文时保留当前对话、固定论文集合、附件、截图、输入草稿和组合状态；当前阅读论文会同步高亮。

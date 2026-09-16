@@ -20,6 +20,8 @@ import {
   selectedFileAttachmentCache,
   selectedFilePreviewExpandedCache,
   activePaperConversationByItem,
+  getReaderChatWorkspace,
+  setReaderChatWorkspace,
 } from "./state";
 import {
   createPaperConversation,
@@ -57,6 +59,10 @@ export function getSharedReaderPanelHostForItem(
   win: Window,
   item: Zotero.Item,
 ): HTMLElement {
+  const workspace = getReaderChatWorkspace(win);
+  if (workspace?.host && workspace.pendingAttachmentId === item.id) {
+    return workspace.host;
+  }
   const key = item.id;
   const map = getWindowMap(win);
   let state = map.get(key);
@@ -83,6 +89,13 @@ export async function bootstrapSharedReaderPanel(
   const map = getWindowMap(win);
   const state = map.get(key);
   if (!state) return;
+  setReaderChatWorkspace(win, {
+    host,
+    item,
+    pendingAttachmentId: null,
+    activeAttachmentId: Number(item.id) || null,
+    activeTabId: null,
+  });
   if (state.bootstrapPromise) {
     return state.bootstrapPromise;
   }
@@ -123,7 +136,8 @@ export async function bootstrapSharedReaderPanel(
       // conversation and the panel was reloaded without clearing module state.
       const activeKey = activePaperConversationByItem.get(item.id) || 0;
       if (activeKey > 0) {
-        const activeTurnCount = await getPaperConversationUserTurnCount(activeKey);
+        const activeTurnCount =
+          await getPaperConversationUserTurnCount(activeKey);
         if (activeTurnCount === 0) {
           const latest = await getLatestPaperConversation(item.id);
           if (latest && latest.userTurnCount > 0) {

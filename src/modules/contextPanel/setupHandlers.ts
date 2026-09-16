@@ -48,6 +48,7 @@ import {
   conversationContextPool,
   draftInputCache,
   activePaperConversationByItem,
+  getReaderChatWorkspace,
 } from "./state";
 import {
   sanitizeText,
@@ -119,11 +120,7 @@ import {
 } from "./contextResolution";
 import { resolvePaperContextRefFromAttachment } from "./paperAttribution";
 import { getZoteroItem } from "../../utils/zoteroItems";
-import {
-  openPaperContextInReader,
-  preserveReaderConversationState,
-  resolvePaperNavigationAttachment,
-} from "./paperNavigation";
+import { openPaperContextInReader } from "./paperNavigation";
 import { relabelPaperSourceRefs } from "./paperSource";
 import { getReaderDocumentCapabilities } from "./documentContext";
 import { getDocumentAdapterForItem } from "./document/registry";
@@ -1852,7 +1849,13 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
   const getCurrentReaderPaperIds = () => {
     if (tabType !== "reader") return null;
     const currentPaperItem = basePaperItem || item;
-    const currentItemId = Math.floor(Number(currentPaperItem?.id) || 0);
+    const workspaceWindow = body.ownerDocument?.defaultView;
+    const workspace = workspaceWindow
+      ? getReaderChatWorkspace(workspaceWindow)
+      : null;
+    const currentItemId = Math.floor(
+      Number(workspace?.activeAttachmentId || currentPaperItem?.id) || 0,
+    );
     const currentParentId = Math.floor(
       Number((currentPaperItem as Zotero.Item | null)?.parentID) || 0,
     );
@@ -8022,14 +8025,6 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       // panel for the target Reader attachment.
       saveDraftInput();
       composeHook.save?.();
-      const panelSourceItemId = Number(item.id);
-      const navigationAttachment =
-        resolvePaperNavigationAttachment(paperContext);
-      preserveReaderConversationState(
-        panelSourceItemId,
-        Number(navigationAttachment?.id) || paperContext.contextItemId,
-        conversationKey,
-      );
       void openPaperContextInReader(paperContext)
         .then((attachmentID) => {
           if (attachmentID && item) updatePaperPreview();
