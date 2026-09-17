@@ -34,7 +34,10 @@ import {
   setReaderContextPanelRegistered,
   recentReaderSelectionCache,
   conversationContextPool,
-  getReaderChatWorkspace,
+  getReaderChatWorkspaceForHost,
+  getPendingReaderNavigation,
+  clearPendingReaderNavigationIfTarget,
+  setPendingReaderNavigation,
   updateReaderChatWorkspaceNavigation,
 } from "./state";
 import { clearConversation as clearStoredConversation } from "../../utils/chatStore";
@@ -77,6 +80,11 @@ type ReaderSelectionPopupHandler =
 
 let readerContextPanelSectionKey: string | null = null;
 let readerSelectionPopupHandler: ReaderSelectionPopupHandler | null = null;
+
+// ItemPaneManager may invoke onAsyncRender after Zotero has selected another
+// Reader tab. Keep the host created during onRender attached to this panel body
+// instead of resolving it again from the global selected tab.
+const readerPanelHostByBody = new WeakMap<Element, HTMLElement>();
 
 function shouldEnablePanelSection(
   body: Element,
@@ -206,16 +214,26 @@ export function registerReaderContextPanel() {
                 renderItem = documentFromTab;
               }
             }
-            const workspace = getReaderChatWorkspace(win);
-            const isPendingNavigation =
-              workspace?.pendingAttachmentId === Number(renderItem.id);
-            const host = getSharedReaderPanelHostForItem(win, renderItem);
-            updateReaderChatWorkspaceNavigation(win, {
-              activeAttachmentId: Number(renderItem.id) || null,
-              ...(isPendingNavigation
-                ? { pendingAttachmentId: Number(renderItem.id) || null }
-                : {}),
+            const pendingNavigation = getPendingReaderNavigation(win);
+            const needsNavigationHost = Boolean(
+              pendingNavigation &&
+              pendingNavigation.targetAttachmentId === Number(renderItem.id),
+            );
+            const host = getSharedReaderPanelHostForItem(win, renderItem, {
+              forceNew: needsNavigationHost,
+              workspaceOwnerId: pendingNavigation?.ownerItem?.id || null,
             });
+            readerPanelHostByBody.set(body, host);
+            const workspace = getReaderChatWorkspaceForHost(win, host);
+            const isPendingNavigation =
+              pendingNavigation?.targetAttachmentId === Number(renderItem.id);
+            const isSharedWorkspaceHost = workspace?.host === host;
+            if (isSharedWorkspaceHost && !isPendingNavigation) {
+              updateReaderChatWorkspaceNavigation(win, {
+                host,
+                activeAttachmentId: Number(renderItem.id) || null,
+              });
+            }
             if (!body.contains(host)) {
               body.textContent = "";
               body.appendChild(host);
@@ -275,16 +293,28 @@ export function registerReaderContextPanel() {
         }
       }
 
-      const workspace = getReaderChatWorkspace(win);
-      const host = getSharedReaderPanelHostForItem(win, readerItem);
+      const pendingNavigation = getPendingReaderNavigation(win);
+      const navigationTarget = Boolean(
+        pendingNavigation &&
+        pendingNavigation.targetAttachmentId === Number(readerItem.id),
+      );
+      const host =
+        readerPanelHostByBody.get(body) ||
+        getSharedReaderPanelHostForItem(win, readerItem, {
+          forceNew: navigationTarget,
+          workspaceOwnerId: pendingNavigation?.ownerItem?.id || null,
+        });
+      readerPanelHostByBody.set(body, host);
+      const workspace = getReaderChatWorkspaceForHost(win, host);
       const isPendingNavigation =
-        workspace?.pendingAttachmentId === Number(readerItem.id);
-      updateReaderChatWorkspaceNavigation(win, {
-        activeAttachmentId: Number(readerItem.id) || null,
-        ...(isPendingNavigation
-          ? { pendingAttachmentId: Number(readerItem.id) || null }
-          : {}),
-      });
+        pendingNavigation?.targetAttachmentId === Number(readerItem.id);
+      const isSharedWorkspaceHost = workspace?.host === host;
+      if (isSharedWorkspaceHost && !isPendingNavigation) {
+        updateReaderChatWorkspaceNavigation(win, {
+          host,
+          activeAttachmentId: Number(readerItem.id) || null,
+        });
+      }
 
       // Keep the original chat workspace when a paper was opened from a
       // context chip. Reader navigation changes the document surface, while
@@ -294,15 +324,32 @@ export function registerReaderContextPanel() {
         body.appendChild(host);
         host.style.display = "flex";
       }
-      if (workspace?.host === host && isPendingNavigation) {
-        updateReaderChatWorkspaceNavigation(win, {
-          pendingAttachmentId: null,
+      if (isPendingNavigation) {
+        // Bootstrap the destination tab with the source conversation owner.
+        // Paper 2 is only the active reading document and must not become the
+        // fixed Paper 1 conversation.
+        const ownerItem = pendingNavigation.ownerItem;
+        const { bootstrapSharedReaderPanel } = await import("./readerPanel");
+        await bootstrapSharedReaderPanel(win, host, ownerItem, {
+          workspaceOwner: ownerItem,
+          activeAttachmentId: Number(readerItem.id) || null,
         });
+        // Keep the transaction until Reader.open() has returned and supplied
+        // the destination tab id. The first async render can happen before
+        // that point, so clearing it here would make a later render initialize
+        // Paper 2 as a new Paper 1.
+        clearPendingReaderNavigationIfTarget(
+          win,
+          workspace?.activeTabId,
+          Number(readerItem.id),
+        );
         return;
       }
 
       const { bootstrapSharedReaderPanel } = await import("./readerPanel");
-      await bootstrapSharedReaderPanel(win, host, readerItem);
+      await bootstrapSharedReaderPanel(win, host, readerItem, {
+        activeAttachmentId: Number(readerItem.id) || null,
+      });
     },
     onToggle: ({ body, event, item, tabType }) => {
       if (tabType !== "library") return;

@@ -1,6 +1,9 @@
 import { assert } from "chai";
 import {
   getReaderChatWorkspace,
+  getReaderChatWorkspaceForHost,
+  getPendingReaderNavigation,
+  setPendingReaderNavigation,
   setReaderChatWorkspace,
 } from "../src/modules/contextPanel/state";
 import {
@@ -96,7 +99,7 @@ describe("paper navigation", function () {
       const workspace = getReaderChatWorkspace(fakeWindow);
       assert.isNotNull(workspace);
       assert.isNull(workspace?.pendingAttachmentId);
-      assert.isNull(workspace?.activeAttachmentId);
+      assert.equal(workspace?.activeAttachmentId, 701);
       assert.equal(workspace?.item, ownerItem);
     } finally {
       (globalThis as any).Zotero = originalZotero;
@@ -123,6 +126,58 @@ describe("paper navigation", function () {
 
     assert.equal(getReaderChatWorkspace(fakeWindow)?.item, ownerItem);
     assert.equal(getReaderChatWorkspace(fakeWindow)?.host, host);
+  });
+
+  it("isolates source and target Reader workspaces", function () {
+    const fakeWindow = {} as Window;
+    const sourceHost = {} as HTMLElement;
+    const targetHost = {} as HTMLElement;
+    const ownerItem = { id: 701 } as any;
+    const targetItem = { id: 702 } as any;
+
+    setReaderChatWorkspace(fakeWindow, {
+      host: sourceHost,
+      item: ownerItem,
+      pendingAttachmentId: null,
+      activeAttachmentId: 701,
+      activeTabId: "reader-source",
+    });
+    setReaderChatWorkspace(fakeWindow, {
+      host: targetHost,
+      item: ownerItem,
+      pendingAttachmentId: null,
+      activeAttachmentId: 702,
+      activeTabId: "reader-target",
+    });
+    setPendingReaderNavigation(fakeWindow, {
+      ownerItem,
+      sourceTabId: "reader-source",
+      targetAttachmentId: 702,
+    });
+
+    assert.equal(
+      getReaderChatWorkspace(fakeWindow, "reader-source")?.item,
+      ownerItem,
+    );
+    assert.equal(
+      getReaderChatWorkspace(fakeWindow, "reader-source")?.activeAttachmentId,
+      701,
+    );
+    assert.equal(
+      getReaderChatWorkspaceForHost(fakeWindow, targetHost)?.item,
+      ownerItem,
+    );
+    assert.equal(
+      getReaderChatWorkspace(fakeWindow, "reader-target")?.activeAttachmentId,
+      702,
+    );
+    assert.equal(getPendingReaderNavigation(fakeWindow)?.ownerItem, ownerItem);
+    setPendingReaderNavigation(fakeWindow, null);
+    assert.isNull(getPendingReaderNavigation(fakeWindow));
+
+    // Keep the target item in the fixture to make the intended distinction
+    // explicit: active Reader document and chat owner are different values.
+    assert.equal(targetItem.id, 702);
   });
 
   it("does not create a tab target when no reader tab is selected", function () {

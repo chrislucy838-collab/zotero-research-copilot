@@ -49,6 +49,7 @@ import {
   draftInputCache,
   activePaperConversationByItem,
   getReaderChatWorkspace,
+  getReaderChatWorkspaceForHost,
 } from "./state";
 import {
   sanitizeText,
@@ -1851,7 +1852,8 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     const currentPaperItem = basePaperItem || item;
     const workspaceWindow = body.ownerDocument?.defaultView;
     const workspace = workspaceWindow
-      ? getReaderChatWorkspace(workspaceWindow)
+      ? getReaderChatWorkspaceForHost(workspaceWindow, body as HTMLElement) ||
+        getReaderChatWorkspace(workspaceWindow)
       : null;
     const currentItemId = Math.floor(
       Number(workspace?.activeAttachmentId || currentPaperItem?.id) || 0,

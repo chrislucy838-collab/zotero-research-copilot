@@ -5384,11 +5384,12 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
 }
 
 .llm-base-pdf-chip {
-  border-left: 2px solid var(--accent-blue8, #4fa0d8);
+  border-left: 2px solid #dc2626;
 }
 
+/* The base document is the fixed Paper 1 of this conversation. */
 .llm-base-pdf-chip .llm-paper-context-chip-label {
-  color: var(--accent-blue8, #4fa0d8);
+  color: #dc2626;
 }
 
 .llm-paper-context-chip-label {
@@ -5463,9 +5464,18 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
   outline-offset: 1px;
 }
 
+/* A selected paper currently viewed through Reader is the blue Paper 2
+ * cursor. The fixed base chip below has a stronger red rule. */
 .llm-paper-context-chip.llm-paper-context-current .llm-paper-context-chip-label,
 .llm-paper-context-chip.llm-paper-context-current:hover
   .llm-paper-context-chip-label {
+  color: #2563eb;
+}
+
+.llm-base-pdf-chip.llm-paper-context-current .llm-paper-context-chip-label,
+.llm-base-pdf-chip.llm-paper-context-current:hover
+  .llm-paper-context-chip-label,
+.llm-base-pdf-chip .llm-paper-context-chip-label {
   color: #dc2626;
 }
 

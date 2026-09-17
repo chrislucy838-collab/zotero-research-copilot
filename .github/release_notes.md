@@ -1,5 +1,8 @@
 ## What's changed
 
+- Fixed Reader navigation blank panels by isolating panel hosts per Reader tab and preserving the Paper 1 conversation owner.
+- Paper 1 remains the red fixed context while the navigated Paper 2 is shown as the blue current reading context.
+
 - Fixed Reader paper round trips: returning to the original paper no longer leaves the plugin blank or unloaded after double-click navigation.
 - Preserved the original chat workspace owner and cleared failed navigation state before the next Reader transition.
 
@@ -38,6 +41,9 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 修复 Reader 导航后面板空白：按 Reader tab 隔离面板宿主，并保持 Paper 1 作为原始会话归属。
+- Paper 1 始终显示为红色固定论文，跳转后的 Paper 2 显示为蓝色当前阅读论文。
 
 - 修复 Reader 论文往返切换：双击导航后返回原论文，不再出现插件空白或无法加载。
 - 保持原始聊天工作区归属，并在 Reader 导航失败时清理状态，避免影响下一次切换。

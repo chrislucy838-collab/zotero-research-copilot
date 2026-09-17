@@ -1,6 +1,11 @@
 import type { PaperContextRef } from "./types";
 import { getZoteroItem } from "../../utils/zoteroItems";
-import { updateReaderChatWorkspaceNavigation } from "./state";
+import {
+  getCurrentReaderTabId,
+  getReaderChatWorkspace,
+  setPendingReaderNavigation,
+  updatePendingReaderNavigation,
+} from "./state";
 
 export type ReaderOpenOptions = {
   tabID?: string;
@@ -92,14 +97,19 @@ export async function openPaperContextInReader(
   const mainWindow = Zotero.getMainWindow?.() as Window | null;
   const targetID = Math.floor(attachmentID);
 
-  // Mark the destination before calling Reader.open(). Zotero may synchronously
-  // select an existing target tab and invoke the panel render hooks from inside
-  // open(), so setting this flag afterwards is too late.
+  // Keep navigation separate from the source tab workspace. Zotero may
+  // synchronously select an existing target tab from inside open(); mutating
+  // the source workspace here would make Paper 2 look like Paper 1.
   if (mainWindow) {
-    updateReaderChatWorkspaceNavigation(mainWindow, {
-      activeAttachmentId: targetID,
-      pendingAttachmentId: targetID,
-    });
+    const sourceTabId = getCurrentReaderTabId(mainWindow);
+    const sourceWorkspace = getReaderChatWorkspace(mainWindow, sourceTabId);
+    if (sourceWorkspace) {
+      setPendingReaderNavigation(mainWindow, {
+        ownerItem: sourceWorkspace.item,
+        sourceTabId,
+        targetAttachmentId: targetID,
+      });
+    }
   }
 
   // Let Zotero select an existing target tab when one exists. When it does
@@ -112,6 +122,16 @@ export async function openPaperContextInReader(
       undefined,
       buildReaderOpenOptions(null),
     );
+    if (mainWindow) {
+      const targetTabId = `${
+        reader?.tabID || getCurrentReaderTabId(mainWindow)
+      }`;
+      updatePendingReaderNavigation(mainWindow, { targetTabId });
+      const targetWorkspace = getReaderChatWorkspace(mainWindow, targetTabId);
+      if (targetWorkspace?.host.querySelector("#llm-main")) {
+        setPendingReaderNavigation(mainWindow, null);
+      }
+    }
     try {
       await reader?.focus?.();
     } catch (_error) {
@@ -119,10 +139,7 @@ export async function openPaperContextInReader(
     }
   } catch (error) {
     if (mainWindow) {
-      updateReaderChatWorkspaceNavigation(mainWindow, {
-        pendingAttachmentId: null,
-        activeAttachmentId: null,
-      });
+      setPendingReaderNavigation(mainWindow, null);
     }
     throw error;
   }

@@ -222,35 +222,146 @@ export type ReaderChatWorkspaceState = {
   activeTabId: string | null;
 };
 
-/** The chat surface that should remain attached while Reader papers change. */
-const readerChatWorkspaceByWindow = new WeakMap<
+/** The chat workspaces are scoped to Reader tabs, not only the main window. */
+const readerChatWorkspacesByWindow = new WeakMap<
   Window,
-  ReaderChatWorkspaceState
+  Map<string, ReaderChatWorkspaceState>
 >();
+
+export function getCurrentReaderTabId(win: Window): string {
+  const globalZotero = (globalThis as any).Zotero;
+  const candidates = [
+    globalZotero?.Tabs?.selectedID,
+    (win as any)?.Zotero?.Tabs?.selectedID,
+    (win as any)?.Zotero_Tabs?.selectedID,
+  ];
+  for (const candidate of candidates) {
+    if (
+      candidate !== undefined &&
+      candidate !== null &&
+      `${candidate}`.trim()
+    ) {
+      return `${candidate}`;
+    }
+  }
+  return "reader-default";
+}
+
+function getReaderWorkspaceMap(
+  win: Window,
+): Map<string, ReaderChatWorkspaceState> {
+  let map = readerChatWorkspacesByWindow.get(win);
+  if (!map) {
+    map = new Map();
+    readerChatWorkspacesByWindow.set(win, map);
+  }
+  return map;
+}
 
 export function setReaderChatWorkspace(
   win: Window,
   state: ReaderChatWorkspaceState,
 ): void {
-  readerChatWorkspaceByWindow.set(win, state);
+  const tabId = `${state.activeTabId || getCurrentReaderTabId(win)}`;
+  state.activeTabId = tabId;
+  getReaderWorkspaceMap(win).set(tabId, state);
 }
 
 export function getReaderChatWorkspace(
   win: Window,
+  tabId?: string | number | null,
 ): ReaderChatWorkspaceState | null {
-  return readerChatWorkspaceByWindow.get(win) || null;
+  return (
+    getReaderWorkspaceMap(win).get(
+      tabId === undefined || tabId === null
+        ? getCurrentReaderTabId(win)
+        : `${tabId}`,
+    ) || null
+  );
+}
+
+export function getReaderChatWorkspaceForHost(
+  win: Window,
+  host: HTMLElement,
+): ReaderChatWorkspaceState | null {
+  for (const workspace of getReaderWorkspaceMap(win).values()) {
+    if (workspace.host === host) return workspace;
+  }
+  return null;
+}
+
+export type PendingReaderNavigation = {
+  ownerItem: Zotero.Item;
+  sourceTabId: string | null;
+  targetAttachmentId: number;
+  /** Filled after Reader.open() returns; needed to disambiguate early renders. */
+  targetTabId?: string | null;
+};
+const pendingReaderNavigationByWindow = new WeakMap<
+  Window,
+  PendingReaderNavigation
+>();
+
+export function updatePendingReaderNavigation(
+  win: Window,
+  patch: Partial<PendingReaderNavigation>,
+): void {
+  const current = pendingReaderNavigationByWindow.get(win);
+  if (current) {
+    pendingReaderNavigationByWindow.set(win, { ...current, ...patch });
+  }
+}
+
+export function clearPendingReaderNavigationIfTarget(
+  win: Window,
+  targetTabId: string | null | undefined,
+  targetAttachmentId: number,
+): void {
+  const current = pendingReaderNavigationByWindow.get(win);
+  if (!current) return;
+  if (
+    current.targetAttachmentId === targetAttachmentId &&
+    Boolean(current.targetTabId) &&
+    Boolean(targetTabId) &&
+    current.targetTabId === targetTabId
+  ) {
+    pendingReaderNavigationByWindow.delete(win);
+  }
+}
+
+export function setPendingReaderNavigation(
+  win: Window,
+  navigation: PendingReaderNavigation | null,
+): void {
+  if (navigation) pendingReaderNavigationByWindow.set(win, navigation);
+  else pendingReaderNavigationByWindow.delete(win);
+}
+
+export function getPendingReaderNavigation(
+  win: Window,
+): PendingReaderNavigation | null {
+  return pendingReaderNavigationByWindow.get(win) || null;
 }
 
 export function updateReaderChatWorkspaceNavigation(
   win: Window,
   navigation: {
+    host?: HTMLElement;
     pendingAttachmentId?: number | null;
     activeAttachmentId?: number | null;
     activeTabId?: string | null;
   },
 ): void {
-  const state = readerChatWorkspaceByWindow.get(win);
+  const state = navigation.host
+    ? getReaderChatWorkspaceForHost(win, navigation.host)
+    : getReaderChatWorkspace(
+        win,
+        navigation.activeTabId === undefined
+          ? undefined
+          : navigation.activeTabId,
+      );
   if (!state) return;
+  if (navigation.host !== undefined) state.host = navigation.host;
   if (navigation.pendingAttachmentId !== undefined) {
     state.pendingAttachmentId = navigation.pendingAttachmentId;
   }
