@@ -38,6 +38,7 @@ import {
   getPendingReaderNavigation,
   clearPendingReaderNavigationIfTarget,
   setPendingReaderNavigation,
+  setReaderChatWorkspace,
   updateReaderChatWorkspaceNavigation,
 } from "./state";
 import { clearConversation as clearStoredConversation } from "../../utils/chatStore";
@@ -62,6 +63,7 @@ import {
 import { resolvePaperContextRefFromAttachment } from "./paperAttribution";
 import {
   bootstrapSharedReaderPanel,
+  getReaderPanelTabId,
   getSharedReaderPanelHostForItem,
 } from "./readerPanel";
 import {
@@ -219,14 +221,30 @@ export function registerReaderContextPanel() {
               pendingNavigation &&
               pendingNavigation.targetAttachmentId === Number(renderItem.id),
             );
-            const host = getSharedReaderPanelHostForItem(win, renderItem, {
-              forceNew: needsNavigationHost,
-              workspaceOwnerId: pendingNavigation?.ownerItem?.id || null,
-            });
+            const host = needsNavigationHost
+              ? getSharedReaderPanelHostForItem(win, renderItem, {
+                  forceNew: true,
+                  workspaceOwnerId: pendingNavigation?.ownerItem?.id || null,
+                })
+              : getSharedReaderPanelHostForItem(win, renderItem);
             readerPanelHostByBody.set(body, host);
-            const workspace = getReaderChatWorkspaceForHost(win, host);
+            let workspace = getReaderChatWorkspaceForHost(win, host);
             const isPendingNavigation =
               pendingNavigation?.targetAttachmentId === Number(renderItem.id);
+            // Claim the freshly created destination host synchronously. Without
+            // this provisional owner, the following async render can treat the
+            // host as uninitialized and replace it again before bootstrap has
+            // had a chance to bind Paper 1.
+            if (isPendingNavigation && !workspace) {
+              setReaderChatWorkspace(win, {
+                host,
+                item: pendingNavigation.ownerItem,
+                pendingAttachmentId: Number(renderItem.id) || null,
+                activeAttachmentId: Number(renderItem.id) || null,
+                activeTabId: getReaderPanelTabId(win),
+              });
+              workspace = getReaderChatWorkspaceForHost(win, host);
+            }
             const isSharedWorkspaceHost = workspace?.host === host;
             if (isSharedWorkspaceHost && !isPendingNavigation) {
               updateReaderChatWorkspaceNavigation(win, {
@@ -298,16 +316,29 @@ export function registerReaderContextPanel() {
         pendingNavigation &&
         pendingNavigation.targetAttachmentId === Number(readerItem.id),
       );
-      const host =
-        readerPanelHostByBody.get(body) ||
-        getSharedReaderPanelHostForItem(win, readerItem, {
-          forceNew: navigationTarget,
-          workspaceOwnerId: pendingNavigation?.ownerItem?.id || null,
-        });
+      const cachedHost = readerPanelHostByBody.get(body);
+      const host = navigationTarget
+        ? getSharedReaderPanelHostForItem(win, readerItem, {
+            forceNew: true,
+            workspaceOwnerId: pendingNavigation?.ownerItem?.id || null,
+          })
+        : cachedHost || getSharedReaderPanelHostForItem(win, readerItem);
       readerPanelHostByBody.set(body, host);
-      const workspace = getReaderChatWorkspaceForHost(win, host);
+      let workspace = getReaderChatWorkspaceForHost(win, host);
       const isPendingNavigation =
         pendingNavigation?.targetAttachmentId === Number(readerItem.id);
+      // Mirror the synchronous render claim for environments that invoke
+      // asyncRender without a preceding onRender callback.
+      if (isPendingNavigation && !workspace) {
+        setReaderChatWorkspace(win, {
+          host,
+          item: pendingNavigation.ownerItem,
+          pendingAttachmentId: Number(readerItem.id) || null,
+          activeAttachmentId: Number(readerItem.id) || null,
+          activeTabId: getReaderPanelTabId(win),
+        });
+        workspace = getReaderChatWorkspaceForHost(win, host);
+      }
       const isSharedWorkspaceHost = workspace?.host === host;
       if (isSharedWorkspaceHost && !isPendingNavigation) {
         updateReaderChatWorkspaceNavigation(win, {

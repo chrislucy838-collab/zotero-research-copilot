@@ -77,6 +77,7 @@ export function resolvePaperNavigationAttachment(
  */
 export async function openPaperContextInReader(
   paperContext: PaperContextRef,
+  conversationOwner?: Zotero.Item | null,
 ): Promise<number | null> {
   const attachment = resolvePaperNavigationAttachment(paperContext);
   const attachmentID = Number(attachment?.id);
@@ -104,9 +105,10 @@ export async function openPaperContextInReader(
   if (mainWindow) {
     const sourceTabId = getCurrentReaderTabId(mainWindow);
     const sourceWorkspace = getReaderChatWorkspace(mainWindow, sourceTabId);
-    if (sourceWorkspace) {
+    const ownerItem = conversationOwner || sourceWorkspace?.item || null;
+    if (ownerItem) {
       setPendingReaderNavigation(mainWindow, {
-        ownerItem: sourceWorkspace.item,
+        ownerItem,
         sourceTabId,
         targetAttachmentId: targetID,
       });

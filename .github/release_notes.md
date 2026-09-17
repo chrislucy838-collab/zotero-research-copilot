@@ -1,5 +1,9 @@
 ## What's changed
 
+- Fixed Reader host lifecycle races that could reinitialize a destination tab with Paper 2 as the conversation owner. Paper 1 remains the conversation owner during existing-tab and new-tab navigation.
+- Added an explicit temporary blue Paper 2 chip for the active Reader document, including the collapsed/expanded paper list. It is display-only and never enters Paper 1's persisted context.
+- Kept the Paper 1 fixed chip red across Reader navigation and return trips.
+
 - Fixed the final conversation-owner bug: double-clicking Paper 2 now keeps Paper 1's conversation history, fixed context, draft, and red chip while Paper 2 remains only the blue active Reader document.
 
 - Fixed a final Reader navigation race so the target tab's completed workspace is used when clearing pending navigation state.
@@ -46,6 +50,10 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 修复 Reader host 生命周期时序问题：目标标签页初始化时不再错误地将 Paper 2 设为对话 owner；已有和新建标签页导航都保持 Paper 1 为对话 owner。
+- 为当前 Reader 文档增加明确的临时蓝色 Paper 2 条目，普通显示和折叠展开列表均可见；它只用于显示和导航，不会进入 Paper 1 的持久化上下文。
+- Reader 导航和返回过程中，Paper 1 固定条目持续保持红色。
 
 - 修复最后一个对话归属问题：双击 Paper 2 后继续使用 Paper 1 的对话历史、固定上下文、草稿和红色条目，Paper 2 仅作为蓝色当前 Reader 文档。
 

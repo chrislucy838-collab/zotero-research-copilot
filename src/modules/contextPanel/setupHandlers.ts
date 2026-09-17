@@ -1901,6 +1901,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       removable?: boolean;
       removableIndex?: number;
       autoLoaded?: boolean;
+      activeReader?: boolean;
     },
   ) => {
     const removable = options?.removable === true;
@@ -1919,6 +1920,10 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     if (options?.autoLoaded) {
       chip.classList.add("llm-paper-context-chip-autoloaded");
       chip.dataset.autoLoaded = "true";
+    }
+    if (options?.activeReader) {
+      chip.classList.add("llm-active-reader-paper-chip");
+      chip.dataset.activeReader = "true";
     }
     if (removable) {
       chip.dataset.paperContextIndex = `${options?.removableIndex ?? -1}`;
@@ -1961,6 +1966,48 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     list.appendChild(chip);
   };
 
+  const resolveActiveReaderPaperContext = (
+    basePdfItemId: number | null,
+  ): PaperContextRef | null => {
+    if (tabType !== "reader") return null;
+    const workspaceWindow = body.ownerDocument?.defaultView;
+    if (!workspaceWindow) return null;
+    const workspace =
+      getReaderChatWorkspaceForHost(workspaceWindow, body as HTMLElement) ||
+      getReaderChatWorkspace(workspaceWindow);
+    const activeAttachmentId = Math.floor(
+      Number(workspace?.activeAttachmentId) || 0,
+    );
+    if (activeAttachmentId <= 0 || activeAttachmentId === basePdfItemId) {
+      return null;
+    }
+    const attachment = getZoteroItem(activeAttachmentId);
+    if (!attachment) return null;
+    const resolved = resolvePaperContextRefFromAttachment(attachment);
+    if (resolved) {
+      return {
+        ...resolved,
+        sourceLabel: "Paper 2",
+        sourceKind: "supplemental-paper",
+      };
+    }
+    if (!attachment.isAttachment?.()) return null;
+    const parent = attachment.parentID
+      ? getZoteroItem(Number(attachment.parentID))
+      : null;
+    const paper = parent || attachment;
+    const title = String(
+      paper.getField?.("title") || attachment.getField?.("title") || "Paper 2",
+    ).trim();
+    return {
+      itemId: Number(paper.id) || activeAttachmentId,
+      contextItemId: activeAttachmentId,
+      title: title || "Paper 2",
+      sourceLabel: "Paper 2",
+      sourceKind: "supplemental-paper",
+    };
+  };
+
   const updatePaperPreview = () => {
     if (!item || !paperPreview || !paperPreviewList) return;
     let selectedPapers = normalizePaperContextEntries(
@@ -1998,6 +2045,22 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       poolKey !== null ? conversationContextPool.get(poolKey) : undefined;
     const hasBasePdf =
       pool && pool.basePdfItemId !== null && !pool.basePdfRemoved;
+    const activeReaderPaperContext = resolveActiveReaderPaperContext(
+      hasBasePdf && pool ? pool.basePdfItemId : null,
+    );
+    const activeReaderPaperAlreadyListed = activeReaderPaperContext
+      ? selectedPapers.some(
+          (entry) =>
+            entry.itemId === activeReaderPaperContext.itemId ||
+            entry.contextItemId === activeReaderPaperContext.contextItemId,
+        ) ||
+        Boolean(
+          autoLoadedPaperContext &&
+          (autoLoadedPaperContext.itemId === activeReaderPaperContext.itemId ||
+            autoLoadedPaperContext.contextItemId ===
+              activeReaderPaperContext.contextItemId),
+        )
+      : false;
 
     if (hasBasePdf && pool?.basePdfItemId) {
       selectedPapers = selectedPapers.filter(
@@ -2007,16 +2070,21 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       );
     }
 
-    // Re-number legacy and restored refs in the current source scope. The
-    // active Reader document occupies Paper 1, so supplemental papers must
-    // start at Paper 2 whenever that base document is present.
+    // Re-number only persisted supplemental refs. The active Reader document
+    // has its own temporary Paper 2 chip and must not alter the saved context
+    // collection or the Paper 1 conversation payload.
     selectedPapers = relabelPaperSourceRefs(
       selectedPapers,
       hasBasePdf ? 1 : 0,
       "supplemental-paper",
     );
 
-    if (!selectedPapers.length && !autoLoadedPaperContext && !hasBasePdf) {
+    if (
+      !selectedPapers.length &&
+      !autoLoadedPaperContext &&
+      !hasBasePdf &&
+      !activeReaderPaperContext
+    ) {
       paperPreview
         .querySelectorAll(".llm-paper-context-stats")
         .forEach((entry: Element) => entry.remove());
@@ -2089,6 +2157,10 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
         "llm-paper-context-detail-item llm-selected-context-detail-item",
       );
       row.classList.toggle("llm-paper-context-current", entry.isCurrent);
+      row.classList.toggle(
+        "llm-active-reader-paper-detail",
+        entry.index === -3,
+      );
       row.dataset.paperContextIndex = `${entry.index}`;
       row.dataset.paperItemId = `${entry.paperContext.itemId}`;
       row.dataset.paperContextItemId = `${entry.paperContext.contextItemId}`;
@@ -2208,6 +2280,19 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       chipHeader.append(removeBtn);
       chip.append(chipHeader);
       paperPreviewList.appendChild(chip);
+    }
+
+    // Show the active Reader document as a temporary Paper 2 chip. It is a
+    // navigation/display state only: it is deliberately not persisted in the
+    // selected-paper cache or injected as a second base document.
+    if (activeReaderPaperContext && !activeReaderPaperAlreadyListed) {
+      paperDetailEntries.push(
+        createPaperDetailEntry(activeReaderPaperContext, -3),
+      );
+      appendPaperChip(ownerDoc, paperPreviewList, activeReaderPaperContext, {
+        removableIndex: -3,
+        activeReader: true,
+      });
     }
 
     // Only show auto-loaded chip if it's not already in the selected list
@@ -8004,6 +8089,9 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
             title: String(baseItem.getField("title") || "Paper"),
           };
         }
+      } else if (index === -3) {
+        const activeReaderPaper = resolveActiveReaderPaperContext(null);
+        paperContext = activeReaderPaper;
       } else if (index === -1) {
         paperContext = resolveAutoLoadedPaperContext();
       } else if (Number.isFinite(index) && index >= 0) {
@@ -8027,7 +8115,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       // panel for the target Reader attachment.
       saveDraftInput();
       composeHook.save?.();
-      void openPaperContextInReader(paperContext)
+      void openPaperContextInReader(paperContext, basePaperItem || item)
         .then((attachmentID) => {
           if (attachmentID && item) updatePaperPreview();
         })
@@ -8090,6 +8178,9 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
           setStatus(status, getPanelI18n().paperContextDismissed, "ready");
         return;
       }
+
+      // Active Reader chip (index -3) is display-only and cannot be removed.
+      if (index === -3) return;
 
       // Auto-loaded chip (index -1): dismiss via dismissedAutoLoadPaperCache
       if (index === -1) {

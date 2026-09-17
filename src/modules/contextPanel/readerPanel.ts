@@ -210,7 +210,7 @@ export async function bootstrapSharedReaderPanel(
       const latest = await getLatestPaperConversation(conversationOwner.id);
       if (!latest) {
         // First time opening this PDF — create the initial conversation.
-        const newKey = await createPaperConversation(item.id);
+        const newKey = await createPaperConversation(conversationOwner.id);
         if (newKey > 0) {
           activePaperConversationByItem.set(conversationOwner.id, newKey);
         }
