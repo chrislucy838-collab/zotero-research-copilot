@@ -60,7 +60,10 @@ export function getSharedReaderPanelHostForItem(
   item: Zotero.Item,
 ): HTMLElement {
   const workspace = getReaderChatWorkspace(win);
-  if (workspace?.host && workspace.pendingAttachmentId === item.id) {
+  if (
+    workspace?.host &&
+    (workspace.pendingAttachmentId === item.id || workspace.item.id === item.id)
+  ) {
     return workspace.host;
   }
   const key = item.id;
@@ -89,13 +92,20 @@ export async function bootstrapSharedReaderPanel(
   const map = getWindowMap(win);
   const state = map.get(key);
   if (!state) return;
-  setReaderChatWorkspace(win, {
-    host,
-    item,
-    pendingAttachmentId: null,
-    activeAttachmentId: Number(item.id) || null,
-    activeTabId: null,
-  });
+  const workspace = getReaderChatWorkspace(win);
+  if (!workspace || workspace.host !== host) {
+    setReaderChatWorkspace(win, {
+      host,
+      item,
+      pendingAttachmentId: null,
+      activeAttachmentId: Number(item.id) || null,
+      activeTabId: null,
+    });
+  } else {
+    // Keep the workspace owner stable. A navigated Reader attachment only
+    // changes the active reading target; it must not become the chat owner.
+    workspace.activeAttachmentId = Number(item.id) || null;
+  }
   if (state.bootstrapPromise) {
     return state.bootstrapPromise;
   }

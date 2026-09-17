@@ -1,5 +1,8 @@
 ## What's changed
 
+- Fixed Reader paper round trips: returning to the original paper no longer leaves the plugin blank or unloaded after double-click navigation.
+- Preserved the original chat workspace owner and cleared failed navigation state before the next Reader transition.
+
 - Fixed Zotero compatibility metadata for Zotero 10.0.x, including the install and update manifest maximum version.
 
 - Fixed paper-chip navigation so double-clicking a reference changes only the left Reader document while preserving the original right-side chat conversation, history, fixed context papers, and draft.
@@ -35,6 +38,9 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 修复 Reader 论文往返切换：双击导航后返回原论文，不再出现插件空白或无法加载。
+- 保持原始聊天工作区归属，并在 Reader 导航失败时清理状态，避免影响下一次切换。
 
 - 修复 Zotero 10.0.x 的兼容性元数据，包含安装清单和自动更新清单中的版本上限。
 

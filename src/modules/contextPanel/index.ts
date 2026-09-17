@@ -277,8 +277,13 @@ export function registerReaderContextPanel() {
 
       const workspace = getReaderChatWorkspace(win);
       const host = getSharedReaderPanelHostForItem(win, readerItem);
+      const isPendingNavigation =
+        workspace?.pendingAttachmentId === Number(readerItem.id);
       updateReaderChatWorkspaceNavigation(win, {
         activeAttachmentId: Number(readerItem.id) || null,
+        ...(isPendingNavigation
+          ? { pendingAttachmentId: Number(readerItem.id) || null }
+          : {}),
       });
 
       // Keep the original chat workspace when a paper was opened from a
@@ -289,7 +294,7 @@ export function registerReaderContextPanel() {
         body.appendChild(host);
         host.style.display = "flex";
       }
-      if (workspace?.host === host) {
+      if (workspace?.host === host && isPendingNavigation) {
         updateReaderChatWorkspaceNavigation(win, {
           pendingAttachmentId: null,
         });

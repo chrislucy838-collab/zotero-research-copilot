@@ -90,26 +90,41 @@ export async function openPaperContextInReader(
   if (!readerAPI?.open) return null;
 
   const mainWindow = Zotero.getMainWindow?.() as Window | null;
+  const targetID = Math.floor(attachmentID);
+
+  // Mark the destination before calling Reader.open(). Zotero may synchronously
+  // select an existing target tab and invoke the panel render hooks from inside
+  // open(), so setting this flag afterwards is too late.
+  if (mainWindow) {
+    updateReaderChatWorkspaceNavigation(mainWindow, {
+      activeAttachmentId: targetID,
+      pendingAttachmentId: targetID,
+    });
+  }
 
   // Let Zotero select an existing target tab when one exists. When it does
   // not, Zotero creates a normal same-window Reader tab. We deliberately do
   // not pass the current tab ID: doing so would mount a second Reader iframe
   // into the current tab instead of opening a clean document surface.
-  const reader = await readerAPI.open(
-    Math.floor(attachmentID),
-    undefined,
-    buildReaderOpenOptions(null),
-  );
-  if (mainWindow) {
-    updateReaderChatWorkspaceNavigation(mainWindow, {
-      activeAttachmentId: Math.floor(attachmentID),
-      pendingAttachmentId: Math.floor(attachmentID),
-    });
-  }
   try {
-    await reader?.focus?.();
-  } catch (_error) {
-    void _error;
+    const reader = await readerAPI.open(
+      targetID,
+      undefined,
+      buildReaderOpenOptions(null),
+    );
+    try {
+      await reader?.focus?.();
+    } catch (_error) {
+      void _error;
+    }
+  } catch (error) {
+    if (mainWindow) {
+      updateReaderChatWorkspaceNavigation(mainWindow, {
+        pendingAttachmentId: null,
+        activeAttachmentId: null,
+      });
+    }
+    throw error;
   }
-  return Math.floor(attachmentID);
+  return targetID;
 }
