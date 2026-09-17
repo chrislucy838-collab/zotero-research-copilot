@@ -16,6 +16,7 @@ import {
   resolveReaderDocument,
 } from "./documentContext";
 import { getDocumentAdapter } from "./document/registry";
+import { getZoteroItem } from "../../utils/zoteroItems";
 import {
   selectedFileAttachmentCache,
   selectedFilePreviewExpandedCache,
@@ -136,6 +137,13 @@ export function getSharedReaderPanelHostForItem(
   return state.host;
 }
 
+export function resolveReaderConversationOwner(
+  item: Zotero.Item,
+  workspaceOwner?: Zotero.Item | null,
+): Zotero.Item {
+  return workspaceOwner || item;
+}
+
 export async function bootstrapSharedReaderPanel(
   win: Window,
   host: HTMLElement,
@@ -151,13 +159,20 @@ export async function bootstrapSharedReaderPanel(
   // host created during onRender remains the authoritative tab lifecycle.
   const state = Array.from(map.values()).find((entry) => entry.host === host);
   if (!state) return;
-  state.itemId = Number(item.id) || state.itemId;
+  const conversationOwner = resolveReaderConversationOwner(
+    item,
+    options?.workspaceOwner,
+  );
+  const activeReaderItem = options?.activeAttachmentId
+    ? getZoteroItem(options.activeAttachmentId) || item
+    : item;
+  state.itemId = Number(conversationOwner.id) || state.itemId;
   const tabId = state.tabId;
   const workspace = getReaderChatWorkspaceForHost(win, host);
   if (!workspace) {
     setReaderChatWorkspace(win, {
       host,
-      item: options?.workspaceOwner || item,
+      item: conversationOwner,
       pendingAttachmentId: null,
       activeAttachmentId:
         options?.activeAttachmentId ?? (Number(item.id) || null),
@@ -191,18 +206,21 @@ export async function bootstrapSharedReaderPanel(
     // ── Resolve active paper conversation key ──
     // Each PDF item can have multiple conversations. Resolve the active one
     // (or create it if none exists) and store in activePaperConversationByItem.
-    if (!activePaperConversationByItem.has(item.id)) {
-      const latest = await getLatestPaperConversation(item.id);
+    if (!activePaperConversationByItem.has(conversationOwner.id)) {
+      const latest = await getLatestPaperConversation(conversationOwner.id);
       if (!latest) {
         // First time opening this PDF — create the initial conversation.
         const newKey = await createPaperConversation(item.id);
         if (newKey > 0) {
-          activePaperConversationByItem.set(item.id, newKey);
+          activePaperConversationByItem.set(conversationOwner.id, newKey);
         }
       } else {
-        activePaperConversationByItem.set(item.id, latest.conversationKey);
+        activePaperConversationByItem.set(
+          conversationOwner.id,
+          latest.conversationKey,
+        );
         ztoolkit.log(
-          `LLM: restored paper conversation ${latest.conversationKey} for item ${item.id} ` +
+          `LLM: restored paper conversation ${latest.conversationKey} for item ${conversationOwner.id} ` +
             `(userTurns=${latest.userTurnCount}, lastActivity=${latest.lastActivityAt})`,
         );
       }
@@ -210,33 +228,37 @@ export async function bootstrapSharedReaderPanel(
       // Recover from a stale in-memory selection that points at an empty chat.
       // This can happen when an empty conversation was created after the real
       // conversation and the panel was reloaded without clearing module state.
-      const activeKey = activePaperConversationByItem.get(item.id) || 0;
+      const activeKey =
+        activePaperConversationByItem.get(conversationOwner.id) || 0;
       if (activeKey > 0) {
         const activeTurnCount =
           await getPaperConversationUserTurnCount(activeKey);
         if (activeTurnCount === 0) {
-          const latest = await getLatestPaperConversation(item.id);
+          const latest = await getLatestPaperConversation(conversationOwner.id);
           if (latest && latest.userTurnCount > 0) {
-            activePaperConversationByItem.set(item.id, latest.conversationKey);
+            activePaperConversationByItem.set(
+              conversationOwner.id,
+              latest.conversationKey,
+            );
             ztoolkit.log(
               `LLM: recovered stale empty paper conversation ${activeKey} ` +
-                `to ${latest.conversationKey} for item ${item.id}`,
+                `to ${latest.conversationKey} for item ${conversationOwner.id}`,
             );
           }
         }
       }
     }
 
-    buildUI(host, item);
-    await ensureConversationLoaded(item);
-    await renderShortcuts(host, item);
-    setupHandlers(host, item);
-    refreshChat(host, item);
+    buildUI(host, conversationOwner);
+    await ensureConversationLoaded(conversationOwner);
+    await renderShortcuts(host, conversationOwner);
+    setupHandlers(host, conversationOwner);
+    refreshChat(host, conversationOwner);
 
     // Defer document extraction so the panel becomes interactive sooner.
     // Use the panel's own item directly — getActiveContextAttachmentFromTabs()
     // queries global tab state which may return a different reader document.
-    const readerDocument = resolveReaderDocument(item);
+    const readerDocument = resolveReaderDocument(activeReaderItem);
     if (readerDocument) {
       const adapter = getDocumentAdapter(readerDocument.kind);
       if (adapter?.contextPolicy.eagerWarmup) {

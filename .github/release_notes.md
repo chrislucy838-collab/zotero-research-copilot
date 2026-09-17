@@ -1,5 +1,7 @@
 ## What's changed
 
+- Fixed the final conversation-owner bug: double-clicking Paper 2 now keeps Paper 1's conversation history, fixed context, draft, and red chip while Paper 2 remains only the blue active Reader document.
+
 - Fixed a final Reader navigation race so the target tab's completed workspace is used when clearing pending navigation state.
 - Preserved Paper 1 as the red fixed context and Paper 2 as the blue current reading context across existing and newly created Reader tabs.
 
@@ -44,6 +46,8 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 修复最后一个对话归属问题：双击 Paper 2 后继续使用 Paper 1 的对话历史、固定上下文、草稿和红色条目，Paper 2 仅作为蓝色当前 Reader 文档。
 
 - 修复 Reader 导航最后一个时序问题：清理 pending 状态时使用目标 tab 已完成的 workspace，避免目标面板残留或串台。
 - 在已有和新建 Reader 标签页中，始终保持 Paper 1 为红色固定论文、Paper 2 为蓝色当前阅读论文。

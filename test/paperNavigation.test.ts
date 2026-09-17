@@ -6,6 +6,7 @@ import {
   setPendingReaderNavigation,
   setReaderChatWorkspace,
 } from "../src/modules/contextPanel/state";
+import { resolveReaderConversationOwner } from "../src/modules/contextPanel/readerPanel";
 import {
   buildReaderOpenOptions,
   openPaperContextInReader,
@@ -178,6 +179,14 @@ describe("paper navigation", function () {
     // Keep the target item in the fixture to make the intended distinction
     // explicit: active Reader document and chat owner are different values.
     assert.equal(targetItem.id, 702);
+  });
+
+  it("uses Paper 1 as the conversation owner while Paper 2 is active", function () {
+    const paper1 = { id: 701 } as any;
+    const paper2 = { id: 702 } as any;
+
+    assert.equal(resolveReaderConversationOwner(paper2, paper1), paper1);
+    assert.equal(resolveReaderConversationOwner(paper1), paper1);
   });
 
   it("does not create a tab target when no reader tab is selected", function () {
