@@ -1,5 +1,8 @@
 ## What's changed
 
+- Fixed a final Reader navigation race so the target tab's completed workspace is used when clearing pending navigation state.
+- Preserved Paper 1 as the red fixed context and Paper 2 as the blue current reading context across existing and newly created Reader tabs.
+
 - Fixed Reader navigation blank panels by isolating panel hosts per Reader tab and preserving the Paper 1 conversation owner.
 - Paper 1 remains the red fixed context while the navigated Paper 2 is shown as the blue current reading context.
 
@@ -41,6 +44,9 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 修复 Reader 导航最后一个时序问题：清理 pending 状态时使用目标 tab 已完成的 workspace，避免目标面板残留或串台。
+- 在已有和新建 Reader 标签页中，始终保持 Paper 1 为红色固定论文、Paper 2 为蓝色当前阅读论文。
 
 - 修复 Reader 导航后面板空白：按 Reader tab 隔离面板宿主，并保持 Paper 1 作为原始会话归属。
 - Paper 1 始终显示为红色固定论文，跳转后的 Paper 2 显示为蓝色当前阅读论文。

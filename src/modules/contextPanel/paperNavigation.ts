@@ -3,6 +3,7 @@ import { getZoteroItem } from "../../utils/zoteroItems";
 import {
   getCurrentReaderTabId,
   getReaderChatWorkspace,
+  getPendingReaderNavigation,
   setPendingReaderNavigation,
   updatePendingReaderNavigation,
 } from "./state";
@@ -127,8 +128,14 @@ export async function openPaperContextInReader(
         reader?.tabID || getCurrentReaderTabId(mainWindow)
       }`;
       updatePendingReaderNavigation(mainWindow, { targetTabId });
+      const pendingNavigation = getPendingReaderNavigation(mainWindow);
       const targetWorkspace = getReaderChatWorkspace(mainWindow, targetTabId);
-      if (targetWorkspace?.host.querySelector("#llm-main")) {
+      const targetAlreadyUsesOwner =
+        targetWorkspace?.item?.id === pendingNavigation?.ownerItem?.id;
+      if (
+        targetAlreadyUsesOwner &&
+        targetWorkspace?.host.querySelector("#llm-main")
+      ) {
         setPendingReaderNavigation(mainWindow, null);
       }
     }

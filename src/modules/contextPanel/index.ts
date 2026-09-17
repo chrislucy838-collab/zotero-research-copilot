@@ -338,9 +338,10 @@ export function registerReaderContextPanel() {
         // the destination tab id. The first async render can happen before
         // that point, so clearing it here would make a later render initialize
         // Paper 2 as a new Paper 1.
+        const completedWorkspace = getReaderChatWorkspaceForHost(win, host);
         clearPendingReaderNavigationIfTarget(
           win,
-          workspace?.activeTabId,
+          completedWorkspace?.activeTabId,
           Number(readerItem.id),
         );
         return;
