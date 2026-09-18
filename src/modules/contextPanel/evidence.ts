@@ -1,10 +1,7 @@
 import type { DocumentChunkMetadata, DocumentLocator } from "./document/types";
 
 export type EvidenceStatus =
-  | "direct"
-  | "metadata-only"
-  | "location-unknown"
-  | "unavailable";
+  "direct" | "metadata-only" | "location-unknown" | "unavailable";
 
 /** The modality of evidence represented by this block. */
 export type EvidenceKind = "text" | "figure" | "table" | "mixed" | "unknown";
@@ -55,7 +52,9 @@ function inferEvidenceKind(
     text(role).toLowerCase(),
   );
   if (roles.some((role) => /table|tabular/.test(role))) return "table";
-  if (roles.some((role) => /figure|chart|diagram|illustration|graphic/.test(role))) {
+  if (
+    roles.some((role) => /figure|chart|diagram|illustration|graphic/.test(role))
+  ) {
     return "figure";
   }
   // A caption is still text evidence. Without a visual region or image
@@ -75,10 +74,14 @@ export function getEvidencePageLabel(
 }
 
 export function formatEvidenceLocator(
-  evidence: Pick<EvidenceBlock, "sourceLabel" | "locator" | "pageIndex" | "pageLabel">,
+  evidence: Pick<
+    EvidenceBlock,
+    "sourceLabel" | "locator" | "pageIndex" | "pageLabel"
+  >,
 ): string {
   const source = text(evidence.sourceLabel) || "Source";
-  const page = text(evidence.pageLabel) ||
+  const page =
+    text(evidence.pageLabel) ||
     (Number.isFinite(evidence.pageIndex) && (evidence.pageIndex as number) >= 0
       ? `${Math.floor(evidence.pageIndex as number) + 1}`
       : "");
@@ -110,7 +113,8 @@ export function createEvidenceBlock(params: {
       : "";
   const locator = params.locator || params.metadata?.locator;
   const pageLabel = getEvidencePageLabel(locator);
-  const pageIndex = locator?.kind === "pdf-page" ? locator.pageIndex : undefined;
+  const pageIndex =
+    locator?.kind === "pdf-page" ? locator.pageIndex : undefined;
   const section = text(
     params.metadata?.headingPath?.filter(Boolean).join(" > ") ||
       params.metadata?.title,
@@ -151,7 +155,7 @@ export function formatEvidenceInstruction(blocks: EvidenceBlock[]): string {
   });
   return [
     "Evidence blocks below are source excerpts included with this request.",
-    "The evidence text is included in the source blocks above. Use only those blocks for factual claims. Cite the source label and page when available; never invent a page number.",
+    "The evidence text is included in the source blocks above. Use only those blocks for factual claims. For every factual claim grounded in a paper, append exactly [Paper N, p. X] or [Paper N, p. X-Y] using the matching source label and page. Never invent a page number, and do not cite a paper when no matching evidence block supports the claim. The plugin will replace valid citations with clickable evidence icons.",
     ...lines,
   ].join("\n\n");
 }

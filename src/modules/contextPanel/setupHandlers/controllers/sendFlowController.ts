@@ -36,6 +36,7 @@ type SendFlowControllerDeps = {
   body: Element;
   inputBox: HTMLTextAreaElement;
   isPanelGenerating: () => boolean;
+  getEvidenceMode?: () => boolean;
   getItem: () => Zotero.Item | null;
   closeSlashMenu: () => void;
   closePaperPicker: () => void;
@@ -110,6 +111,7 @@ type SendFlowControllerDeps = {
     paperContexts?: PaperContextRef[],
     attachments?: ChatAttachment[],
     onContextEstimate?: (tokens: number) => void,
+    evidenceMode?: boolean,
   ) => Promise<void>;
   clearSelectedImageState: (itemId: number) => void;
   clearSelectedPaperState: (itemId: number) => void;
@@ -331,6 +333,7 @@ export function createSendFlowController(deps: SendFlowControllerDeps): {
       selectedPaperContexts.length ? selectedPaperContexts : undefined,
       selectedFiles.length ? selectedFiles : undefined,
       deps.onContextEstimate,
+      deps.getEvidenceMode?.() === true,
     );
     const win = deps.body.ownerDocument?.defaultView;
     if (win) {

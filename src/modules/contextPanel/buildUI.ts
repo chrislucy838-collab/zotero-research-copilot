@@ -1013,24 +1013,27 @@ function buildUI(body: Element, item?: Zotero.Item | null) {
   const sendSlot = createElement(doc, "div", "llm-action-slot");
   sendSlot.append(sendBtn, cancelBtn);
 
-  // New conversation button
-  const newChatBtn = createElement(
+  // Evidence mode toggle. The new-conversation button remains in the history
+  // header; this leftmost action replaces the old bottom new-chat button.
+  const evidenceModeBtn = createElement(
     doc,
     "button",
-    "llm-shortcut-btn llm-action-btn llm-action-btn-secondary llm-new-chat-btn llm-action-icon-only",
+    "llm-shortcut-btn llm-action-btn llm-action-btn-secondary llm-evidence-mode-btn llm-action-icon-only",
     {
-      id: "llm-new-chat",
+      id: "llm-evidence-mode",
       type: "button",
       textContent: "",
-      title: i18n.newConversation,
+      title: "Evidence mode: off",
     },
   );
-  const newChatSlot = createElement(doc, "div", "llm-action-slot");
-  newChatSlot.appendChild(newChatBtn);
+  evidenceModeBtn.setAttribute("aria-label", "Evidence mode: off");
+  evidenceModeBtn.setAttribute("aria-pressed", "false");
+  const evidenceModeSlot = createElement(doc, "div", "llm-action-slot");
+  evidenceModeSlot.appendChild(evidenceModeBtn);
 
-  // Order: ➕ new chat, 📎 upload/attach, ✂️ screenshot, Add Text, Model
+  // Order: evidence mode, 📎 upload/attach, ✂️ screenshot, Add Text, Model
   actionsLeft.append(
-    newChatSlot,
+    evidenceModeSlot,
     uploadSlot,
     screenshotSlot,
     selectTextSlot,

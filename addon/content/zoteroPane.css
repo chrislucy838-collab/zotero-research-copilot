@@ -6129,6 +6129,8 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
   line-height: 0;
 }
 
+.llm-evidence-mode-btn,
+.llm-evidence-mode-btn.llm-action-icon-only,
 .llm-new-chat-btn,
 .llm-new-chat-btn.llm-action-icon-only {
   display: inline-flex;
@@ -6151,6 +6153,7 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
 }
 
 .llm-upload-file-btn::before,
+.llm-evidence-mode-btn::before,
 .llm-new-chat-btn::before,
 .llm-clear-papers-btn::before,
 .llm-select-text-btn::before,
@@ -6184,6 +6187,22 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
   -webkit-mask-image: url("icons/action-slash.svg");
 }
 
+.llm-evidence-mode-btn::before {
+  mask-image: url("icons/preview-paper.svg");
+  -webkit-mask-image: url("icons/preview-paper.svg");
+  width: 20px;
+  height: 20px;
+  color: var(--fill-tertiary);
+}
+
+.llm-evidence-mode-btn.is-enabled::before {
+  color: var(--color-accent, #3584e4);
+}
+
+.llm-evidence-mode-btn.is-disabled::before {
+  color: var(--fill-tertiary, #8a8f98);
+}
+
 .llm-new-chat-btn::before {
   mask-image: url("icons/action-new-chat.svg");
   -webkit-mask-image: url("icons/action-new-chat.svg");
@@ -6206,6 +6225,7 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
   -webkit-mask-image: url("icons/action-screenshot.svg");
 }
 
+.llm-evidence-mode-btn:hover:not(:disabled),
 .llm-clear-papers-btn:hover:not(:disabled),
 .llm-select-text-btn:hover:not(:disabled),
 .llm-screenshot-btn:hover:not(:disabled),
@@ -6213,6 +6233,7 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
 .llm-new-chat-btn:hover:not(:disabled),
 .llm-model-btn:hover:not(:disabled),
 .llm-reasoning-btn:hover:not(:disabled),
+.llm-evidence-mode-btn:focus-visible,
 .llm-clear-papers-btn:focus-visible,
 .llm-select-text-btn:focus-visible,
 .llm-screenshot-btn:focus-visible,

@@ -58,6 +58,7 @@ export interface Message {
     supplementalPapers?: PaperContextRef[];
     fileAttachmentIds?: string[];
     compactedSummary?: string;
+    evidenceMode?: boolean;
     evidenceBlocks?: import("./evidence").EvidenceBlock[];
   };
   streaming?: boolean;
@@ -136,9 +137,7 @@ export type PdfContext = DocumentTextContext;
 
 export type PaperSourceKind = "active-document" | "supplemental-paper";
 export type PaperSourceAvailability =
-  | "full-text"
-  | "metadata-only"
-  | "unavailable";
+  "full-text" | "metadata-only" | "unavailable";
 
 /**
  * Stable identity and human-readable labeling for a paper brought into a

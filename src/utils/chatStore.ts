@@ -14,7 +14,10 @@ import {
   normalizePaperContextRefs,
 } from "../modules/contextPanel/normalizers";
 import { normalizeModelOutput } from "./modelOutputNormalizer";
-import { normalizeEvidenceBlocks, type EvidenceBlock } from "../modules/contextPanel/evidence";
+import {
+  normalizeEvidenceBlocks,
+  type EvidenceBlock,
+} from "../modules/contextPanel/evidence";
 
 export type ContextRefsJson = {
   /** Canonical format-neutral base document reference. */
@@ -30,6 +33,7 @@ export type ContextRefsJson = {
   fileAttachmentIds?: string[];
   compactedSummary?: string;
   compactionBoundary?: string;
+  evidenceMode?: boolean;
   evidenceBlocks?: EvidenceBlock[];
 };
 
@@ -406,8 +410,13 @@ function normalizeContextRefsForStorage(
   if (!contextRefs) return undefined;
   const normalized = { ...contextRefs };
   if (Array.isArray(normalized.evidenceBlocks)) {
-    normalized.evidenceBlocks = normalizeEvidenceBlocks(normalized.evidenceBlocks);
+    normalized.evidenceBlocks = normalizeEvidenceBlocks(
+      normalized.evidenceBlocks,
+    );
     if (!normalized.evidenceBlocks.length) delete normalized.evidenceBlocks;
+  }
+  if (typeof normalized.evidenceMode !== "boolean") {
+    delete normalized.evidenceMode;
   }
   if (typeof normalized.compactedSummary === "string") {
     const summary = normalizeModelOutput(normalized.compactedSummary).text;

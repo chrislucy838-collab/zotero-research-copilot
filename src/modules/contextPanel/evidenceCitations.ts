@@ -7,10 +7,10 @@ export type EvidenceCitation = {
 };
 
 const CITATION_RE =
-  /(?:\[\s*Paper\s+\d+\s*,\s*(?:p(?:age)?\.?\s*)\d+(?:\s*(?:[\-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*\s*\]|(?<!\[)\bPaper\s+\d+\s*,\s*(?:p(?:age)?\.?\s*)\d+(?:\s*(?:[\-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*(?:\s*\])?)/gi;
+  /(?:\[\s*Paper\s+\d+\s*,\s*(?:p(?:age)?\.?\s*)\d+(?:\s*(?:[-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*\s*\]|(?<!\[)\bPaper\s+\d+\s*,\s*(?:p(?:age)?\.?\s*)\d+(?:\s*(?:[-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*(?:\s*\])?)/gi;
 
 const CITATION_DETAILS_RE =
-  /^\[*\s*Paper\s+(\d+)\s*,\s*(?:p(?:age)?\.?\s*)(\d+)((?:\s*(?:[\-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*)\s*\]*$/i;
+  /^\[*\s*Paper\s+(\d+)\s*,\s*(?:p(?:age)?\.?\s*)(\d+)((?:\s*(?:[-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*)\s*\]*$/i;
 
 type CitationMatch = {
   text: string;
@@ -122,6 +122,42 @@ function createBookOpenTextIcon(doc: Document): SVGSVGElement {
   return svg as unknown as SVGSVGElement;
 }
 
+function evidenceTerms(value: string): Set<string> {
+  const terms = new Set<string>();
+  const matches =
+    value.toLowerCase().match(/[a-z0-9]{3,}|[\u4e00-\u9fff]/g) || [];
+  for (const term of matches) terms.add(term);
+  return terms;
+}
+
+function findAutomaticEvidenceBlocks(
+  root: HTMLElement,
+  blocks: EvidenceBlock[],
+): EvidenceBlock[] {
+  const answerTerms = evidenceTerms(root.textContent || "");
+  if (answerTerms.size < 2) return [];
+  return blocks
+    .filter(
+      (block) =>
+        block.status === "direct" &&
+        Boolean(block.contextItemId) &&
+        Number.isFinite(block.pageIndex) &&
+        (block.pageIndex as number) >= 0,
+    )
+    .map((block) => {
+      const quoteTerms = evidenceTerms(block.quote);
+      let overlap = 0;
+      for (const term of quoteTerms) {
+        if (answerTerms.has(term)) overlap += 1;
+      }
+      return { block, overlap };
+    })
+    .filter(({ overlap }) => overlap >= 2)
+    .sort((left, right) => right.overlap - left.overlap)
+    .slice(0, 8)
+    .map(({ block }) => block);
+}
+
 function isExcludedTextNode(node: Text): boolean {
   const parent = node.parentElement;
   if (!parent) return true;
@@ -141,6 +177,7 @@ export function linkEvidenceCitations(
     matchingBlocks: EvidenceBlock[],
     anchor: HTMLAnchorElement,
   ) => void,
+  options?: { appendFallback?: boolean },
 ): number {
   if (!root || !blocks.length) return 0;
   const doc = root.ownerDocument;
@@ -214,6 +251,36 @@ export function linkEvidenceCitations(
     if (!changed) continue;
     fragment.appendChild(doc.createTextNode(text.slice(cursor)));
     textNode.parentNode?.replaceChild(fragment, textNode);
+  }
+  if (linkedCount === 0 && options?.appendFallback) {
+    const fallbackBlocks = findAutomaticEvidenceBlocks(root, blocks);
+    if (fallbackBlocks.length) {
+      const anchor = doc.createElement("a") as HTMLAnchorElement;
+      anchor.className = "llm-evidence-citation llm-evidence-citation-fallback";
+      anchor.href = "#";
+      anchor.appendChild(createBookOpenTextIcon(doc));
+      anchor.dataset.citation = "Open paper evidence";
+      anchor.dataset.evidenceKind = "text";
+      anchor.dataset.evidenceId = fallbackBlocks[0].evidenceId;
+      anchor.setAttribute("aria-label", "Open paper evidence");
+      anchor.title = "Open paper evidence";
+      anchor.addEventListener("click", (event: Event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const first = fallbackBlocks[0];
+        const page = Number.isFinite(first.pageIndex)
+          ? Math.floor(first.pageIndex as number) + 1
+          : 1;
+        onActivate(
+          { startPage: page, endPage: page, text: "Open paper evidence" },
+          fallbackBlocks,
+          anchor,
+        );
+      });
+      root.appendChild(doc.createTextNode(" "));
+      root.appendChild(anchor);
+      return 1;
+    }
   }
   return linkedCount;
 }

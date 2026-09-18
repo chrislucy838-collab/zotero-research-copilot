@@ -26,6 +26,7 @@ export type PanelDomRefs = {
   contextUsageRing: HTMLDivElement | null;
   screenshotBtn: HTMLButtonElement | null;
   uploadBtn: HTMLButtonElement | null;
+  evidenceModeBtn: HTMLButtonElement | null;
   newChatBtn: HTMLButtonElement | null;
   uploadInput: HTMLInputElement | null;
   slashMenu: HTMLDivElement | null;
@@ -149,6 +150,9 @@ export function getPanelDomRefs(body: Element): PanelDomRefs {
     ) as HTMLButtonElement | null,
     uploadBtn: body.querySelector(
       "#llm-upload-file",
+    ) as HTMLButtonElement | null,
+    evidenceModeBtn: body.querySelector(
+      "#llm-evidence-mode",
     ) as HTMLButtonElement | null,
     newChatBtn: body.querySelector("#llm-new-chat") as HTMLButtonElement | null,
     uploadInput: body.querySelector(

@@ -70,6 +70,9 @@ import {
   selectedPaperContextCache,
   selectedImageCache,
   selectedTextCache,
+  getEvidenceMode,
+  hasEvidenceMode,
+  setEvidenceMode,
 } from "./state";
 import {
   sanitizeText,
@@ -588,16 +591,19 @@ async function openEvidencePage(
   }
 }
 
-function getAssistantEvidenceBlocks(
+function getAssistantEvidenceContext(
   history: Message[],
   assistantIndex: number,
-): EvidenceBlock[] {
+): { enabled: boolean; blocks: EvidenceBlock[] } {
   for (let index = assistantIndex - 1; index >= 0; index -= 1) {
     const candidate = history[index];
     if (candidate.role !== "user") continue;
-    return normalizeEvidenceBlocks(candidate.contextRefs?.evidenceBlocks);
+    return {
+      enabled: candidate.contextRefs?.evidenceMode === true,
+      blocks: normalizeEvidenceBlocks(candidate.contextRefs?.evidenceBlocks),
+    };
   }
-  return [];
+  return { enabled: false, blocks: [] };
 }
 
 function getUserBubbleElement(wrapper: HTMLElement): HTMLDivElement | null {
@@ -957,7 +963,7 @@ export async function exportMarkdownToFile(
   const safeText = sanitizeText(markdownText).trim();
   if (!safeText) throw new Error("No chat history available to export");
   const baseName =
-    suggestedName.replace(/[\\?%*:|\"<>/]/g, "_").trim() ||
+    suggestedName.replace(/[\\?%*:|"<>/]/g, "_").trim() ||
     "zotero-research-copilot-chat";
   const fileName = baseName.replace(/(?:\.md)+$/i, "") + ".md";
   const parentWindow = body.ownerDocument?.defaultView || undefined;
@@ -1219,7 +1225,7 @@ export function resolveEffectiveRequestConfig(params: {
     primaryProfile.model ||
     modelFallback
   ).trim();
-  let apiBase = (params.apiBase ?? fallbackProfile.apiBase ?? "").trim();
+  const apiBase = (params.apiBase ?? fallbackProfile.apiBase ?? "").trim();
   const apiKey = (
     params.apiKey ??
     fallbackProfile.apiKey ??
@@ -1253,6 +1259,7 @@ async function buildCombinedContextForRequest(params: {
     kind: Parameters<typeof setStatus>[2],
   ) => void;
   onEvidenceBlocks?: (blocks: EvidenceBlock[]) => void;
+  evidenceMode?: boolean;
 }): Promise<string> {
   throwIfRequestAborted(params.signal);
   const requestEvidenceBlocks: EvidenceBlock[] = [];
@@ -1567,7 +1574,6 @@ async function buildCombinedContextForRequest(params: {
       "\n[This paper context was truncated by the multi-paper context budget.]";
     const available = Math.max(0, supplementalRemaining - marker.length);
     boundedSupplementalBlocks.push(`${block.slice(0, available)}${marker}`);
-    supplementalRemaining = 0;
     break;
   }
   const supplementalPaperContext = boundedSupplementalBlocks.length
@@ -1600,7 +1606,9 @@ async function buildCombinedContextForRequest(params: {
   }
 
   throwIfRequestAborted(params.signal);
-  const evidenceInstruction = formatEvidenceInstruction(requestEvidenceBlocks);
+  const evidenceInstruction = params.evidenceMode
+    ? formatEvidenceInstruction(requestEvidenceBlocks)
+    : "";
   const assembledContext = [
     memoryContext,
     pdfContext,
@@ -1697,6 +1705,9 @@ function buildContextRefsSnapshot(
   if (persistedEvidenceBlocks.length) {
     refs.evidenceBlocks = persistedEvidenceBlocks;
   }
+  if (hasEvidenceMode(conversationKey)) {
+    refs.evidenceMode = getEvidenceMode(conversationKey);
+  }
   // Persist Zone B summary if available.
   const cachedZoneBSummary = zoneBSummaryCache.get(conversationKey);
   if (cachedZoneBSummary) {
@@ -1771,6 +1782,9 @@ function restoreContextPoolFromStoredMessages(
   }
 
   conversationContextPool.set(conversationKey, pool);
+  if (typeof latestContextRefs.evidenceMode === "boolean") {
+    setEvidenceMode(conversationKey, latestContextRefs.evidenceMode);
+  }
 
   // Restore Zone B summary if persisted.
   if (
@@ -2659,6 +2673,7 @@ export async function editUserMessageAndRetry(
       question,
       imageCount: screenshotImages.length,
       paperContexts,
+      evidenceMode: getEvidenceMode(conversationKey),
       apiBase: effectiveRequestConfig.apiBase,
       apiKey: effectiveRequestConfig.apiKey,
       conversationKey,
@@ -2993,6 +3008,7 @@ export async function retryLatestAssistantResponse(
       question,
       imageCount: screenshotImages.length,
       paperContexts,
+      evidenceMode: getEvidenceMode(conversationKey),
       apiBase: effectiveRequestConfig.apiBase,
       apiKey: effectiveRequestConfig.apiKey,
       conversationKey,
@@ -3219,6 +3235,7 @@ export async function sendQuestion(
   paperContexts?: PaperContextRef[],
   attachments?: ChatAttachment[],
   onContextEstimate?: (tokens: number) => void,
+  evidenceMode = false,
 ) {
   const ui = getPanelRequestUI(body);
   const i18n = getPanelI18n();
@@ -3425,6 +3442,7 @@ export async function sendQuestion(
       question,
       imageCount,
       paperContexts: paperContextsForMessage,
+      evidenceMode: getEvidenceMode(conversationKey),
       apiBase: effectiveRequestConfig.apiBase,
       apiKey: effectiveRequestConfig.apiKey,
       conversationKey,
@@ -4400,13 +4418,17 @@ export function refreshChat(body: Element, item?: Zotero.Item | null) {
           bubble.appendChild(streamingContent);
         } else {
           renderAssistantMarkdown(bubble);
-          const evidenceBlocks = getAssistantEvidenceBlocks(history, index);
+          const evidenceContext = getAssistantEvidenceContext(history, index);
+          const evidenceBlocks = evidenceContext.enabled
+            ? evidenceContext.blocks
+            : [];
           linkEvidenceCitations(
             bubble,
             evidenceBlocks,
             (_citation, matchingBlocks) => {
               void openEvidencePage(matchingBlocks);
             },
+            { appendFallback: evidenceContext.enabled },
           );
         }
         bubble.addEventListener("contextmenu", (e: Event) => {

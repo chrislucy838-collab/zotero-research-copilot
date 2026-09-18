@@ -1,5 +1,11 @@
 ## What's changed
 
+- Added an evidence mode toggle in the bottom-left action slot, replacing the former bottom new-chat button. The existing top-right new-chat control is unchanged.
+- Evidence mode is gray when disabled and blue when enabled, and its state is kept per conversation.
+- When enabled, all papers in the current conversation context share one evidence pool. Paper-backed claims receive precise `[Paper N, p. X]` citations that become clickable book icons in the reply.
+- Clicking an evidence icon opens the matching Zotero Reader PDF page and applies temporary text highlighting. A bounded evidence-overlap fallback is used when a model omits the citation marker but the answer clearly overlaps a page-backed excerpt.
+- Evidence mode metadata is persisted with conversation context and restored when the conversation is reopened.
+
 - Rolled back the experimental Reader paper-chip double-click navigation introduced after v0.10.18. The stable v0.10.18 Reader behavior is restored; no Paper 1/Paper 2 cross-tab switching or temporary Reader chip is included in this version.
 - Preserved the later Zotero 10.0.x compatibility metadata and existing API, Discover, and provider features.
 

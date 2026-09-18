@@ -215,3 +215,21 @@ export const recentReaderSelectionCache = new Map<number, string>();
 export const draftInputCache = new Map<number, string>();
 /** Maps PDF item.id → active paper conversation key (1B range). */
 export const activePaperConversationByItem = new Map<number, number>();
+/** Per-conversation toggle for source-backed evidence citations in replies. */
+export const evidenceModeByConversation = new Map<number, boolean>();
+
+export function getEvidenceMode(conversationKey: number): boolean {
+  return evidenceModeByConversation.get(conversationKey) === true;
+}
+
+export function hasEvidenceMode(conversationKey: number): boolean {
+  return evidenceModeByConversation.has(Math.floor(conversationKey));
+}
+
+export function setEvidenceMode(
+  conversationKey: number,
+  enabled: boolean,
+): void {
+  if (!Number.isFinite(conversationKey) || conversationKey <= 0) return;
+  evidenceModeByConversation.set(Math.floor(conversationKey), enabled === true);
+}

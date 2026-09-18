@@ -48,6 +48,8 @@ import {
   conversationContextPool,
   draftInputCache,
   activePaperConversationByItem,
+  getEvidenceMode,
+  setEvidenceMode,
 } from "./state";
 import {
   sanitizeText,
@@ -316,6 +318,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     contextUsageRing,
     screenshotBtn,
     uploadBtn,
+    evidenceModeBtn,
     newChatBtn,
     uploadInput,
     slashMenu,
@@ -601,6 +604,21 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     contextUsage.setAttribute("aria-label", label);
   };
 
+  const updateEvidenceModeButton = () => {
+    if (!evidenceModeBtn) return;
+    const enabled =
+      conversationKey !== null && getEvidenceMode(conversationKey);
+    evidenceModeBtn.classList.toggle("is-enabled", enabled);
+    evidenceModeBtn.classList.toggle("is-disabled", !enabled);
+    evidenceModeBtn.style.color = enabled
+      ? "var(--color-accent, #3584e4)"
+      : "var(--fill-tertiary, #8a8f98)";
+    evidenceModeBtn.setAttribute("aria-pressed", enabled ? "true" : "false");
+    const title = enabled ? "Evidence mode: on" : "Evidence mode: off";
+    evidenceModeBtn.title = title;
+    evidenceModeBtn.setAttribute("aria-label", title);
+  };
+
   const syncConversationIdentity = () => {
     conversationKey = item ? getConversationKey(item) : null;
     panelRoot.dataset.itemId =
@@ -621,6 +639,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       historyModeIndicator.style.display = "none";
     }
     updateContextUsageIndicator();
+    updateEvidenceModeButton();
   };
   syncConversationIdentity();
   let activeEditSession: EditLatestTurnMarker | null = null;
@@ -6512,6 +6531,8 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     body,
     inputBox,
     isPanelGenerating: () => isPanelGenerating(body),
+    getEvidenceMode: () =>
+      conversationKey !== null && getEvidenceMode(conversationKey),
     getItem: () => item,
     closeSlashMenu,
     closePaperPicker,
@@ -6571,6 +6592,25 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     },
     editStaleStatusText: EDIT_STALE_STATUS_TEXT,
   });
+
+  if (evidenceModeBtn) {
+    evidenceModeBtn.addEventListener("click", (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (conversationKey === null) return;
+      const enabled = !getEvidenceMode(conversationKey);
+      setEvidenceMode(conversationKey, enabled);
+      updateEvidenceModeButton();
+      refreshChatPreservingScroll();
+      if (status) {
+        setStatus(
+          status,
+          enabled ? "Evidence mode enabled" : "Evidence mode disabled",
+          "ready",
+        );
+      }
+    });
+  }
 
   // Send button - use addEventListener
   sendBtn.addEventListener("click", (e: Event) => {
