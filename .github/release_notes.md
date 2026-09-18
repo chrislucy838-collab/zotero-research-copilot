@@ -1,5 +1,8 @@
 ## What's changed
 
+- Rolled back the experimental Reader paper-chip double-click navigation introduced after v0.10.18. The stable v0.10.18 Reader behavior is restored; no Paper 1/Paper 2 cross-tab switching or temporary Reader chip is included in this version.
+- Preserved the later Zotero 10.0.x compatibility metadata and existing API, Discover, and provider features.
+
 - Replaced the Reader panel host model: the plugin no longer moves or reuses a chat DOM host across Reader tabs. Each Zotero ItemPaneManager body now owns its own rendering lifecycle, avoiding duplicate Context Pane controls and the double-arrow artifact in the conversation index.
 - Made each Reader body the authoritative workspace key instead of relying on the globally selected tab during asynchronous rendering.
 - Fixed existing Paper 2 tabs: when Zotero selects an already-open target tab, its chat body now consumes the Paper 1 navigation owner before the marker is cleared.
@@ -55,6 +58,9 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 回退 v0.10.18 之后引入的实验性论文 chip 双击 Reader 导航功能，恢复稳定的 v0.10.18 Reader 行为。本版本不再包含 Paper 1/Paper 2 跨标签切换或临时 Reader 条目。
+- 保留后续加入的 Zotero 10.0.x 兼容性元数据，以及 API、Discover 和 provider 功能。
 
 - 替换 Reader 面板宿主模型：插件不再跨 Reader 标签页搬运或复用聊天 DOM host。每个 Zotero ItemPaneManager body 独立拥有自己的渲染生命周期，避免 Context Pane 控件重复与对话索引双箭头残影。
 - Reader 异步渲染改为以当前 body 作为唯一工作区键，不再依赖全局已选标签页。

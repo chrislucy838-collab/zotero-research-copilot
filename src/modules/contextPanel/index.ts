@@ -34,9 +34,6 @@ import {
   setReaderContextPanelRegistered,
   recentReaderSelectionCache,
   conversationContextPool,
-  getReaderChatWorkspaceForHost,
-  getPendingReaderNavigation,
-  setPendingReaderNavigation,
 } from "./state";
 import { clearConversation as clearStoredConversation } from "../../utils/chatStore";
 import {
@@ -51,13 +48,17 @@ import {
   appendSelectedTextContextForItem,
   applySelectedTextPreview,
   getActiveContextAttachmentFromTabs,
+  getActiveReaderDocumentAttachmentFromTabs,
 } from "./contextResolution";
 import {
   getFirstSelectionFromReader,
   getSelectionFromDocument,
 } from "./readerSelection";
 import { resolvePaperContextRefFromAttachment } from "./paperAttribution";
-import { bootstrapSharedReaderPanel } from "./readerPanel";
+import {
+  bootstrapSharedReaderPanel,
+  getSharedReaderPanelHostForItem,
+} from "./readerPanel";
 import {
   bootstrapSharedLibraryPanel,
   getSharedLibraryPanelHost,
@@ -67,10 +68,7 @@ import {
   isManagedLibraryPanelSectionEnabled,
 } from "./librarySelection";
 import { getPanelI18n } from "./i18n";
-import {
-  getReaderDocumentKind,
-  resolveReaderDocument,
-} from "./documentContext";
+import { getReaderDocumentKind } from "./documentContext";
 
 type ReaderSelectionPopupHandler =
   _ZoteroTypes.Reader.EventHandler<"renderTextSelectionPopup">;
@@ -189,10 +187,42 @@ export function registerReaderContextPanel() {
         }
         return;
       }
-      // Reader section bodies are owned by ItemPaneManager. Do not move DOM
-      // between Reader tabs here: Zotero may invoke this while tab selection is
-      // changing, and reparenting creates duplicate Context Pane controls.
-      if (tabType === "reader") return;
+      // ── Reader mode: synchronously reparent the cached host ──
+      if (tabType === "reader" && item) {
+        try {
+          const doc = body.ownerDocument;
+          const win = doc?.defaultView;
+          if (win) {
+            // Zotero may pass a parent item. Prefer the attachment owned by
+            // the active reader so mixed PDF/EPUB parents cannot pick the
+            // wrong document by attachment order.
+            let renderItem = item;
+            if (!getReaderDocumentKind(item)) {
+              const documentFromTab =
+                getActiveReaderDocumentAttachmentFromTabs();
+              if (documentFromTab) {
+                renderItem = documentFromTab;
+              }
+            }
+            const host = getSharedReaderPanelHostForItem(win, renderItem);
+            if (!body.contains(host)) {
+              body.textContent = "";
+              body.appendChild(host);
+            }
+            host.style.display = "flex";
+          }
+          // Removed: scrollSectionIntoView(body) — was hijacking sidebar scroll
+        } catch (err) {
+          ztoolkit.log("LLM: reader sync reparent failed", err);
+        }
+        return;
+      }
+      if (tabType !== "reader") return;
+      try {
+        // Removed: scrollSectionIntoView(body) — was hijacking sidebar scroll
+      } catch (err) {
+        ztoolkit.log("LLM: scroll section failed", err);
+      }
     },
     onAsyncRender: async ({ body, item, setEnabled, tabType }) => {
       const enabled = shouldEnablePanelSection(body, tabType, item);
@@ -212,63 +242,39 @@ export function registerReaderContextPanel() {
         return;
       }
 
-      // ── Reader mode: render only in the body owned by this section ──
-      // ItemPaneManager owns the body lifecycle. A Reader navigation must not
-      // move a panel from another tab into it, because Zotero can select an
-      // existing target tab before this callback runs.
-      if (tabType !== "reader" || !item) return;
-      const win = body.ownerDocument?.defaultView;
+      // ── Reader mode: bootstrap shared persistent DOM ──
+      // The host was already reparented synchronously in onRender.
+      // Here we only run the one-time async bootstrap.
+      if (tabType !== "reader") return;
+
+      if (!item) return;
+      const doc = body.ownerDocument;
+      if (!doc) return;
+      const win = doc.defaultView;
       if (!win) return;
 
-      const pendingNavigation = getPendingReaderNavigation(win);
+      // Zotero sometimes passes the parent item instead of the attachment.
+      // Resolve the active reader attachment before bootstrapping so mixed
+      // PDF/EPUB parents cannot warm the wrong document.
       let readerItem = item;
       if (!getReaderDocumentKind(item)) {
-        // Do not read the globally selected Reader tab here. This async
-        // callback may run after Zotero has selected another tab. Resolve only
-        // from the callback item, using the one-shot target attachment when it
-        // belongs to this navigation transaction.
-        const pendingAttachment = pendingNavigation
-          ? getZoteroItem(pendingNavigation.targetAttachmentId)
-          : null;
-        if (pendingAttachment?.parentID === item.id) {
-          readerItem = pendingAttachment;
-        } else {
-          readerItem = resolveReaderDocument(item)?.item || item;
+        const documentFromTab = getActiveReaderDocumentAttachmentFromTabs();
+        if (documentFromTab) {
+          readerItem = documentFromTab;
         }
       }
 
-      const isNavigationTarget =
-        pendingNavigation?.targetAttachmentId === Number(readerItem.id);
-      // Once a target body has been initialized, its local workspace remains
-      // the source of truth on later Zotero re-renders. This is what keeps
-      // Paper 1 as owner after the one-shot pending marker is cleared.
-      const existingWorkspace = getReaderChatWorkspaceForHost(
-        win,
-        body as HTMLElement,
-      );
-      const workspaceStillDisplaysCurrentAttachment =
-        existingWorkspace?.activeAttachmentId === Number(readerItem.id);
-      const conversationOwner = isNavigationTarget
-        ? pendingNavigation.ownerItem
-        : workspaceStillDisplaysCurrentAttachment
-          ? existingWorkspace.item
-          : readerItem;
+      const host = getSharedReaderPanelHostForItem(win, readerItem);
 
-      await bootstrapSharedReaderPanel(
-        win,
-        body as HTMLElement,
-        conversationOwner,
-        {
-          workspaceOwner: conversationOwner,
-          activeAttachmentId: Number(readerItem.id) || null,
-        },
-      );
-
-      // The conversation owner is now stored on this exact body workspace.
-      // Clearing the one-shot navigation marker cannot affect another tab.
-      if (isNavigationTarget) {
-        setPendingReaderNavigation(win, null);
+      // Defensive: ensure host is attached (in case onRender didn't fire)
+      if (!body.contains(host)) {
+        body.textContent = "";
+        body.appendChild(host);
+        host.style.display = "flex";
       }
+
+      const { bootstrapSharedReaderPanel } = await import("./readerPanel");
+      await bootstrapSharedReaderPanel(win, host, readerItem);
     },
     onToggle: ({ body, event, item, tabType }) => {
       if (tabType !== "library") return;
@@ -403,13 +409,23 @@ export function registerReaderSelectionTracking() {
           return;
         }
         try {
-          // The Reader section body is owned by ItemPaneManager. Do not create
-          // a second panel from a text-selection popup; use the panel Zotero
-          // has already rendered for this document.
-          const preferredPanelRoot =
-            event.doc.defaultView?.top?.document?.querySelector(
-              "#llm-main",
-            ) as HTMLDivElement | null;
+          let preferredPanelRoot: HTMLDivElement | null = null;
+          const readerWin = (event.doc.defaultView?.top ||
+            null) as Window | null;
+          if (readerWin && item) {
+            try {
+              const host = getSharedReaderPanelHostForItem(readerWin, item);
+              await bootstrapSharedReaderPanel(readerWin, host, item);
+              preferredPanelRoot = host.querySelector(
+                "#llm-main",
+              ) as HTMLDivElement | null;
+            } catch (err) {
+              ztoolkit.log(
+                "LLM: Add Text popup reader panel bootstrap failed",
+                err,
+              );
+            }
+          }
 
           const docs = new Set<Document>();
           const pushDoc = (doc?: Document | null) => {

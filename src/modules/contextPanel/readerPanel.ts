@@ -1,3 +1,12 @@
+/**
+ * Reader Panel — persistent DOM caching for reader-mode tabs.
+ *
+ * Mirrors the library-mode pattern from libraryPanel.ts: each conversation key
+ * gets a cached host element that is reparented into the section body on tab
+ * switch, avoiding a full DOM rebuild (buildUI + setupHandlers + refreshChat)
+ * every time the user switches between PDF tabs.
+ */
+
 import { buildUI } from "./buildUI";
 import { setupHandlers } from "./setupHandlers";
 import { ensureConversationLoaded, refreshChat } from "./chat";
@@ -7,12 +16,10 @@ import {
   resolveReaderDocument,
 } from "./documentContext";
 import { getDocumentAdapter } from "./document/registry";
-import { getZoteroItem } from "../../utils/zoteroItems";
 import {
+  selectedFileAttachmentCache,
+  selectedFilePreviewExpandedCache,
   activePaperConversationByItem,
-  getCurrentReaderTabId,
-  getReaderChatWorkspaceForHost,
-  setReaderChatWorkspace,
 } from "./state";
 import {
   createPaperConversation,
@@ -21,139 +28,126 @@ import {
   initChatStore,
 } from "../../utils/chatStore";
 
-/**
- * The ItemPaneManager owns Reader section bodies. A section body must never be
- * moved to another Reader tab: doing that interferes with Zotero's Context Pane
- * layout and makes async renders resolve the wrong tab. Keep state on the body
- * that Zotero supplied instead.
- */
-type ReaderBodyState = {
-  ownerId: number;
-  activeAttachmentId: number | null;
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+
+interface ReaderPanelState {
+  host: HTMLElement;
   hasBootstrapped: boolean;
   bootstrapPromise: Promise<void> | null;
-};
-
-let readerBodyStates = new WeakMap<HTMLElement, ReaderBodyState>();
-
-export function getReaderPanelTabId(win: Window): string {
-  return getCurrentReaderTabId(win);
 }
 
-export function resolveReaderConversationOwner(
+const panelStateByWindow = new WeakMap<Window, Map<number, ReaderPanelState>>();
+
+function getWindowMap(win: Window): Map<number, ReaderPanelState> {
+  let map = panelStateByWindow.get(win);
+  if (!map) {
+    map = new Map();
+    panelStateByWindow.set(win, map);
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+export function getSharedReaderPanelHostForItem(
+  win: Window,
   item: Zotero.Item,
-  workspaceOwner?: Zotero.Item | null,
-): Zotero.Item {
-  return workspaceOwner || item;
+): HTMLElement {
+  const key = item.id;
+  const map = getWindowMap(win);
+  let state = map.get(key);
+  if (!state) {
+    const doc = win.document;
+    const host = doc.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "div",
+    ) as HTMLDivElement;
+    host.id = "llm-reader-panel-host";
+    host.dataset.tabType = "reader";
+    state = { host, hasBootstrapped: false, bootstrapPromise: null };
+    map.set(key, state);
+  }
+  return state.host;
 }
 
 export async function bootstrapSharedReaderPanel(
   win: Window,
-  body: HTMLElement,
+  host: HTMLElement,
   item: Zotero.Item,
-  options?: {
-    workspaceOwner?: Zotero.Item;
-    activeAttachmentId?: number | null;
-  },
 ): Promise<void> {
-  const conversationOwner = resolveReaderConversationOwner(
-    item,
-    options?.workspaceOwner,
-  );
-  const requestedAttachmentId = options?.activeAttachmentId ?? Number(item.id);
-  const activeAttachmentId =
-    Number.isFinite(requestedAttachmentId) && requestedAttachmentId > 0
-      ? Math.floor(requestedAttachmentId)
-      : null;
-  const activeReaderItem = activeAttachmentId
-    ? getZoteroItem(activeAttachmentId) || item
-    : item;
-
-  let state = readerBodyStates.get(body);
-  const ownerChanged = state?.ownerId !== Number(conversationOwner.id);
-  const attachmentChanged =
-    state?.activeAttachmentId !== (Number(activeAttachmentId) || null);
-
-  // A body belongs to one Zotero Reader section. Rebuild only inside that same
-  // body when its displayed document or chat owner changes. There is no host
-  // pooling, no DOM reparenting, and no dependency on another tab's selectedID.
-  if (!state || ownerChanged || attachmentChanged) {
-    state = {
-      ownerId: Number(conversationOwner.id) || 0,
-      activeAttachmentId: Number(activeAttachmentId) || null,
-      hasBootstrapped: false,
-      bootstrapPromise: null,
-    };
-    readerBodyStates.set(body, state);
+  const key = item.id;
+  const map = getWindowMap(win);
+  const state = map.get(key);
+  if (!state) return;
+  if (state.bootstrapPromise) {
+    return state.bootstrapPromise;
   }
-
-  const tabId = getCurrentReaderTabId(win);
-  const workspace = getReaderChatWorkspaceForHost(win, body);
-  if (!workspace) {
-    setReaderChatWorkspace(win, {
-      host: body,
-      item: conversationOwner,
-      pendingAttachmentId: null,
-      activeAttachmentId: state.activeAttachmentId,
-      activeTabId: tabId,
-    });
-  } else {
-    workspace.item = conversationOwner;
-    workspace.pendingAttachmentId = null;
-    workspace.activeAttachmentId = state.activeAttachmentId;
-    workspace.activeTabId = tabId;
-  }
-
-  if (state.bootstrapPromise) return state.bootstrapPromise;
   if (state.hasBootstrapped) return;
 
   let resolveBootstrap: () => void = () => undefined;
   state.bootstrapPromise = new Promise<void>((resolve) => {
     resolveBootstrap = resolve;
   });
+
+  // Mark immediately to prevent parallel initialization
   state.hasBootstrapped = true;
 
   try {
     await initChatStore();
 
-    if (!activePaperConversationByItem.has(conversationOwner.id)) {
-      const latest = await getLatestPaperConversation(conversationOwner.id);
+    // ── Resolve active paper conversation key ──
+    // Each PDF item can have multiple conversations. Resolve the active one
+    // (or create it if none exists) and store in activePaperConversationByItem.
+    if (!activePaperConversationByItem.has(item.id)) {
+      const latest = await getLatestPaperConversation(item.id);
       if (!latest) {
-        const newKey = await createPaperConversation(conversationOwner.id);
+        // First time opening this PDF — create the initial conversation.
+        const newKey = await createPaperConversation(item.id);
         if (newKey > 0) {
-          activePaperConversationByItem.set(conversationOwner.id, newKey);
+          activePaperConversationByItem.set(item.id, newKey);
         }
       } else {
-        activePaperConversationByItem.set(
-          conversationOwner.id,
-          latest.conversationKey,
+        activePaperConversationByItem.set(item.id, latest.conversationKey);
+        ztoolkit.log(
+          `LLM: restored paper conversation ${latest.conversationKey} for item ${item.id} ` +
+            `(userTurns=${latest.userTurnCount}, lastActivity=${latest.lastActivityAt})`,
         );
       }
     } else {
-      const activeKey =
-        activePaperConversationByItem.get(conversationOwner.id) || 0;
+      // Recover from a stale in-memory selection that points at an empty chat.
+      // This can happen when an empty conversation was created after the real
+      // conversation and the panel was reloaded without clearing module state.
+      const activeKey = activePaperConversationByItem.get(item.id) || 0;
       if (activeKey > 0) {
         const activeTurnCount =
           await getPaperConversationUserTurnCount(activeKey);
         if (activeTurnCount === 0) {
-          const latest = await getLatestPaperConversation(conversationOwner.id);
+          const latest = await getLatestPaperConversation(item.id);
           if (latest && latest.userTurnCount > 0) {
-            activePaperConversationByItem.set(
-              conversationOwner.id,
-              latest.conversationKey,
+            activePaperConversationByItem.set(item.id, latest.conversationKey);
+            ztoolkit.log(
+              `LLM: recovered stale empty paper conversation ${activeKey} ` +
+                `to ${latest.conversationKey} for item ${item.id}`,
             );
           }
         }
       }
     }
 
-    buildUI(body, conversationOwner);
-    await ensureConversationLoaded(conversationOwner);
-    await renderShortcuts(body, conversationOwner);
-    setupHandlers(body, conversationOwner);
-    refreshChat(body, conversationOwner);
+    buildUI(host, item);
+    await ensureConversationLoaded(item);
+    await renderShortcuts(host, item);
+    setupHandlers(host, item);
+    refreshChat(host, item);
 
-    const readerDocument = resolveReaderDocument(activeReaderItem);
+    // Defer document extraction so the panel becomes interactive sooner.
+    // Use the panel's own item directly — getActiveContextAttachmentFromTabs()
+    // queries global tab state which may return a different reader document.
+    const readerDocument = resolveReaderDocument(item);
     if (readerDocument) {
       const adapter = getDocumentAdapter(readerDocument.kind);
       if (adapter?.contextPolicy.eagerWarmup) {
@@ -161,7 +155,7 @@ export async function bootstrapSharedReaderPanel(
       }
     }
   } catch (err) {
-    ztoolkit.log(`LLM: Reader body bootstrap failed: ${err}`);
+    ztoolkit.log(`LLM: bootstrapSharedReaderPanel failed: ${err}`);
     state.hasBootstrapped = false;
   } finally {
     resolveBootstrap();
@@ -170,15 +164,37 @@ export async function bootstrapSharedReaderPanel(
 }
 
 export function invalidateSharedReaderPanelForItem(
-  _win: Window,
-  _item: Zotero.Item,
+  win: Window,
+  item: Zotero.Item,
 ): void {
-  // Bodies are owned and destroyed by Zotero. The next section render rebuilds
-  // the affected body when its item or active attachment changes.
+  const key = item.id;
+  const map = getWindowMap(win);
+  const state = map.get(key);
+  if (state) {
+    const heightSync = (
+      state.host as typeof state.host & {
+        __llmHeightSync?: { dispose?: () => void } | null;
+      }
+    ).__llmHeightSync;
+    heightSync?.dispose?.();
+    state.hasBootstrapped = false;
+    state.bootstrapPromise = null;
+    // Clear stale file preview expansion for this item
+    selectedFilePreviewExpandedCache.delete(key);
+  }
 }
 
-export function removeReaderPanels(_win: Window): void {
-  // Never remove ItemPaneManager-owned bodies. Dropping our weak references is
-  // sufficient when a Zotero main window closes.
-  readerBodyStates = new WeakMap<HTMLElement, ReaderBodyState>();
+export function removeReaderPanels(win: Window): void {
+  const map = panelStateByWindow.get(win);
+  if (!map) return;
+  for (const [, state] of map) {
+    const heightSync = (
+      state.host as typeof state.host & {
+        __llmHeightSync?: { dispose?: () => void } | null;
+      }
+    ).__llmHeightSync;
+    heightSync?.dispose?.();
+    state.host.remove();
+  }
+  map.clear();
 }
