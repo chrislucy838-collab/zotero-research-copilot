@@ -129,17 +129,11 @@ export async function openPaperContextInReader(
       const targetTabId = `${
         reader?.tabID || getCurrentReaderTabId(mainWindow)
       }`;
+      // Reader.open() may return after Zotero has selected an existing Paper 2
+      // tab but before ItemPaneManager renders its body. Only that target body
+      // is allowed to consume this marker, otherwise it can fall back to
+      // Paper 2 before Paper 1 has been bound as its conversation owner.
       updatePendingReaderNavigation(mainWindow, { targetTabId });
-      const pendingNavigation = getPendingReaderNavigation(mainWindow);
-      const targetWorkspace = getReaderChatWorkspace(mainWindow, targetTabId);
-      const targetAlreadyUsesOwner =
-        targetWorkspace?.item?.id === pendingNavigation?.ownerItem?.id;
-      if (
-        targetAlreadyUsesOwner &&
-        targetWorkspace?.host.querySelector("#llm-main")
-      ) {
-        setPendingReaderNavigation(mainWindow, null);
-      }
     }
     try {
       await reader?.focus?.();

@@ -181,6 +181,44 @@ describe("paper navigation", function () {
     assert.equal(targetItem.id, 702);
   });
 
+  it("keeps each Reader body owner-local when the selected tab changes", function () {
+    const fakeWindow = {} as Window;
+    const paper1 = { id: 701 } as any;
+    const paper3 = { id: 703 } as any;
+    const paper2Body = {} as HTMLElement;
+    const paper3Body = {} as HTMLElement;
+
+    // Simulate an async render race: a global tab lookup can now point to the
+    // later body, but a Paper 2 body must still resolve its own Paper 1 owner.
+    setReaderChatWorkspace(fakeWindow, {
+      host: paper2Body,
+      item: paper1,
+      pendingAttachmentId: null,
+      activeAttachmentId: 702,
+      activeTabId: "reader-current",
+    });
+    setReaderChatWorkspace(fakeWindow, {
+      host: paper3Body,
+      item: paper3,
+      pendingAttachmentId: null,
+      activeAttachmentId: 703,
+      activeTabId: "reader-current",
+    });
+
+    assert.equal(
+      getReaderChatWorkspaceForHost(fakeWindow, paper2Body)?.item,
+      paper1,
+    );
+    assert.equal(
+      getReaderChatWorkspaceForHost(fakeWindow, paper2Body)?.activeAttachmentId,
+      702,
+    );
+    assert.equal(
+      getReaderChatWorkspaceForHost(fakeWindow, paper3Body)?.item,
+      paper3,
+    );
+  });
+
   it("uses Paper 1 as the conversation owner while Paper 2 is active", function () {
     const paper1 = { id: 701 } as any;
     const paper2 = { id: 702 } as any;

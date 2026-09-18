@@ -36,10 +36,7 @@ import {
   conversationContextPool,
   getReaderChatWorkspaceForHost,
   getPendingReaderNavigation,
-  clearPendingReaderNavigationIfTarget,
   setPendingReaderNavigation,
-  setReaderChatWorkspace,
-  updateReaderChatWorkspaceNavigation,
 } from "./state";
 import { clearConversation as clearStoredConversation } from "../../utils/chatStore";
 import {
@@ -54,18 +51,13 @@ import {
   appendSelectedTextContextForItem,
   applySelectedTextPreview,
   getActiveContextAttachmentFromTabs,
-  getActiveReaderDocumentAttachmentFromTabs,
 } from "./contextResolution";
 import {
   getFirstSelectionFromReader,
   getSelectionFromDocument,
 } from "./readerSelection";
 import { resolvePaperContextRefFromAttachment } from "./paperAttribution";
-import {
-  bootstrapSharedReaderPanel,
-  getReaderPanelTabId,
-  getSharedReaderPanelHostForItem,
-} from "./readerPanel";
+import { bootstrapSharedReaderPanel } from "./readerPanel";
 import {
   bootstrapSharedLibraryPanel,
   getSharedLibraryPanelHost,
@@ -75,18 +67,16 @@ import {
   isManagedLibraryPanelSectionEnabled,
 } from "./librarySelection";
 import { getPanelI18n } from "./i18n";
-import { getReaderDocumentKind } from "./documentContext";
+import {
+  getReaderDocumentKind,
+  resolveReaderDocument,
+} from "./documentContext";
 
 type ReaderSelectionPopupHandler =
   _ZoteroTypes.Reader.EventHandler<"renderTextSelectionPopup">;
 
 let readerContextPanelSectionKey: string | null = null;
 let readerSelectionPopupHandler: ReaderSelectionPopupHandler | null = null;
-
-// ItemPaneManager may invoke onAsyncRender after Zotero has selected another
-// Reader tab. Keep the host created during onRender attached to this panel body
-// instead of resolving it again from the global selected tab.
-const readerPanelHostByBody = new WeakMap<Element, HTMLElement>();
 
 function shouldEnablePanelSection(
   body: Element,
@@ -199,77 +189,10 @@ export function registerReaderContextPanel() {
         }
         return;
       }
-      // ── Reader mode: synchronously reparent the cached host ──
-      if (tabType === "reader" && item) {
-        try {
-          const doc = body.ownerDocument;
-          const win = doc?.defaultView;
-          if (win) {
-            // Zotero may pass a parent item. Prefer the attachment owned by
-            // the active reader so mixed PDF/EPUB parents cannot pick the
-            // wrong document by attachment order.
-            let renderItem = item;
-            if (!getReaderDocumentKind(item)) {
-              const documentFromTab =
-                getActiveReaderDocumentAttachmentFromTabs();
-              if (documentFromTab) {
-                renderItem = documentFromTab;
-              }
-            }
-            const pendingNavigation = getPendingReaderNavigation(win);
-            const needsNavigationHost = Boolean(
-              pendingNavigation &&
-              pendingNavigation.targetAttachmentId === Number(renderItem.id),
-            );
-            const host = needsNavigationHost
-              ? getSharedReaderPanelHostForItem(win, renderItem, {
-                  forceNew: true,
-                  workspaceOwnerId: pendingNavigation?.ownerItem?.id || null,
-                })
-              : getSharedReaderPanelHostForItem(win, renderItem);
-            readerPanelHostByBody.set(body, host);
-            let workspace = getReaderChatWorkspaceForHost(win, host);
-            const isPendingNavigation =
-              pendingNavigation?.targetAttachmentId === Number(renderItem.id);
-            // Claim the freshly created destination host synchronously. Without
-            // this provisional owner, the following async render can treat the
-            // host as uninitialized and replace it again before bootstrap has
-            // had a chance to bind Paper 1.
-            if (isPendingNavigation && !workspace) {
-              setReaderChatWorkspace(win, {
-                host,
-                item: pendingNavigation.ownerItem,
-                pendingAttachmentId: Number(renderItem.id) || null,
-                activeAttachmentId: Number(renderItem.id) || null,
-                activeTabId: getReaderPanelTabId(win),
-              });
-              workspace = getReaderChatWorkspaceForHost(win, host);
-            }
-            const isSharedWorkspaceHost = workspace?.host === host;
-            if (isSharedWorkspaceHost && !isPendingNavigation) {
-              updateReaderChatWorkspaceNavigation(win, {
-                host,
-                activeAttachmentId: Number(renderItem.id) || null,
-              });
-            }
-            if (!body.contains(host)) {
-              body.textContent = "";
-              body.appendChild(host);
-            }
-            host.style.display = "flex";
-          }
-          // Removed: scrollSectionIntoView(body) — was hijacking sidebar scroll
-        } catch (err) {
-          ztoolkit.log("LLM: reader sync reparent failed", err);
-        }
-        return;
-      }
-      if (tabType !== "reader") return;
-      try {
-        // Removed: scrollSectionIntoView(body) — was hijacking sidebar scroll
-      } catch (err) {
-        ztoolkit.log("LLM: scroll section failed", err);
-      }
+      // Reader section bodies are owned by ItemPaneManager. Do not move DOM
+      // between Reader tabs here: Zotero may invoke this while tab selection is
+      // changing, and reparenting creates duplicate Context Pane controls.
+      if (tabType === "reader") return;
     },
     onAsyncRender: async ({ body, item, setEnabled, tabType }) => {
       const enabled = shouldEnablePanelSection(body, tabType, item);
@@ -289,99 +212,63 @@ export function registerReaderContextPanel() {
         return;
       }
 
-      // ── Reader mode: bootstrap shared persistent DOM ──
-      // The host was already reparented synchronously in onRender.
-      // Here we only run the one-time async bootstrap.
-      if (tabType !== "reader") return;
-
-      if (!item) return;
-      const doc = body.ownerDocument;
-      if (!doc) return;
-      const win = doc.defaultView;
+      // ── Reader mode: render only in the body owned by this section ──
+      // ItemPaneManager owns the body lifecycle. A Reader navigation must not
+      // move a panel from another tab into it, because Zotero can select an
+      // existing target tab before this callback runs.
+      if (tabType !== "reader" || !item) return;
+      const win = body.ownerDocument?.defaultView;
       if (!win) return;
 
-      // Zotero sometimes passes the parent item instead of the attachment.
-      // Resolve the active reader attachment before bootstrapping so mixed
-      // PDF/EPUB parents cannot warm the wrong document.
+      const pendingNavigation = getPendingReaderNavigation(win);
       let readerItem = item;
       if (!getReaderDocumentKind(item)) {
-        const documentFromTab = getActiveReaderDocumentAttachmentFromTabs();
-        if (documentFromTab) {
-          readerItem = documentFromTab;
+        // Do not read the globally selected Reader tab here. This async
+        // callback may run after Zotero has selected another tab. Resolve only
+        // from the callback item, using the one-shot target attachment when it
+        // belongs to this navigation transaction.
+        const pendingAttachment = pendingNavigation
+          ? getZoteroItem(pendingNavigation.targetAttachmentId)
+          : null;
+        if (pendingAttachment?.parentID === item.id) {
+          readerItem = pendingAttachment;
+        } else {
+          readerItem = resolveReaderDocument(item)?.item || item;
         }
       }
 
-      const pendingNavigation = getPendingReaderNavigation(win);
-      const navigationTarget = Boolean(
-        pendingNavigation &&
-        pendingNavigation.targetAttachmentId === Number(readerItem.id),
-      );
-      const cachedHost = readerPanelHostByBody.get(body);
-      const host = navigationTarget
-        ? getSharedReaderPanelHostForItem(win, readerItem, {
-            forceNew: true,
-            workspaceOwnerId: pendingNavigation?.ownerItem?.id || null,
-          })
-        : cachedHost || getSharedReaderPanelHostForItem(win, readerItem);
-      readerPanelHostByBody.set(body, host);
-      let workspace = getReaderChatWorkspaceForHost(win, host);
-      const isPendingNavigation =
+      const isNavigationTarget =
         pendingNavigation?.targetAttachmentId === Number(readerItem.id);
-      // Mirror the synchronous render claim for environments that invoke
-      // asyncRender without a preceding onRender callback.
-      if (isPendingNavigation && !workspace) {
-        setReaderChatWorkspace(win, {
-          host,
-          item: pendingNavigation.ownerItem,
-          pendingAttachmentId: Number(readerItem.id) || null,
-          activeAttachmentId: Number(readerItem.id) || null,
-          activeTabId: getReaderPanelTabId(win),
-        });
-        workspace = getReaderChatWorkspaceForHost(win, host);
-      }
-      const isSharedWorkspaceHost = workspace?.host === host;
-      if (isSharedWorkspaceHost && !isPendingNavigation) {
-        updateReaderChatWorkspaceNavigation(win, {
-          host,
-          activeAttachmentId: Number(readerItem.id) || null,
-        });
-      }
+      // Once a target body has been initialized, its local workspace remains
+      // the source of truth on later Zotero re-renders. This is what keeps
+      // Paper 1 as owner after the one-shot pending marker is cleared.
+      const existingWorkspace = getReaderChatWorkspaceForHost(
+        win,
+        body as HTMLElement,
+      );
+      const workspaceStillDisplaysCurrentAttachment =
+        existingWorkspace?.activeAttachmentId === Number(readerItem.id);
+      const conversationOwner = isNavigationTarget
+        ? pendingNavigation.ownerItem
+        : workspaceStillDisplaysCurrentAttachment
+          ? existingWorkspace.item
+          : readerItem;
 
-      // Keep the original chat workspace when a paper was opened from a
-      // context chip. Reader navigation changes the document surface, while
-      // the conversation remains owned by the paper where the chat started.
-      if (!body.contains(host)) {
-        body.textContent = "";
-        body.appendChild(host);
-        host.style.display = "flex";
-      }
-      if (isPendingNavigation) {
-        // Bootstrap the destination tab with the source conversation owner.
-        // Paper 2 is only the active reading document and must not become the
-        // fixed Paper 1 conversation.
-        const ownerItem = pendingNavigation.ownerItem;
-        const { bootstrapSharedReaderPanel } = await import("./readerPanel");
-        await bootstrapSharedReaderPanel(win, host, ownerItem, {
-          workspaceOwner: ownerItem,
+      await bootstrapSharedReaderPanel(
+        win,
+        body as HTMLElement,
+        conversationOwner,
+        {
+          workspaceOwner: conversationOwner,
           activeAttachmentId: Number(readerItem.id) || null,
-        });
-        // Keep the transaction until Reader.open() has returned and supplied
-        // the destination tab id. The first async render can happen before
-        // that point, so clearing it here would make a later render initialize
-        // Paper 2 as a new Paper 1.
-        const completedWorkspace = getReaderChatWorkspaceForHost(win, host);
-        clearPendingReaderNavigationIfTarget(
-          win,
-          completedWorkspace?.activeTabId,
-          Number(readerItem.id),
-        );
-        return;
-      }
+        },
+      );
 
-      const { bootstrapSharedReaderPanel } = await import("./readerPanel");
-      await bootstrapSharedReaderPanel(win, host, readerItem, {
-        activeAttachmentId: Number(readerItem.id) || null,
-      });
+      // The conversation owner is now stored on this exact body workspace.
+      // Clearing the one-shot navigation marker cannot affect another tab.
+      if (isNavigationTarget) {
+        setPendingReaderNavigation(win, null);
+      }
     },
     onToggle: ({ body, event, item, tabType }) => {
       if (tabType !== "library") return;
@@ -516,23 +403,13 @@ export function registerReaderSelectionTracking() {
           return;
         }
         try {
-          let preferredPanelRoot: HTMLDivElement | null = null;
-          const readerWin = (event.doc.defaultView?.top ||
-            null) as Window | null;
-          if (readerWin && item) {
-            try {
-              const host = getSharedReaderPanelHostForItem(readerWin, item);
-              await bootstrapSharedReaderPanel(readerWin, host, item);
-              preferredPanelRoot = host.querySelector(
-                "#llm-main",
-              ) as HTMLDivElement | null;
-            } catch (err) {
-              ztoolkit.log(
-                "LLM: Add Text popup reader panel bootstrap failed",
-                err,
-              );
-            }
-          }
+          // The Reader section body is owned by ItemPaneManager. Do not create
+          // a second panel from a text-selection popup; use the panel Zotero
+          // has already rendered for this document.
+          const preferredPanelRoot =
+            event.doc.defaultView?.top?.document?.querySelector(
+              "#llm-main",
+            ) as HTMLDivElement | null;
 
           const docs = new Set<Document>();
           const pushDoc = (doc?: Document | null) => {

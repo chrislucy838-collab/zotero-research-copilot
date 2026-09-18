@@ -1,5 +1,10 @@
 ## What's changed
 
+- Replaced the Reader panel host model: the plugin no longer moves or reuses a chat DOM host across Reader tabs. Each Zotero ItemPaneManager body now owns its own rendering lifecycle, avoiding duplicate Context Pane controls and the double-arrow artifact in the conversation index.
+- Made each Reader body the authoritative workspace key instead of relying on the globally selected tab during asynchronous rendering.
+- Fixed existing Paper 2 tabs: when Zotero selects an already-open target tab, its chat body now consumes the Paper 1 navigation owner before the marker is cleared.
+- Kept Paper 2 as a temporary blue current-reading chip and Paper 1 as the persistent red conversation owner.
+
 - Fixed Reader host lifecycle races that could reinitialize a destination tab with Paper 2 as the conversation owner. Paper 1 remains the conversation owner during existing-tab and new-tab navigation.
 - Added an explicit temporary blue Paper 2 chip for the active Reader document, including the collapsed/expanded paper list. It is display-only and never enters Paper 1's persisted context.
 - Kept the Paper 1 fixed chip red across Reader navigation and return trips.
@@ -50,6 +55,11 @@
 - Verified the complete unit test suite and production XPI build.
 
 ## 更新内容
+
+- 替换 Reader 面板宿主模型：插件不再跨 Reader 标签页搬运或复用聊天 DOM host。每个 Zotero ItemPaneManager body 独立拥有自己的渲染生命周期，避免 Context Pane 控件重复与对话索引双箭头残影。
+- Reader 异步渲染改为以当前 body 作为唯一工作区键，不再依赖全局已选标签页。
+- 修复 Paper 2 已有标签页：Zotero 选中已打开的目标标签时，该 body 会先消费 Paper 1 的导航 owner，再清除一次性标记。
+- Paper 2 继续只是临时蓝色当前阅读条目，Paper 1 继续是持久红色对话 owner。
 
 - 修复 Reader host 生命周期时序问题：目标标签页初始化时不再错误地将 Paper 2 设为对话 owner；已有和新建标签页导航都保持 Paper 1 为对话 owner。
 - 为当前 Reader 文档增加明确的临时蓝色 Paper 2 条目，普通显示和折叠展开列表均可见；它只用于显示和导航，不会进入 Paper 1 的持久化上下文。

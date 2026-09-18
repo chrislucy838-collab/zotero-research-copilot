@@ -222,10 +222,19 @@ export type ReaderChatWorkspaceState = {
   activeTabId: string | null;
 };
 
-/** The chat workspaces are scoped to Reader tabs, not only the main window. */
+/**
+ * Reader sections are owned by ItemPaneManager bodies. Keep the direct body
+ * lookup authoritative because Zotero can change the globally selected tab
+ * before an asynchronous section callback runs. The tab map remains only as a
+ * compatibility lookup for callers that do not have a body reference.
+ */
 const readerChatWorkspacesByWindow = new WeakMap<
   Window,
   Map<string, ReaderChatWorkspaceState>
+>();
+const readerChatWorkspacesByHostByWindow = new WeakMap<
+  Window,
+  WeakMap<HTMLElement, ReaderChatWorkspaceState>
 >();
 
 export function getCurrentReaderTabId(win: Window): string {
@@ -258,6 +267,17 @@ function getReaderWorkspaceMap(
   return map;
 }
 
+function getReaderWorkspaceHostMap(
+  win: Window,
+): WeakMap<HTMLElement, ReaderChatWorkspaceState> {
+  let map = readerChatWorkspacesByHostByWindow.get(win);
+  if (!map) {
+    map = new WeakMap();
+    readerChatWorkspacesByHostByWindow.set(win, map);
+  }
+  return map;
+}
+
 export function setReaderChatWorkspace(
   win: Window,
   state: ReaderChatWorkspaceState,
@@ -265,6 +285,7 @@ export function setReaderChatWorkspace(
   const tabId = `${state.activeTabId || getCurrentReaderTabId(win)}`;
   state.activeTabId = tabId;
   getReaderWorkspaceMap(win).set(tabId, state);
+  getReaderWorkspaceHostMap(win).set(state.host, state);
 }
 
 export function getReaderChatWorkspace(
@@ -284,10 +305,7 @@ export function getReaderChatWorkspaceForHost(
   win: Window,
   host: HTMLElement,
 ): ReaderChatWorkspaceState | null {
-  for (const workspace of getReaderWorkspaceMap(win).values()) {
-    if (workspace.host === host) return workspace;
-  }
-  return null;
+  return getReaderWorkspaceHostMap(win).get(host) || null;
 }
 
 export type PendingReaderNavigation = {
