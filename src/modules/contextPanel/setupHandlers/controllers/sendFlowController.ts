@@ -37,6 +37,8 @@ type SendFlowControllerDeps = {
   inputBox: HTMLTextAreaElement;
   isPanelGenerating: () => boolean;
   getEvidenceMode?: () => boolean;
+  getReasoningConfig?: () =>
+    import("../../../../utils/llmClient").ReasoningConfig | undefined;
   getItem: () => Zotero.Item | null;
   closeSlashMenu: () => void;
   closePaperPicker: () => void;
@@ -112,6 +114,7 @@ type SendFlowControllerDeps = {
     attachments?: ChatAttachment[],
     onContextEstimate?: (tokens: number) => void,
     evidenceMode?: boolean,
+    reasoning?: import("../../../../utils/llmClient").ReasoningConfig,
   ) => Promise<void>;
   clearSelectedImageState: (itemId: number) => void;
   clearSelectedPaperState: (itemId: number) => void;
@@ -334,6 +337,7 @@ export function createSendFlowController(deps: SendFlowControllerDeps): {
       selectedFiles.length ? selectedFiles : undefined,
       deps.onContextEstimate,
       deps.getEvidenceMode?.() === true,
+      deps.getReasoningConfig?.(),
     );
     const win = deps.body.ownerDocument?.defaultView;
     if (win) {

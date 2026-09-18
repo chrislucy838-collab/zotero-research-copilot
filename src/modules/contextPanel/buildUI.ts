@@ -985,6 +985,22 @@ function buildUI(body: Element, item?: Zotero.Item | null) {
     disabled: !hasItem,
   });
 
+  const {
+    slot: reasoningDropdown,
+    button: reasoningBtn,
+    menu: reasoningMenu,
+  } = createActionDropdown(doc, {
+    slotId: "llm-reasoning-dropdown",
+    slotClassName: "llm-reasoning-dropdown",
+    buttonId: "llm-reasoning-toggle",
+    buttonClassName:
+      "llm-shortcut-btn llm-action-btn llm-action-btn-secondary llm-reasoning-btn",
+    buttonText: "Auto",
+    menuId: "llm-reasoning-menu",
+    menuClassName: "llm-reasoning-menu",
+    disabled: !hasItem,
+  });
+
   const sendBtn = createElement(
     doc,
     "button",
@@ -1056,6 +1072,7 @@ function buildUI(body: Element, item?: Zotero.Item | null) {
     selectTextSlot,
     clearPapersSlot,
     modelDropdown,
+    reasoningDropdown,
   );
   actionsRight.append(contextUsageSlot, sendSlot);
   actionsRow.append(actionsLeft, actionsRight);

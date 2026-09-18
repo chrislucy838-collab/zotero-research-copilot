@@ -1051,6 +1051,7 @@ const OPENAI_EFFORT_ORDER: OpenAIReasoningEffort[] = [
   "medium",
   "high",
   "xhigh",
+  "max",
 ];
 
 const REASONING_LEVEL_ALIAS_MAP: Partial<

@@ -1,5 +1,10 @@
 ## What's changed
 
+- Added a model-aware reasoning-strength selector beside the model selector with `Auto`, `Low`, `Medium`, `High`, `XHigh`, and `Max` where the selected model supports them.
+- Reasoning levels are resolved from the existing provider/model profiles rather than advertised universally. For example, GPT-5.2 exposes `XHigh` and `Max`, while a regular GPT-5 profile does not expose `Max`.
+- The selected level is sent through the existing provider-specific reasoning payload path. For OpenAI Responses, `Max` maps to `reasoning.effort: "max"`.
+- Added regression coverage for model-specific availability and the actual `Max` request payload.
+
 - Added an optional per-conversation Web Search toggle beside the paper evidence toggle.
 - When enabled with the OpenAI Responses API, requests include the native `web_search` tool so the model can retrieve current public-web information before answering.
 - Web Search changes only the model request. The assistant reply remains ordinary text; no web-source icons, inline hyperlinks, source cards, or web-citation persistence are added.

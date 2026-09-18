@@ -20,10 +20,17 @@ describe("reasoningProfiles", function () {
       assert.isTrue(supportsReasoningForModel("openai", "o3-mini"));
     });
 
-    it("gpt-5.2 profile should include xhigh level", function () {
+    it("gpt-5.2 profile should include xhigh and max levels", function () {
       const options = getRuntimeReasoningOptionsForModel("openai", "gpt-5.2");
       const levels = options.map((o) => o.level);
       assert.include(levels, "xhigh");
+      assert.include(levels, "max");
+    });
+
+    it("gpt-5 profile should not advertise max", function () {
+      const options = getRuntimeReasoningOptionsForModel("openai", "gpt-5");
+      const levels = options.map((o) => o.level);
+      assert.notInclude(levels, "max");
     });
 
     it("gpt-5 should have default level", function () {

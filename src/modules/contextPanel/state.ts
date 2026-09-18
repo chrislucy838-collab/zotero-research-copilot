@@ -68,6 +68,8 @@ export const loadingConversationTasks = new Map<number, Promise<void>>();
 export const selectedModelCache = new Map<number, string>();
 /** Parallel cache: tracks which provider label the selected model belongs to. */
 export const selectedModelProviderCache = new Map<number, string>();
+/** Per-item selected reasoning level for the active model. */
+export const selectedReasoningLevelCache = new Map<number, string>();
 
 export const documentTextCache = new Map<number, DocumentTextContext>();
 export const documentTextLoadingTasks = new Map<number, Promise<void>>();

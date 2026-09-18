@@ -158,6 +158,33 @@ describe("llmClient payload parameter policy", function () {
     assert.equal(seenUrl, "https://api.example.test/v1/responses");
   });
 
+  it("sends max reasoning effort for a model profile that supports Max", async function () {
+    let seenPayload: Record<string, unknown> | null = null;
+    globalThis.fetch = (async (
+      _url: string | URL | Request,
+      init?: RequestInit,
+    ) => {
+      seenPayload = JSON.parse(String(init?.body || "{}"));
+      return buildResponsesSseResponse("OK");
+    }) as typeof globalThis.fetch;
+
+    await llmClient.callLLMStream(
+      {
+        prompt: "Think deeply",
+        model: "gpt-5.2",
+        apiBase: "https://api.example.test/v1/responses",
+        apiKey: "test-key",
+        reasoning: { provider: "openai", level: "max" },
+      },
+      () => undefined,
+    );
+
+    assert.deepEqual(seenPayload?.reasoning, {
+      summary: "detailed",
+      effort: "max",
+    });
+  });
+
   it("adds only the native web_search tool when enabled for Responses API", async function () {
     let seenPayload: Record<string, unknown> | null = null;
     globalThis.fetch = (async (

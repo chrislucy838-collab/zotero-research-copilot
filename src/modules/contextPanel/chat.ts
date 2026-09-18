@@ -24,6 +24,7 @@ import {
   callLLM,
   ChatFileAttachment,
   ChatMessage,
+  type ReasoningConfig,
 } from "../../utils/llmClient";
 import {
   PERSISTED_HISTORY_LIMIT,
@@ -3247,6 +3248,7 @@ export async function sendQuestion(
   attachments?: ChatAttachment[],
   onContextEstimate?: (tokens: number) => void,
   evidenceMode = false,
+  reasoning?: ReasoningConfig,
 ) {
   const ui = getPanelRequestUI(body);
   const i18n = getPanelI18n();
@@ -3522,6 +3524,7 @@ export async function sendQuestion(
         apiKey: effectiveRequestConfig.apiKey,
         temperature: effectiveRequestConfig.advanced?.temperature,
         maxTokens: effectiveRequestConfig.advanced?.maxTokens,
+        reasoning,
         webSearch: getWebSearchMode(conversationKey),
         onContextEstimate,
       },

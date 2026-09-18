@@ -3,9 +3,9 @@ const REASONING_PROFILE_TABLE_VERSION = 6;
 export type ReasoningProvider =
   "openai" | "gemini" | "deepseek" | "kimi" | "qwen" | "grok" | "anthropic";
 export type ReasoningLevel =
-  "default" | "minimal" | "low" | "medium" | "high" | "xhigh";
+  "default" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 export type OpenAIReasoningEffort =
-  "default" | "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
+  "default" | "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 export type GeminiThinkingParam = "thinking_level" | "thinking_budget";
 export type GeminiThinkingValue = "low" | "medium" | "high" | number;
 export type GeminiReasoningOption = {
@@ -138,6 +138,7 @@ const OPENAI_GPT52_PROFILE: ProviderProfile = {
     option("medium", "medium"),
     option("high", "high"),
     option("xhigh", "xhigh"),
+    option("max", "max"),
   ],
   openai: {
     defaultEffort: "default",
@@ -147,6 +148,7 @@ const OPENAI_GPT52_PROFILE: ProviderProfile = {
       medium: "medium",
       high: "high",
       xhigh: "xhigh",
+      max: "max",
     },
   },
 };
@@ -471,6 +473,7 @@ const OPENAI_EFFORT_ORDER: OpenAIReasoningEffort[] = [
   "medium",
   "high",
   "xhigh",
+  "max",
 ];
 
 function normalizeModelName(modelName?: string): string {
