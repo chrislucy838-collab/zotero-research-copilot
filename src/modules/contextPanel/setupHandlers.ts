@@ -7460,6 +7460,10 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
       e.preventDefault();
       e.stopPropagation();
       if (!reasoningMenu || reasoningBtn.disabled) return;
+      if (isFloatingMenuOpen(reasoningMenu)) {
+        setFloatingMenuOpen(reasoningMenu, "llm-reasoning-menu-open", false);
+        return;
+      }
       closeModelMenu();
       rebuildReasoningMenu();
       positionFloatingMenu(body, reasoningMenu, reasoningBtn);

@@ -1,5 +1,7 @@
 ## What's changed
 
+- Fixed the reasoning-strength dropdown trigger so clicking its arrow again now closes the open list, matching the model dropdown toggle behavior.
+
 - Added the GPT-5.6 family to the OpenAI reasoning profile. `gpt-5.6`, `gpt-5.6-terra`, and `gpt-5.6-luna` now expose `Auto`, `Low`, `Medium`, `High`, `XHigh`, and `Max`.
 - GPT-5.6 requests keep the default OpenAI `standard` reasoning mode by omitting `reasoning.mode`; only the selected `reasoning.effort` is sent.
 
