@@ -1,5 +1,8 @@
 ## What's changed
 
+- Fixed the release pipeline to validate the XPI archive and its manifest before publishing. A missing or empty `manifest.json` now stops the workflow instead of producing an installable-looking but invalid asset.
+- Published the reasoning-menu toggle fix together with the validated release artifact.
+
 - Fixed the reasoning-strength dropdown trigger so clicking its arrow again now closes the open list, matching the model dropdown toggle behavior.
 
 - Added the GPT-5.6 family to the OpenAI reasoning profile. `gpt-5.6`, `gpt-5.6-terra`, and `gpt-5.6-luna` now expose `Auto`, `Low`, `Medium`, `High`, `XHigh`, and `Max`.

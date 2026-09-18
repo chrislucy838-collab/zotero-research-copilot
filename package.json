@@ -1,7 +1,7 @@
 {
   "name": "zotero-research-copilot",
   "type": "module",
-  "version": "0.10.33",
+  "version": "0.10.34",
   "description": "A local-first AI research assistant for Zotero using an OpenAI-compatible gateway",
   "config": {
     "addonName": "Zotero Research Copilot",
@@ -26,6 +26,7 @@
     "lint:check": "prettier --check . && eslint .",
     "lint:fix": "prettier --write . && eslint . --fix",
     "release": "zotero-plugin release",
+    "validate:xpi": "node scripts/validate-xpi.mjs",
     "test": "zotero-plugin test",
     "test:unit": "npx tsx node_modules/mocha/bin/mocha --timeout 10000 --ignore test/startup.test.ts --ignore test/oauthCli*.test.ts --ignore test/oauthModelSelection.test.ts --ignore test/selectionTranslate*.test.ts --ignore test/pdfTranslator/**/*.test.ts --ignore test/customEndpointSettings.test.ts \"test/**/*.test.ts\"",
     "update-deps": "npm update --save"

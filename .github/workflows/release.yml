@@ -30,7 +30,36 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Publish release assets
+      - name: Validate XPI before publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          xpi=".scaffold/build/Zotero-Research-Copilot-${version}.xpi"
+          npm run validate:xpi -- "$xpi" "$version"
+
+      - name: Publish validated XPI and update manifest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run release -- --yes
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          xpi=".scaffold/build/Zotero-Research-Copilot-${version}.xpi"
+          update_json=".scaffold/build/update.json"
+          test -s "$xpi"
+          test -s "$update_json"
+          gh release create "${GITHUB_REF_NAME}" "$xpi" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Release ${GITHUB_REF_NAME}" \
+            --generate-notes
+          if gh release view release --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload release "$update_json" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            gh release create release "$update_json" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Release Manifest" \
+              --prerelease
+          fi
