@@ -27,6 +27,7 @@ export type PanelDomRefs = {
   screenshotBtn: HTMLButtonElement | null;
   uploadBtn: HTMLButtonElement | null;
   evidenceModeBtn: HTMLButtonElement | null;
+  webSearchModeBtn: HTMLButtonElement | null;
   newChatBtn: HTMLButtonElement | null;
   uploadInput: HTMLInputElement | null;
   slashMenu: HTMLDivElement | null;
@@ -153,6 +154,9 @@ export function getPanelDomRefs(body: Element): PanelDomRefs {
     ) as HTMLButtonElement | null,
     evidenceModeBtn: body.querySelector(
       "#llm-evidence-mode",
+    ) as HTMLButtonElement | null,
+    webSearchModeBtn: body.querySelector(
+      "#llm-web-search-mode",
     ) as HTMLButtonElement | null,
     newChatBtn: body.querySelector("#llm-new-chat") as HTMLButtonElement | null,
     uploadInput: body.querySelector(

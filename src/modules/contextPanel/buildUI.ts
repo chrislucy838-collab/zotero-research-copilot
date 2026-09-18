@@ -1031,9 +1031,26 @@ function buildUI(body: Element, item?: Zotero.Item | null) {
   const evidenceModeSlot = createElement(doc, "div", "llm-action-slot");
   evidenceModeSlot.appendChild(evidenceModeBtn);
 
-  // Order: evidence mode, 📎 upload/attach, ✂️ screenshot, Add Text, Model
+  const webSearchModeBtn = createElement(
+    doc,
+    "button",
+    "llm-shortcut-btn llm-action-btn llm-action-btn-secondary llm-web-search-mode-btn llm-action-icon-only",
+    {
+      id: "llm-web-search-mode",
+      type: "button",
+      textContent: "",
+      title: "Web search: off",
+    },
+  );
+  webSearchModeBtn.setAttribute("aria-label", "Web search: off");
+  webSearchModeBtn.setAttribute("aria-pressed", "false");
+  const webSearchModeSlot = createElement(doc, "div", "llm-action-slot");
+  webSearchModeSlot.appendChild(webSearchModeBtn);
+
+  // Order: evidence mode, web search, 📎 upload/attach, ✂️ screenshot, Add Text, Model
   actionsLeft.append(
     evidenceModeSlot,
+    webSearchModeSlot,
     uploadSlot,
     screenshotSlot,
     selectTextSlot,

@@ -6131,6 +6131,8 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
 
 .llm-evidence-mode-btn,
 .llm-evidence-mode-btn.llm-action-icon-only,
+.llm-web-search-mode-btn,
+.llm-web-search-mode-btn.llm-action-icon-only,
 .llm-new-chat-btn,
 .llm-new-chat-btn.llm-action-icon-only {
   display: inline-flex;
@@ -6154,6 +6156,7 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
 
 .llm-upload-file-btn::before,
 .llm-evidence-mode-btn::before,
+.llm-web-search-mode-btn::before,
 .llm-new-chat-btn::before,
 .llm-clear-papers-btn::before,
 .llm-select-text-btn::before,
@@ -6203,6 +6206,22 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
   color: var(--fill-tertiary, #8a8f98);
 }
 
+.llm-web-search-mode-btn::before {
+  mask-image: url("icons/action-web-search.svg");
+  -webkit-mask-image: url("icons/action-web-search.svg");
+  width: 20px;
+  height: 20px;
+  color: var(--fill-tertiary, #8a8f98);
+}
+
+.llm-web-search-mode-btn.is-enabled::before {
+  color: var(--color-accent, #3584e4);
+}
+
+.llm-web-search-mode-btn.is-disabled::before {
+  color: var(--fill-tertiary, #8a8f98);
+}
+
 .llm-new-chat-btn::before {
   mask-image: url("icons/action-new-chat.svg");
   -webkit-mask-image: url("icons/action-new-chat.svg");
@@ -6226,6 +6245,7 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
 }
 
 .llm-evidence-mode-btn:hover:not(:disabled),
+.llm-web-search-mode-btn:hover:not(:disabled),
 .llm-clear-papers-btn:hover:not(:disabled),
 .llm-select-text-btn:hover:not(:disabled),
 .llm-screenshot-btn:hover:not(:disabled),
@@ -6234,6 +6254,7 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
 .llm-model-btn:hover:not(:disabled),
 .llm-reasoning-btn:hover:not(:disabled),
 .llm-evidence-mode-btn:focus-visible,
+.llm-web-search-mode-btn:focus-visible,
 .llm-clear-papers-btn:focus-visible,
 .llm-select-text-btn:focus-visible,
 .llm-screenshot-btn:focus-visible,

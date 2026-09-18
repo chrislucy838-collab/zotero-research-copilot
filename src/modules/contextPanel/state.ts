@@ -217,6 +217,8 @@ export const draftInputCache = new Map<number, string>();
 export const activePaperConversationByItem = new Map<number, number>();
 /** Per-conversation toggle for source-backed evidence citations in replies. */
 export const evidenceModeByConversation = new Map<number, boolean>();
+/** Per-conversation toggle for OpenAI Responses web search. */
+export const webSearchModeByConversation = new Map<number, boolean>();
 
 export function getEvidenceMode(conversationKey: number): boolean {
   return evidenceModeByConversation.get(conversationKey) === true;
@@ -232,4 +234,23 @@ export function setEvidenceMode(
 ): void {
   if (!Number.isFinite(conversationKey) || conversationKey <= 0) return;
   evidenceModeByConversation.set(Math.floor(conversationKey), enabled === true);
+}
+
+export function getWebSearchMode(conversationKey: number): boolean {
+  return webSearchModeByConversation.get(conversationKey) === true;
+}
+
+export function hasWebSearchMode(conversationKey: number): boolean {
+  return webSearchModeByConversation.has(Math.floor(conversationKey));
+}
+
+export function setWebSearchMode(
+  conversationKey: number,
+  enabled: boolean,
+): void {
+  if (!Number.isFinite(conversationKey) || conversationKey <= 0) return;
+  webSearchModeByConversation.set(
+    Math.floor(conversationKey),
+    enabled === true,
+  );
 }

@@ -34,6 +34,7 @@ export type ContextRefsJson = {
   compactedSummary?: string;
   compactionBoundary?: string;
   evidenceMode?: boolean;
+  webSearchMode?: boolean;
   evidenceBlocks?: EvidenceBlock[];
 };
 

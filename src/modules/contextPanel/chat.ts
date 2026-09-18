@@ -73,6 +73,9 @@ import {
   getEvidenceMode,
   hasEvidenceMode,
   setEvidenceMode,
+  getWebSearchMode,
+  hasWebSearchMode,
+  setWebSearchMode,
 } from "./state";
 import {
   sanitizeText,
@@ -1708,6 +1711,9 @@ function buildContextRefsSnapshot(
   if (hasEvidenceMode(conversationKey)) {
     refs.evidenceMode = getEvidenceMode(conversationKey);
   }
+  if (hasWebSearchMode(conversationKey)) {
+    refs.webSearchMode = getWebSearchMode(conversationKey);
+  }
   // Persist Zone B summary if available.
   const cachedZoneBSummary = zoneBSummaryCache.get(conversationKey);
   if (cachedZoneBSummary) {
@@ -1784,6 +1790,9 @@ function restoreContextPoolFromStoredMessages(
   conversationContextPool.set(conversationKey, pool);
   if (typeof latestContextRefs.evidenceMode === "boolean") {
     setEvidenceMode(conversationKey, latestContextRefs.evidenceMode);
+  }
+  if (typeof latestContextRefs.webSearchMode === "boolean") {
+    setWebSearchMode(conversationKey, latestContextRefs.webSearchMode);
   }
 
   // Restore Zone B summary if persisted.
@@ -2743,6 +2752,7 @@ export async function editUserMessageAndRetry(
         apiKey: effectiveRequestConfig.apiKey,
         temperature: effectiveRequestConfig.advanced?.temperature,
         maxTokens: effectiveRequestConfig.advanced?.maxTokens,
+        webSearch: getWebSearchMode(conversationKey),
       },
       (delta) => {
         streamedAnswer += sanitizeText(delta);
@@ -3105,6 +3115,7 @@ export async function retryLatestAssistantResponse(
         apiKey: effectiveRequestConfig.apiKey,
         temperature: effectiveRequestConfig.advanced?.temperature,
         maxTokens: effectiveRequestConfig.advanced?.maxTokens,
+        webSearch: getWebSearchMode(conversationKey),
       },
       (delta) => {
         streamedAnswer += sanitizeText(delta);
@@ -3511,6 +3522,7 @@ export async function sendQuestion(
         apiKey: effectiveRequestConfig.apiKey,
         temperature: effectiveRequestConfig.advanced?.temperature,
         maxTokens: effectiveRequestConfig.advanced?.maxTokens,
+        webSearch: getWebSearchMode(conversationKey),
         onContextEstimate,
       },
       (delta) => {

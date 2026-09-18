@@ -50,6 +50,8 @@ import {
   activePaperConversationByItem,
   getEvidenceMode,
   setEvidenceMode,
+  getWebSearchMode,
+  setWebSearchMode,
 } from "./state";
 import {
   sanitizeText,
@@ -319,6 +321,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     screenshotBtn,
     uploadBtn,
     evidenceModeBtn,
+    webSearchModeBtn,
     newChatBtn,
     uploadInput,
     slashMenu,
@@ -619,6 +622,21 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     evidenceModeBtn.setAttribute("aria-label", title);
   };
 
+  const updateWebSearchModeButton = () => {
+    if (!webSearchModeBtn) return;
+    const enabled =
+      conversationKey !== null && getWebSearchMode(conversationKey);
+    webSearchModeBtn.classList.toggle("is-enabled", enabled);
+    webSearchModeBtn.classList.toggle("is-disabled", !enabled);
+    webSearchModeBtn.style.color = enabled
+      ? "var(--color-accent, #3584e4)"
+      : "var(--fill-tertiary, #8a8f98)";
+    webSearchModeBtn.setAttribute("aria-pressed", enabled ? "true" : "false");
+    const title = enabled ? "Web search: on" : "Web search: off";
+    webSearchModeBtn.title = title;
+    webSearchModeBtn.setAttribute("aria-label", title);
+  };
+
   const syncConversationIdentity = () => {
     conversationKey = item ? getConversationKey(item) : null;
     panelRoot.dataset.itemId =
@@ -640,6 +658,7 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     }
     updateContextUsageIndicator();
     updateEvidenceModeButton();
+    updateWebSearchModeButton();
   };
   syncConversationIdentity();
   let activeEditSession: EditLatestTurnMarker | null = null;
@@ -6592,6 +6611,24 @@ export function setupHandlers(body: Element, initialItem?: Zotero.Item | null) {
     },
     editStaleStatusText: EDIT_STALE_STATUS_TEXT,
   });
+
+  if (webSearchModeBtn) {
+    webSearchModeBtn.addEventListener("click", (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (conversationKey === null) return;
+      const enabled = !getWebSearchMode(conversationKey);
+      setWebSearchMode(conversationKey, enabled);
+      updateWebSearchModeButton();
+      if (status) {
+        setStatus(
+          status,
+          enabled ? "Web search enabled" : "Web search disabled",
+          "ready",
+        );
+      }
+    });
+  }
 
   if (evidenceModeBtn) {
     evidenceModeBtn.addEventListener("click", (e: Event) => {

@@ -132,6 +132,8 @@ export type ChatParams = {
   attachments?: ChatFileAttachment[];
   /** Stable conversation identifier used by providers such as OpenCode Go. */
   sessionId?: string | number;
+  /** Enable OpenAI Responses hosted web search for this request. */
+  webSearch?: boolean;
   /** Called after the complete provider-visible message list is assembled. */
   onContextEstimate?: (tokens: number, messages: ChatMessage[]) => void;
 };
@@ -1479,6 +1481,7 @@ function createChatPayloadBuilder(params: {
   effectiveTemperature?: number;
   effectiveMaxTokens?: number;
   stream: boolean;
+  webSearch?: boolean;
 }) {
   const {
     model,
@@ -1489,6 +1492,7 @@ function createChatPayloadBuilder(params: {
     effectiveTemperature,
     effectiveMaxTokens,
     stream,
+    webSearch,
   } = params;
   return (reasoningOverride: ReasoningConfig | undefined) => {
     const reasoningPayload = buildReasoningPayload(
@@ -1518,6 +1522,9 @@ function createChatPayloadBuilder(params: {
           ...buildTokenParam(model, effectiveMaxTokens),
         };
 
+    if (webSearch && useResponses) {
+      (payload as Record<string, unknown>).tools = [{ type: "web_search" }];
+    }
     if (stream) {
       return {
         ...payload,
@@ -2033,6 +2040,11 @@ export async function callLLM(params: ChatParams): Promise<string> {
     });
   }
   const useResponses = isResponsesApiType(apiType) || isResponsesBase(apiBase);
+  if (params.webSearch && !useResponses) {
+    throw new Error(
+      "联网搜索需要使用 OpenAI Responses API；当前配置不是 Responses 接口。",
+    );
+  }
   const responseFileIds = useResponses
     ? await uploadFilesForResponses({
         apiBase,
@@ -2062,6 +2074,7 @@ export async function callLLM(params: ChatParams): Promise<string> {
     effectiveTemperature,
     effectiveMaxTokens,
     stream: false,
+    webSearch: params.webSearch,
   });
   const res = await postWithReasoningFallback({
     url,
@@ -2310,6 +2323,11 @@ export async function callLLMStream(
     return finishNormalizedOutput(nativeText);
   }
   const useResponses = isResponsesApiType(apiType) || isResponsesBase(apiBase);
+  if (params.webSearch && !useResponses) {
+    throw new Error(
+      "联网搜索需要使用 OpenAI Responses API；当前配置不是 Responses 接口。",
+    );
+  }
   const responseFileIds = useResponses
     ? await uploadFilesForResponses({
         apiBase,
@@ -2339,6 +2357,7 @@ export async function callLLMStream(
     effectiveTemperature,
     effectiveMaxTokens,
     stream: true,
+    webSearch: params.webSearch,
   });
   const buildEffectivePayload = (
     reasoningOverride: ReasoningConfig | undefined,

@@ -59,6 +59,7 @@ export interface Message {
     fileAttachmentIds?: string[];
     compactedSummary?: string;
     evidenceMode?: boolean;
+    webSearchMode?: boolean;
     evidenceBlocks?: import("./evidence").EvidenceBlock[];
   };
   streaming?: boolean;

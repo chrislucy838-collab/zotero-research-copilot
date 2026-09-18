@@ -1,5 +1,10 @@
 ## What's changed
 
+- Added an optional per-conversation Web Search toggle beside the paper evidence toggle.
+- When enabled with the OpenAI Responses API, requests include the native `web_search` tool so the model can retrieve current public-web information before answering.
+- Web Search changes only the model request. The assistant reply remains ordinary text; no web-source icons, inline hyperlinks, source cards, or web-citation persistence are added.
+- The toggle is rejected clearly when the configured request is not an OpenAI Responses API request.
+
 - Added an evidence mode toggle in the bottom-left action slot, replacing the former bottom new-chat button. The existing top-right new-chat control is unchanged.
 - Evidence mode is gray when disabled and blue when enabled, and its state is kept per conversation.
 - When enabled, all papers in the current conversation context share one evidence pool. Paper-backed claims receive precise `[Paper N, p. X]` citations that become clickable book icons in the reply.

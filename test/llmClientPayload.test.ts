@@ -158,6 +158,55 @@ describe("llmClient payload parameter policy", function () {
     assert.equal(seenUrl, "https://api.example.test/v1/responses");
   });
 
+  it("adds only the native web_search tool when enabled for Responses API", async function () {
+    let seenPayload: Record<string, unknown> | null = null;
+    globalThis.fetch = (async (
+      _url: string | URL | Request,
+      init?: RequestInit,
+    ) => {
+      seenPayload = JSON.parse(String(init?.body || "{}"));
+      return buildResponsesSseResponse("Search result");
+    }) as typeof globalThis.fetch;
+
+    const result = await llmClient.callLLMStream(
+      {
+        prompt: "What happened today?",
+        model: "gpt-5.1",
+        apiBase: "https://api.example.test/v1/responses",
+        apiKey: "test-key",
+        webSearch: true,
+      },
+      () => undefined,
+    );
+
+    assert.equal(result, "Search result");
+    assert.deepEqual(seenPayload?.tools, [{ type: "web_search" }]);
+  });
+
+  it("does not add web_search to Chat Completions requests", async function () {
+    globalThis.fetch = (async (
+      _url: string | URL | Request,
+      _init?: RequestInit,
+    ) => buildOpenAICompatSseResponse("OK")) as typeof globalThis.fetch;
+
+    let error: Error | undefined;
+    try {
+      await llmClient.callLLMStream(
+        {
+          prompt: "Hello",
+          model: "gpt-4o-mini",
+          apiBase: "https://api.example.test/v1/chat/completions",
+          apiKey: "test-key",
+          webSearch: true,
+        },
+        () => undefined,
+      );
+    } catch (caught) {
+      error = caught as Error;
+    }
+    assert.match(error?.message || "", /Responses API/);
+  });
+
   it("omits max_output_tokens for Responses API when not provided", async function () {
     let seenPayload: Record<string, unknown> | null = null;
     globalThis.fetch = (async (
