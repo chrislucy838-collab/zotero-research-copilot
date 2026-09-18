@@ -20,12 +20,19 @@ describe("reasoningProfiles", function () {
       assert.isTrue(supportsReasoningForModel("openai", "o3-mini"));
     });
 
-    it("gpt-5.2 profile should include xhigh and max levels", function () {
-      const options = getRuntimeReasoningOptionsForModel("openai", "gpt-5.2");
-      const levels = options.map((o) => o.level);
-      assert.include(levels, "xhigh");
-      assert.include(levels, "max");
-    });
+    for (const model of [
+      "gpt-5.2",
+      "gpt-5.6",
+      "gpt-5.6-terra",
+      "gpt-5.6-luna",
+    ]) {
+      it(`${model} profile should include xhigh and max levels`, function () {
+        const options = getRuntimeReasoningOptionsForModel("openai", model);
+        const levels = options.map((o) => o.level);
+        assert.include(levels, "xhigh");
+        assert.include(levels, "max");
+      });
+    }
 
     it("gpt-5 profile should not advertise max", function () {
       const options = getRuntimeReasoningOptionsForModel("openai", "gpt-5");

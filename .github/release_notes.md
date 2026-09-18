@@ -1,5 +1,8 @@
 ## What's changed
 
+- Added the GPT-5.6 family to the OpenAI reasoning profile. `gpt-5.6`, `gpt-5.6-terra`, and `gpt-5.6-luna` now expose `Auto`, `Low`, `Medium`, `High`, `XHigh`, and `Max`.
+- GPT-5.6 requests keep the default OpenAI `standard` reasoning mode by omitting `reasoning.mode`; only the selected `reasoning.effort` is sent.
+
 - Added a model-aware reasoning-strength selector beside the model selector with `Auto`, `Low`, `Medium`, `High`, `XHigh`, and `Max` where the selected model supports them.
 - Reasoning levels are resolved from the existing provider/model profiles rather than advertised universally. For example, GPT-5.2 exposes `XHigh` and `Max`, while a regular GPT-5 profile does not expose `Max`.
 - The selected level is sent through the existing provider-specific reasoning payload path. For OpenAI Responses, `Max` maps to `reasoning.effort: "max"`.

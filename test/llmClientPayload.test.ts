@@ -171,7 +171,7 @@ describe("llmClient payload parameter policy", function () {
     await llmClient.callLLMStream(
       {
         prompt: "Think deeply",
-        model: "gpt-5.2",
+        model: "gpt-5.6-terra",
         apiBase: "https://api.example.test/v1/responses",
         apiKey: "test-key",
         reasoning: { provider: "openai", level: "max" },
@@ -183,6 +183,7 @@ describe("llmClient payload parameter policy", function () {
       summary: "detailed",
       effort: "max",
     });
+    assert.notProperty(seenPayload?.reasoning as object, "mode");
   });
 
   it("adds only the native web_search tool when enabled for Responses API", async function () {

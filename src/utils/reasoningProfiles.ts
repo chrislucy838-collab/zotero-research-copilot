@@ -153,6 +153,30 @@ const OPENAI_GPT52_PROFILE: ProviderProfile = {
   },
 };
 
+const OPENAI_GPT56_PROFILE: ProviderProfile = {
+  supportsReasoning: true,
+  defaultLevel: "default",
+  options: [
+    option("default", "default"),
+    option("low", "low"),
+    option("medium", "medium"),
+    option("high", "high"),
+    option("xhigh", "xhigh"),
+    option("max", "max"),
+  ],
+  openai: {
+    defaultEffort: "default",
+    levelToEffort: {
+      default: null,
+      low: "low",
+      medium: "medium",
+      high: "high",
+      xhigh: "xhigh",
+      max: "max",
+    },
+  },
+};
+
 const GROK_3_MINI_PROFILE: ProviderProfile = {
   supportsReasoning: true,
   defaultLevel: "default",
@@ -359,6 +383,10 @@ const PROFILE_RULES: Record<
 > = {
   openai: {
     rules: [
+      {
+        match: /^gpt-5\.6(?:\b|[.-])/,
+        profile: OPENAI_GPT56_PROFILE,
+      },
       {
         match: /^gpt-5\.2(?:\b|[.-])/,
         profile: OPENAI_GPT52_PROFILE,
