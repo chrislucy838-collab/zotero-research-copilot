@@ -6,11 +6,19 @@ export type EvidenceCitation = {
   text: string;
 };
 
-const CITATION_RE =
-  /(?:\[\s*Paper\s+\d+\s*,\s*(?:p(?:age)?\.?\s*)\d+(?:\s*(?:[-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*\s*\]|(?<!\[)\bPaper\s+\d+\s*,\s*(?:p(?:age)?\.?\s*)\d+(?:\s*(?:[-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*(?:\s*\])?)/gi;
+const PAPER_PREFIX = "Paper\\s*(\\d+)\\s*[,\\uFF0C]\\s*";
+const PAGE_MARKER = "p(?:p|age|ages)?\\.?";
+const PAGE_SEQUENCE =
+  "\\d+(?:\\s*(?:[-\\u2012\\u2013\\u2014\\uFF5E]\\s*|[,，]\\s*)\\d+)*";
+const CITATION_RE = new RegExp(
+  `(?:\\[\\s*${PAPER_PREFIX}${PAGE_MARKER}\\s*${PAGE_SEQUENCE}\\s*\\]|(?<!\\[)\\b${PAPER_PREFIX}${PAGE_MARKER}\\s*${PAGE_SEQUENCE}(?:\\s*\\])?)`,
+  "gi",
+);
 
-const CITATION_DETAILS_RE =
-  /^\[*\s*Paper\s+(\d+)\s*,\s*(?:p(?:age)?\.?\s*)(\d+)((?:\s*(?:[-\u2012\u2013\u2014\uFF5E]\s*|,\s*)\d+)*)\s*\]*$/i;
+const CITATION_DETAILS_RE = new RegExp(
+  `^\\[*\\s*${PAPER_PREFIX}${PAGE_MARKER}\\s*(\\d+)((?:\\s*(?:[-\\u2012\\u2013\\u2014\\uFF5E]\\s*|[,，]\\s*)\\d+)*)\\s*\\]*$`,
+  "i",
+);
 
 type CitationMatch = {
   text: string;
@@ -168,6 +176,17 @@ function isExcludedTextNode(node: Text): boolean {
   );
 }
 
+function citationLabel(
+  paperNumber: string,
+  startPage: string,
+  endPage?: string,
+): string {
+  const paper = Math.floor(Number(paperNumber));
+  const start = Math.floor(Number(startPage));
+  const end = endPage ? Math.floor(Number(endPage)) : start;
+  return `[Paper ${paper}, p. ${start}${end !== start ? `–${end}` : ""}]`;
+}
+
 /** Turn only citations backed by reliable EvidenceBlocks into Reader links. */
 export function linkEvidenceCitations(
   root: HTMLElement,
@@ -195,6 +214,9 @@ export function linkEvidenceCitations(
     }
   }
 
+  const hasExplicitCitation = textNodes.some(
+    (textNode) => findCitationMatches(textNode.nodeValue || "").length > 0,
+  );
   let linkedCount = 0;
   for (const textNode of textNodes) {
     const text = textNode.nodeValue || "";
@@ -202,7 +224,6 @@ export function linkEvidenceCitations(
     let changed = false;
     const fragment = doc.createDocumentFragment();
     for (const match of findCitationMatches(text)) {
-      const citationText = match.text.trim();
       const matchingBlocks = getCitationBlocks(
         match.paperNumber,
         match.startPage,
@@ -212,7 +233,11 @@ export function linkEvidenceCitations(
       if (!matchingBlocks.length) continue;
       const start = match.index;
       const end = start + match.text.length;
-      const tooltipCitation = `[Paper ${Math.floor(Number(match.paperNumber))}, p. ${Math.floor(Number(match.startPage))}${match.endPage ? `–${Math.floor(Number(match.endPage))}` : ""}]`;
+      const tooltipCitation = citationLabel(
+        match.paperNumber,
+        match.startPage,
+        match.endPage,
+      );
       fragment.appendChild(doc.createTextNode(text.slice(cursor, start)));
       const anchor = doc.createElement("a") as HTMLAnchorElement;
       anchor.className = "llm-evidence-citation";
@@ -236,7 +261,7 @@ export function linkEvidenceCitations(
         endPage: match.endPage
           ? Math.floor(Number(match.endPage))
           : Math.floor(Number(match.startPage)),
-        text: citationText,
+        text: tooltipCitation,
       };
       anchor.addEventListener("click", (event: Event) => {
         event.preventDefault();
@@ -252,7 +277,12 @@ export function linkEvidenceCitations(
     fragment.appendChild(doc.createTextNode(text.slice(cursor)));
     textNode.parentNode?.replaceChild(fragment, textNode);
   }
-  if (linkedCount === 0 && options?.appendFallback) {
+  if (
+    linkedCount === 0 &&
+    options?.appendFallback &&
+    !hasExplicitCitation &&
+    !root.querySelector(".llm-evidence-citation")
+  ) {
     const fallbackBlocks = findAutomaticEvidenceBlocks(root, blocks);
     if (fallbackBlocks.length) {
       const anchor = doc.createElement("a") as HTMLAnchorElement;

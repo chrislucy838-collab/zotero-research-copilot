@@ -1,5 +1,9 @@
 ## What's changed
 
+- Fixed evidence citation parsing for plural page markers such as `pp. 15–20`, compact labels such as `[Paper1, pp.15-20]`, and full `page/pages` markers.
+- Valid citations are replaced in place by one Reader evidence icon. Explicit citations that cannot be matched no longer receive an extra generic fallback icon, preventing duplicate text-plus-icon output.
+- Added regression coverage for page ranges and fallback behavior.
+
 - Fixed the release pipeline to validate the XPI archive and its manifest before publishing. A missing or empty `manifest.json` now stops the workflow instead of producing an installable-looking but invalid asset.
 - Published the reasoning-menu toggle fix together with the validated release artifact.
 

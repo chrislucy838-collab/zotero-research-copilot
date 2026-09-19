@@ -82,4 +82,28 @@ describe("evidence citation matching", () => {
       ],
     );
   });
+
+  it("accepts plural pp. citations and compact Paper1 labels", () => {
+    assert.deepEqual(
+      __evidenceCitationsTest.findCitationMatches(
+        "[paper1, pp.15-20] and [Paper 1, pp. 21–22]",
+      ),
+      [
+        {
+          text: "[paper1, pp.15-20]",
+          paperNumber: "1",
+          startPage: "15",
+          endPage: "20",
+          index: 0,
+        },
+        {
+          text: "[Paper 1, pp. 21–22]",
+          paperNumber: "1",
+          startPage: "21",
+          endPage: "22",
+          index: 23,
+        },
+      ],
+    );
+  });
 });
