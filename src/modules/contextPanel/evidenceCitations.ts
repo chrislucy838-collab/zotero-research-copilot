@@ -230,7 +230,6 @@ export function linkEvidenceCitations(
         blocks,
         match.endPage,
       );
-      if (!matchingBlocks.length) continue;
       const start = match.index;
       const end = start + match.text.length;
       const tooltipCitation = citationLabel(
@@ -239,39 +238,53 @@ export function linkEvidenceCitations(
         match.endPage,
       );
       fragment.appendChild(doc.createTextNode(text.slice(cursor, start)));
-      const anchor = doc.createElement("a") as HTMLAnchorElement;
-      anchor.className = "llm-evidence-citation";
-      anchor.href = "#";
-      anchor.appendChild(createBookOpenTextIcon(doc));
-      anchor.dataset.citation = tooltipCitation;
-      anchor.dataset.evidenceKind = matchingBlocks.some(
-        (block) => block.evidenceKind === "figure",
-      )
-        ? "figure"
-        : matchingBlocks.some((block) => block.evidenceKind === "table")
-          ? "table"
-          : matchingBlocks.some((block) => block.evidenceKind === "mixed")
-            ? "mixed"
-            : "text";
-      anchor.setAttribute("aria-label", tooltipCitation);
-      anchor.title = tooltipCitation;
-      anchor.dataset.evidenceId = matchingBlocks[0].evidenceId;
-      const citation = {
-        startPage: Math.floor(Number(match.startPage)),
-        endPage: match.endPage
-          ? Math.floor(Number(match.endPage))
-          : Math.floor(Number(match.startPage)),
-        text: tooltipCitation,
-      };
-      anchor.addEventListener("click", (event: Event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onActivate(citation, matchingBlocks, anchor);
-      });
-      fragment.appendChild(anchor);
+      if (!matchingBlocks.length) {
+        const unmatched = doc.createElement("span");
+        unmatched.className =
+          "llm-evidence-citation llm-evidence-citation-unmatched";
+        unmatched.setAttribute(
+          "aria-label",
+          `No matching evidence for ${tooltipCitation}`,
+        );
+        unmatched.title = `No matching evidence for ${tooltipCitation}`;
+        unmatched.dataset.citation = tooltipCitation;
+        unmatched.appendChild(createBookOpenTextIcon(doc));
+        fragment.appendChild(unmatched);
+      } else {
+        const anchor = doc.createElement("a") as HTMLAnchorElement;
+        anchor.className = "llm-evidence-citation";
+        anchor.href = "#";
+        anchor.appendChild(createBookOpenTextIcon(doc));
+        anchor.dataset.citation = tooltipCitation;
+        anchor.dataset.evidenceKind = matchingBlocks.some(
+          (block) => block.evidenceKind === "figure",
+        )
+          ? "figure"
+          : matchingBlocks.some((block) => block.evidenceKind === "table")
+            ? "table"
+            : matchingBlocks.some((block) => block.evidenceKind === "mixed")
+              ? "mixed"
+              : "text";
+        anchor.setAttribute("aria-label", tooltipCitation);
+        anchor.title = tooltipCitation;
+        anchor.dataset.evidenceId = matchingBlocks[0].evidenceId;
+        const citation = {
+          startPage: Math.floor(Number(match.startPage)),
+          endPage: match.endPage
+            ? Math.floor(Number(match.endPage))
+            : Math.floor(Number(match.startPage)),
+          text: tooltipCitation,
+        };
+        anchor.addEventListener("click", (event: Event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onActivate(citation, matchingBlocks, anchor);
+        });
+        fragment.appendChild(anchor);
+        linkedCount += 1;
+      }
       cursor = end;
       changed = true;
-      linkedCount += 1;
     }
     if (!changed) continue;
     fragment.appendChild(doc.createTextNode(text.slice(cursor)));

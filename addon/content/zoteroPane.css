@@ -9315,6 +9315,22 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
   outline: none;
 }
 
+.llm-evidence-citation-unmatched {
+  color: var(--fill-secondary, var(--fill-primary));
+  opacity: 0.58;
+  cursor: help;
+}
+
+.llm-evidence-citation-unmatched:hover,
+.llm-evidence-citation-unmatched:focus-visible {
+  color: var(--fill-secondary, var(--fill-primary));
+  background: color-mix(
+    in srgb,
+    var(--fill-secondary, var(--fill-primary)) 10%,
+    transparent
+  );
+}
+
 .llm-evidence-citation:focus-visible {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 40%, transparent);
 }

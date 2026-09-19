@@ -1,5 +1,9 @@
 ## What's changed
 
+- Evidence mode now consumes every recognized paper citation in the rendered reply so citation text does not remain visible.
+- Matched citations become clickable Reader evidence icons. Recognized citations without a matching evidence block become muted, non-clickable icons with a diagnostic tooltip instead of leaking raw citation text.
+- Preserved the automatic fallback icon only for replies that contain no explicit paper citation.
+
 - Fixed evidence citation parsing for plural page markers such as `pp. 15–20`, compact labels such as `[Paper1, pp.15-20]`, and full `page/pages` markers.
 - Valid citations are replaced in place by one Reader evidence icon. Explicit citations that cannot be matched no longer receive an extra generic fallback icon, preventing duplicate text-plus-icon output.
 - Added regression coverage for page ranges and fallback behavior.
