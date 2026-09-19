@@ -28,5 +28,8 @@ describe("evidence reader highlighting helpers", () => {
     assert.include(script, "__zrcEvidenceSearchClearing");
     assert.include(script, "zrc-evidence-overlay");
     assert.include(script, "getClientRects");
+    assert.include(script, "groupMatchesQuery");
+    assert.include(script, "doc.addEventListener('click'");
+    assert.include(script, "clearSearch();");
   });
 });
