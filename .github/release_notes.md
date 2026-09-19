@@ -1,5 +1,9 @@
 ## What's changed
 
+- Improved Reader evidence highlighting: each quote is searched independently instead of batching all evidence queries into one global PDF.js search.
+- Added a temporary geometry overlay that copies the exact `getClientRects()` of each matching text-layer hit, then hides the native PDF.js highlight. This prevents same-page evidence queries from visually contaminating one another.
+- Added overlay cleanup, delayed-render handling, repeated-click handling, and quote-switch race protection without creating persistent Zotero annotations.
+
 - Upgraded evidence citation parsing to support compound citations such as `[Paper 1, p. 2; Paper 2, p. 8]`; each matched paper citation now produces its own Reader icon.
 - Added section/location citations such as `[Paper 1, abstract]`, `[Paper 1, introduction]`, `[Paper 1, 引文]`, and `[Paper 1, references]` when the evidence block contains a matching section label.
 - Page lists and ranges are represented separately, so `p. 2、9` no longer becomes the continuous range `2–9`.

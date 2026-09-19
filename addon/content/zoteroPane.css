@@ -9279,6 +9279,22 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
   outline-offset: 2px;
 }
 
+/* Temporary evidence geometry copied from PDF.js text-layer hits */
+.zrc-evidence-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.zrc-evidence-rect {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(255, 214, 64, 0.68);
+  box-shadow: 0 0 0 1px rgba(190, 135, 0, 0.24);
+  border-radius: 2px;
+}
+
 /* Evidence citations in assistant replies */
 .llm-evidence-citation {
   display: inline-flex;

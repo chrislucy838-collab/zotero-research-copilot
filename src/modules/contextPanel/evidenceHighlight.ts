@@ -5,18 +5,8 @@ type ReaderWindowLike = Window & {
   __zrcEvidenceSearchQuery?: string | boolean;
 };
 
-/**
- * Zotero's PDF Reader has two document layers:
- *
- *   Reader iframe -> nested pdf.js viewer iframe -> .textLayer .highlight
- *
- * The search event bus and the highlight spans live in that nested viewer
- * realm. Injecting a tiny script into the Reader iframe is intentional here:
- * it makes the dispatch happen in the same realm as Zotero's pdf.js instance.
- * This follows the same integration shape used by the open-source
- * zotero-keyword-highlighter plugin.
- */
 const SEARCH_SCRIPT_MARKER = "__zrcEvidenceSearchQuery";
+const MAX_SEARCH_QUERIES = 8;
 
 function normalizeText(value: string): string {
   return value.replace(/\s+/g, " ").trim();
@@ -45,12 +35,11 @@ function chooseSearchQueries(quote: string): string[] {
       (left, right) => right.score - left.score || left.index - right.index,
     );
   const queries = scored
-    .slice(0, 2)
+    .slice(0, 3)
     .map(({ sentence }) =>
       sentence.length > 180 ? sentence.slice(0, 170).trim() : sentence,
     );
-  if (queries.length) return queries;
-  return [normalized.slice(0, 170).trim()];
+  return queries.length ? queries : [normalized.slice(0, 170).trim()];
 }
 
 function chooseSearchQuery(quote: string): string {
@@ -68,8 +57,6 @@ function getHostReaderWindows(reader: any): ReaderWindowLike[] {
     windows.push(win);
   };
 
-  // This is the supported-by-practice Zotero Reader integration point. The
-  // nested view windows are kept as fallbacks for split-view/older builds.
   push(reader?._iframeWindow);
   push(reader?._internalReader?._primaryView?._iframeWindow);
   push(reader?._internalReader?._secondaryView?._iframeWindow);
@@ -79,7 +66,7 @@ function getHostReaderWindows(reader: any): ReaderWindowLike[] {
 }
 
 function buildSearchScript(queries: string[], pageIndexes: number[]): string {
-  const queryJSON = JSON.stringify(queries);
+  const queryJSON = JSON.stringify(queries.slice(0, MAX_SEARCH_QUERIES));
   const pageIndexesJSON = JSON.stringify(
     pageIndexes.filter((page) => Number.isFinite(page) && page >= 0),
   );
@@ -115,78 +102,115 @@ function buildSearchScript(queries: string[], pageIndexes: number[]): string {
       });
 
       var cleanups = [];
-      var clearTimers = [];
+      var timers = [];
+      var overlayPages = [];
+      var queryIndex = 0;
+      var completedQueries = 0;
+
       function isCurrentRun() {
         return window.__zrcEvidenceSearchGeneration === runId;
       }
-      function isTargetHighlight(node) {
+      function isTargetPage(page) {
         if (!pageIndexes.length) return true;
-        var page = node && node.closest ? node.closest('.page') : null;
         if (!page) return false;
         var pageNumber = page.getAttribute('data-page-number');
         var pageIndex = page.getAttribute('data-page-index');
-        if (pageNumber !== null && pageNumber !== '') {
-          return Boolean(targetPageNumbers[pageNumber]);
+        return (pageNumber !== null && Boolean(targetPageNumbers[pageNumber])) ||
+          (pageIndex !== null && Boolean(targetPageIndexes[pageIndex]));
+      }
+      function isTargetHighlight(node) {
+        var page = node && node.closest ? node.closest('.page') : null;
+        return isTargetPage(page);
+      }
+      function hideHighlight(highlight) {
+        if (!highlight) return;
+        if (!highlight.hasAttribute('data-zrc-original-style')) {
+          var original = highlight.getAttribute('style');
+          highlight.setAttribute('data-zrc-original-style', original === null ? '' : original);
         }
-        if (pageIndex !== null && pageIndex !== '') {
-          return Boolean(targetPageIndexes[pageIndex]);
-        }
-        return false;
+        highlight.style.setProperty('background-color', 'transparent', 'important');
+        highlight.style.setProperty('box-shadow', 'none', 'important');
+        highlight.style.setProperty('opacity', '0', 'important');
+        highlight.style.setProperty('visibility', 'hidden', 'important');
       }
       function hideHighlights(doc) {
         try {
-          doc.querySelectorAll('.textLayer .highlight').forEach(function(highlight) {
-            highlight.style.setProperty('background-color', 'transparent', 'important');
-            highlight.style.setProperty('box-shadow', 'none', 'important');
-            highlight.style.setProperty('opacity', '0', 'important');
-            highlight.style.setProperty('visibility', 'hidden', 'important');
-          });
+          doc.querySelectorAll('.textLayer .highlight').forEach(hideHighlight);
         } catch (e) {}
       }
-      function filterHighlights(doc) {
-        if (!isCurrentRun()) return;
-        if (window.__zrcEvidenceSearchClearing === runId) {
-          hideHighlights(doc);
-          return;
-        }
-        try {
-          doc.querySelectorAll('.textLayer .highlight').forEach(function(highlight) {
-            if (!isTargetHighlight(highlight)) {
-              highlight.style.setProperty('background-color', 'transparent', 'important');
-              highlight.style.setProperty('box-shadow', 'none', 'important');
-              highlight.style.setProperty('opacity', '0', 'important');
-              highlight.style.setProperty('visibility', 'hidden', 'important');
-              return;
-            }
-            // PDF.js uses a different color for the currently selected match.
-            // Evidence citations represent one semantic class, so normalize
-            // both the selected and unselected match to the same visible tint.
-            highlight.style.setProperty('background-color', 'rgba(255, 214, 64, .68)', 'important');
-            highlight.style.setProperty('box-shadow', '0 0 0 1px rgba(190, 135, 0, .24)', 'important');
-            highlight.style.removeProperty('opacity');
-            highlight.style.removeProperty('visibility');
-          });
-        } catch (e) {}
-      }
-      function scheduleHideAfterClear() {
-        [0, 40, 120, 300, 650].forEach(function(delay, index) {
-          var timer = window.setTimeout(function() {
-            if (!isCurrentRun() || window.__zrcEvidenceSearchClearing !== runId) return;
-            nestedDocs.forEach(hideHighlights);
-            if (index === 4) {
-              try { delete window.__zrcEvidenceSearchClearing; } catch (e) {}
-              cleanups.splice(0).forEach(function(cleanup) {
-                try { cleanup(); } catch (e) {}
-              });
-            }
-          }, delay);
-          clearTimers.push(timer);
+      function removeOverlays() {
+        overlayPages.splice(0).forEach(function(overlay) {
+          try { overlay.remove(); } catch (e) {}
         });
       }
-      function clearSearch() {
-        if (!isCurrentRun()) return;
-        window.__zrcEvidenceSearchClearing = runId;
-        nestedDocs.forEach(hideHighlights);
+      function resetCollectedHighlights() {
+        nestedDocs.forEach(function(doc) {
+          try {
+            doc.querySelectorAll('.textLayer .highlight[data-zrc-collected]').forEach(function(highlight) {
+              highlight.removeAttribute('data-zrc-collected');
+            });
+          } catch (e) {}
+        });
+      }
+      function ensureOverlay(page) {
+        var overlay = page.querySelector('.zrc-evidence-overlay[data-zrc-run="' + runId + '"]');
+        if (overlay) return overlay;
+        overlay = page.ownerDocument.createElement('div');
+        overlay.className = 'zrc-evidence-overlay';
+        overlay.setAttribute('data-zrc-run', runId);
+        overlay.style.position = 'absolute';
+        overlay.style.left = '0';
+        overlay.style.top = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '30';
+        page.appendChild(overlay);
+        overlayPages.push(overlay);
+        return overlay;
+      }
+      function renderHighlight(highlight) {
+        var page = highlight && highlight.closest ? highlight.closest('.page') : null;
+        if (!page || !isTargetPage(page)) return false;
+        var pageRect = page.getBoundingClientRect();
+        var clientRects = Array.from(highlight.getClientRects ? highlight.getClientRects() : []);
+        if (!clientRects.length) clientRects = [highlight.getBoundingClientRect()];
+        var overlay = ensureOverlay(page);
+        clientRects.forEach(function(rect) {
+          if (!rect || rect.width <= 0 || rect.height <= 0) return;
+          var mark = page.ownerDocument.createElement('div');
+          mark.className = 'zrc-evidence-rect';
+          mark.style.position = 'absolute';
+          mark.style.left = Math.max(0, rect.left - pageRect.left) + 'px';
+          mark.style.top = Math.max(0, rect.top - pageRect.top) + 'px';
+          mark.style.width = Math.max(0, rect.width) + 'px';
+          mark.style.height = Math.max(0, rect.height) + 'px';
+          mark.style.background = 'rgba(255, 214, 64, .68)';
+          mark.style.boxShadow = '0 0 0 1px rgba(190, 135, 0, .24)';
+          mark.style.borderRadius = '2px';
+          overlay.appendChild(mark);
+        });
+        hideHighlight(highlight);
+        return true;
+      }
+      function collectCurrentHighlights() {
+        var count = 0;
+        nestedDocs.forEach(function(doc) {
+          try {
+            doc.querySelectorAll('.textLayer .highlight').forEach(function(highlight) {
+              if (highlight.hasAttribute('data-zrc-collected')) return;
+              if (isTargetHighlight(highlight) && renderHighlight(highlight)) {
+                highlight.setAttribute('data-zrc-collected', 'true');
+                count++;
+              } else {
+                hideHighlight(highlight);
+              }
+            });
+          } catch (e) {}
+        });
+        return count;
+      }
+      function clearFind() {
         try {
           bus.dispatch('find', {
             source: window,
@@ -200,7 +224,67 @@ function buildSearchScript(queries: string[], pageIndexes: number[]): string {
             matchDiacritics: false
           });
         } catch (e) {}
-        scheduleHideAfterClear();
+      }
+      function schedule(fn, delay) {
+        var timer = window.setTimeout(fn, delay);
+        timers.push(timer);
+        return timer;
+      }
+      function waitForCurrentQuery(deadline) {
+        if (!isCurrentRun()) return;
+        var found = collectCurrentHighlights();
+        if (found || Date.now() >= deadline) {
+          completedQueries++;
+          queryIndex++;
+          runNextQuery();
+          return;
+        }
+        schedule(function() { waitForCurrentQuery(deadline); }, 30);
+      }
+      function runNextQuery() {
+        if (!isCurrentRun()) return;
+        if (queryIndex >= queries.length) {
+          nestedDocs.forEach(hideHighlights);
+          return;
+        }
+        clearFind();
+        schedule(function() {
+          if (!isCurrentRun()) return;
+          resetCollectedHighlights();
+          bus.dispatch('find', {
+            source: window,
+            type: '',
+            query: [queries[queryIndex]],
+            phraseSearch: true,
+            caseSensitive: false,
+            entireWord: false,
+            highlightAll: true,
+            findPrevious: false,
+            matchDiacritics: false
+          });
+          waitForCurrentQuery(Date.now() + 1400);
+        }, 40);
+      }
+      function clearSearch() {
+        if (!isCurrentRun()) return;
+        window.__zrcEvidenceSearchClearing = runId;
+        timers.splice(0).forEach(function(timer) { window.clearTimeout(timer); });
+        removeOverlays();
+        resetCollectedHighlights();
+        nestedDocs.forEach(function(doc) {
+          try {
+            doc.querySelectorAll('[data-zrc-original-style]').forEach(function(node) {
+              var original = node.getAttribute('data-zrc-original-style');
+              if (original) node.setAttribute('style', original);
+              else node.removeAttribute('style');
+              node.removeAttribute('data-zrc-original-style');
+            });
+          } catch (e) {}
+        });
+        clearFind();
+        cleanups.splice(0).forEach(function(cleanup) {
+          try { cleanup(); } catch (e) {}
+        });
         try { delete window[marker]; } catch (e) { window[marker] = ''; }
         try { delete window.__zrcEvidenceSearchCleanup; } catch (e) {}
       }
@@ -211,54 +295,16 @@ function buildSearchScript(queries: string[], pageIndexes: number[]): string {
 
       nestedDocs.forEach(function(doc) {
         try {
-          var onClick = function(event) {
-            var target = event.target;
-            if (target && target.closest && target.closest('.textLayer .highlight')) return;
-            clearSearch();
-          };
-          doc.addEventListener('click', onClick, true);
-          cleanups.push(function() { doc.removeEventListener('click', onClick, true); });
-          filterHighlights(doc);
-          var filterTimer = null;
           var observer = new MutationObserver(function() {
-            if (filterTimer) window.clearTimeout(filterTimer);
-            filterTimer = window.setTimeout(function() { filterHighlights(doc); }, 20);
+            if (!isCurrentRun()) return;
+            schedule(function() { collectCurrentHighlights(); }, 20);
           });
           if (doc.body) observer.observe(doc.body, { childList: true, subtree: true });
-          cleanups.push(function() {
-            if (filterTimer) window.clearTimeout(filterTimer);
-            observer.disconnect();
-          });
+          cleanups.push(function() { observer.disconnect(); });
         } catch (e) {}
       });
 
-      // Reset first so a repeated click on the same citation is treated as a
-      // new search by pdf.js, then dispatch in the Reader/pdf.js realm.
-      bus.dispatch('find', {
-        source: window,
-        type: '',
-        query: '',
-        phraseSearch: true,
-        caseSensitive: false,
-        entireWord: false,
-        highlightAll: false,
-        findPrevious: false,
-        matchDiacritics: false
-      });
-      window.setTimeout(function() {
-        if (window[marker] !== true) return;
-        bus.dispatch('find', {
-          source: window,
-          type: '',
-          query: queries,
-          phraseSearch: true,
-          caseSensitive: false,
-          entireWord: false,
-          highlightAll: true,
-          findPrevious: false,
-          matchDiacritics: false
-        });
-      }, 0);
+      runNextQuery();
     })();
   `;
 }
@@ -286,10 +332,7 @@ function clearInjectedSearch(hostWindow: ReaderWindowLike): void {
   }
 }
 
-/**
- * Search and highlight an evidence quote using Zotero/pdf.js's own search
- * highlighter. It is temporary and does not create a Zotero annotation.
- */
+/** Search quote(s), copy exact hit geometry into a temporary overlay, and hide native highlights. */
 export async function highlightEvidenceInReader(
   reader: any,
   evidence: EvidenceBlock | EvidenceBlock[],
@@ -308,7 +351,7 @@ export async function highlightEvidenceInReader(
     .flatMap((block) => chooseSearchQueries(block.quote))
     .filter(Boolean)
     .filter((query, index, all) => all.indexOf(query) === index)
-    .slice(0, 16);
+    .slice(0, MAX_SEARCH_QUERIES);
   const pageIndexes = evidenceBlocks
     .map((block) =>
       Number.isFinite(block.pageIndex)
@@ -326,7 +369,7 @@ export async function highlightEvidenceInReader(
       if (injectSearchScript(hostWindow, queries, pageIndexes)) return true;
     }
   } catch (err) {
-    ztoolkit.log("LLM: Failed to inject Zotero PDF search highlight", err);
+    ztoolkit.log("LLM: Failed to inject Zotero PDF evidence overlay", err);
   }
   return false;
 }

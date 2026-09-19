@@ -22,9 +22,11 @@ describe("evidence reader highlighting helpers", () => {
       [1],
     );
     assert.include(script, "PDFViewerApplication");
-    assert.include(script, "query: queries");
+    assert.include(script, "query: [queries[queryIndex]]");
     assert.include(script, "iframe");
     assert.include(script, "data-page-number");
     assert.include(script, "__zrcEvidenceSearchClearing");
+    assert.include(script, "zrc-evidence-overlay");
+    assert.include(script, "getClientRects");
   });
 });
