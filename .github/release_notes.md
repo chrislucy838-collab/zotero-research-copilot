@@ -1,5 +1,10 @@
 ## What's changed
 
+- Reduced temporary evidence overlay opacity from 0.68 to 0.22 and softened its border so PDF text remains clearly readable beneath the highlight.
+
+- Fixed evidence overlay contamination by requiring each collected PDF.js highlight group to match the currently searched quote before drawing it.
+- Restored click-away cleanup: clicking blank Reader space now removes the temporary evidence overlay and restores the underlying Reader highlight styles; clicking a highlight itself preserves it.
+
 - Improved Reader evidence highlighting: each quote is searched independently instead of batching all evidence queries into one global PDF.js search.
 - Added a temporary geometry overlay that copies the exact `getClientRects()` of each matching text-layer hit, then hides the native PDF.js highlight. This prevents same-page evidence queries from visually contaminating one another.
 - Added overlay cleanup, delayed-render handling, repeated-click handling, and quote-switch race protection without creating persistent Zotero annotations.

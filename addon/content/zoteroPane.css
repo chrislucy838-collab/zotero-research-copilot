@@ -9290,8 +9290,8 @@ button.llm-paper-context-summary-trigger.llm-history-context-trigger {
 .zrc-evidence-rect {
   position: absolute;
   pointer-events: none;
-  background: rgba(255, 214, 64, 0.68);
-  box-shadow: 0 0 0 1px rgba(190, 135, 0, 0.24);
+  background: rgba(255, 214, 64, 0.22);
+  box-shadow: 0 0 0 1px rgba(190, 135, 0, 0.1);
   border-radius: 2px;
 }
 

@@ -185,25 +185,68 @@ function buildSearchScript(queries: string[], pageIndexes: number[]): string {
           mark.style.top = Math.max(0, rect.top - pageRect.top) + 'px';
           mark.style.width = Math.max(0, rect.width) + 'px';
           mark.style.height = Math.max(0, rect.height) + 'px';
-          mark.style.background = 'rgba(255, 214, 64, .68)';
-          mark.style.boxShadow = '0 0 0 1px rgba(190, 135, 0, .24)';
+          mark.style.background = 'rgba(255, 214, 64, .22)';
+          mark.style.boxShadow = '0 0 0 1px rgba(190, 135, 0, .10)';
           mark.style.borderRadius = '2px';
           overlay.appendChild(mark);
         });
         hideHighlight(highlight);
         return true;
       }
+      function normalizeForCompare(value) {
+        return String(value || '').replace(/\\s+/g, ' ').trim().toLowerCase();
+      }
+      function queryTerms(value) {
+        return normalizeForCompare(value).match(/[a-z0-9]{3,}|[\\u4e00-\\u9fff]/g) || [];
+      }
+      function getHighlightGroups(doc) {
+        var all = Array.from(doc.querySelectorAll('.textLayer .highlight'));
+        var groups = [];
+        var i = 0;
+        while (i < all.length) {
+          var group = [all[i++]];
+          if (group[0].classList.contains('begin')) {
+            while (i < all.length) {
+              group.push(all[i]);
+              if (all[i++].classList.contains('end')) break;
+            }
+          }
+          groups.push(group);
+        }
+        return groups;
+      }
+      function groupMatchesQuery(group) {
+        var query = normalizeForCompare(queries[queryIndex]);
+        var text = normalizeForCompare(group.map(function(node) {
+          return node.textContent || '';
+        }).join(' '));
+        if (!query || !text) return false;
+        if (text.indexOf(query) !== -1 || query.indexOf(text) !== -1) return true;
+        var terms = queryTerms(query);
+        if (!terms.length) return false;
+        var matched = terms.filter(function(term) { return text.indexOf(term) !== -1; }).length;
+        return matched >= Math.max(2, Math.ceil(terms.length * .45));
+      }
       function collectCurrentHighlights() {
         var count = 0;
         nestedDocs.forEach(function(doc) {
           try {
-            doc.querySelectorAll('.textLayer .highlight').forEach(function(highlight) {
-              if (highlight.hasAttribute('data-zrc-collected')) return;
-              if (isTargetHighlight(highlight) && renderHighlight(highlight)) {
-                highlight.setAttribute('data-zrc-collected', 'true');
-                count++;
+            getHighlightGroups(doc).forEach(function(group) {
+              if (group.some(function(highlight) { return highlight.hasAttribute('data-zrc-collected'); })) return;
+              var target = group.some(isTargetHighlight);
+              if (target && groupMatchesQuery(group)) {
+                var rendered = false;
+                group.forEach(function(highlight) {
+                  rendered = renderHighlight(highlight) || rendered;
+                });
+                if (rendered) {
+                  group.forEach(function(highlight) {
+                    highlight.setAttribute('data-zrc-collected', 'true');
+                  });
+                  count++;
+                }
               } else {
-                hideHighlight(highlight);
+                group.forEach(hideHighlight);
               }
             });
           } catch (e) {}
@@ -295,6 +338,13 @@ function buildSearchScript(queries: string[], pageIndexes: number[]): string {
 
       nestedDocs.forEach(function(doc) {
         try {
+          var onClick = function(event) {
+            var target = event.target;
+            if (target && target.closest && target.closest('.textLayer .highlight')) return;
+            clearSearch();
+          };
+          doc.addEventListener('click', onClick, true);
+          cleanups.push(function() { doc.removeEventListener('click', onClick, true); });
           var observer = new MutationObserver(function() {
             if (!isCurrentRun()) return;
             schedule(function() { collectCurrentHighlights(); }, 20);
