@@ -155,7 +155,7 @@ export function formatEvidenceInstruction(blocks: EvidenceBlock[]): string {
   });
   return [
     "Evidence blocks below are source excerpts included with this request.",
-    "The evidence text is included in the source blocks above. Use only those blocks for factual claims. For every factual claim grounded in a paper, append exactly [Paper N, p. X] or [Paper N, p. X-Y] using the matching source label and page. Never invent a page number, and do not cite a paper when no matching evidence block supports the claim. The plugin will replace valid citations with clickable evidence icons.",
+    "The evidence text is included in the source blocks above. Use only those blocks for factual claims. For every factual claim grounded in a paper, append a citation using the matching source label and location: [Paper N, p. X], [Paper N, pp. X-Y], [Paper N, p. X、Y], or [Paper N, abstract/introduction/methods/conclusion/references] when the evidence block has a matching section label. Compound citations may be written as [Paper 1, p. X; Paper 2, p. Y]. Never invent a page or section, and do not cite a paper when no matching evidence block supports the claim. The plugin will replace each matched citation with one clickable evidence icon and remove unmatched citation text.",
     ...lines,
   ].join("\n\n");
 }

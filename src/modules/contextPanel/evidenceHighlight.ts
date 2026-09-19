@@ -41,10 +41,14 @@ function chooseSearchQueries(quote: string): string[] {
         (sentence.split(/\s+/).length >= 10 ? 16 : 0) -
         (/^(page|section|figure|table|contents)\b/i.test(sentence) ? 24 : 0),
     }))
-    .sort((left, right) => right.score - left.score || left.index - right.index);
-  const queries = scored.slice(0, 2).map(({ sentence }) =>
-    sentence.length > 180 ? sentence.slice(0, 170).trim() : sentence,
-  );
+    .sort(
+      (left, right) => right.score - left.score || left.index - right.index,
+    );
+  const queries = scored
+    .slice(0, 2)
+    .map(({ sentence }) =>
+      sentence.length > 180 ? sentence.slice(0, 170).trim() : sentence,
+    );
   if (queries.length) return queries;
   return [normalized.slice(0, 170).trim()];
 }
@@ -74,10 +78,7 @@ function getHostReaderWindows(reader: any): ReaderWindowLike[] {
   return windows;
 }
 
-function buildSearchScript(
-  queries: string[],
-  pageIndexes: number[],
-): string {
+function buildSearchScript(queries: string[], pageIndexes: number[]): string {
   const queryJSON = JSON.stringify(queries);
   const pageIndexesJSON = JSON.stringify(
     pageIndexes.filter((page) => Number.isFinite(page) && page >= 0),
@@ -119,6 +120,7 @@ function buildSearchScript(
         return window.__zrcEvidenceSearchGeneration === runId;
       }
       function isTargetHighlight(node) {
+        if (!pageIndexes.length) return true;
         var page = node && node.closest ? node.closest('.page') : null;
         if (!page) return false;
         var pageNumber = page.getAttribute('data-page-number');
@@ -292,13 +294,14 @@ export async function highlightEvidenceInReader(
   reader: any,
   evidence: EvidenceBlock | EvidenceBlock[],
 ): Promise<boolean> {
-  const evidenceBlocks = (Array.isArray(evidence) ? evidence : [evidence]).filter(
+  const evidenceBlocks = (
+    Array.isArray(evidence) ? evidence : [evidence]
+  ).filter(
     (block) =>
       block &&
-      Number.isFinite(block.pageIndex) &&
-      (block.pageIndex as number) >= 0 &&
-      block.status === "direct" &&
-      block.contextItemId,
+      block.status !== "unavailable" &&
+      block.contextItemId &&
+      Boolean(block.quote?.trim()),
   );
   if (!reader || !evidenceBlocks.length) return false;
   const queries = evidenceBlocks
@@ -307,22 +310,20 @@ export async function highlightEvidenceInReader(
     .filter((query, index, all) => all.indexOf(query) === index)
     .slice(0, 16);
   const pageIndexes = evidenceBlocks
-    .map((block) => Math.floor(block.pageIndex as number))
-    .filter((page, index, pages) => pages.indexOf(page) === index);
-  if (!queries.length || !pageIndexes.length) return false;
+    .map((block) =>
+      Number.isFinite(block.pageIndex)
+        ? Math.floor(block.pageIndex as number)
+        : -1,
+    )
+    .filter((page, index, pages) => page >= 0 && pages.indexOf(page) === index);
+  if (!queries.length) return false;
 
   try {
     await reader?._waitForReader?.();
     const hostWindows = getHostReaderWindows(reader);
     for (const hostWindow of hostWindows) {
       clearInjectedSearch(hostWindow);
-      if (
-        injectSearchScript(
-          hostWindow,
-          queries,
-          pageIndexes,
-        )
-      ) return true;
+      if (injectSearchScript(hostWindow, queries, pageIndexes)) return true;
     }
   } catch (err) {
     ztoolkit.log("LLM: Failed to inject Zotero PDF search highlight", err);

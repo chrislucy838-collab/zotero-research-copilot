@@ -564,19 +564,17 @@ async function openEvidencePage(
   const evidenceBlocks = (
     Array.isArray(evidence) ? evidence : [evidence]
   ).filter(
-    (block) =>
-      Number.isFinite(block.pageIndex) &&
-      (block.pageIndex as number) >= 0 &&
-      Boolean(block.contextItemId),
+    (block) => Boolean(block.contextItemId) && block.status !== "unavailable",
   );
   const first = evidenceBlocks[0];
   if (!first?.contextItemId) return;
   try {
     const readerAPI = Zotero.Reader as _ZoteroTypes.Reader;
     if (!readerAPI?.open) throw new Error("Zotero Reader API unavailable");
-    const openedReader = await readerAPI.open(first.contextItemId, {
-      pageIndex: Math.floor(first.pageIndex as number),
-    });
+    const openOptions = Number.isFinite(first.pageIndex)
+      ? { pageIndex: Math.floor(first.pageIndex as number) }
+      : undefined;
+    const openedReader = await readerAPI.open(first.contextItemId, openOptions);
     const reader =
       openedReader ||
       readerAPI._readers?.find(
