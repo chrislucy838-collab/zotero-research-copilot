@@ -106,4 +106,19 @@ describe("evidence citation matching", () => {
       ],
     );
   });
+
+  it("accepts Chinese enumeration punctuation in page lists", () => {
+    assert.deepEqual(
+      __evidenceCitationsTest.findCitationMatches("[Paper 1, p. 2、9]"),
+      [
+        {
+          text: "[Paper 1, p. 2、9]",
+          paperNumber: "1",
+          startPage: "2",
+          endPage: "9",
+          index: 0,
+        },
+      ],
+    );
+  });
 });

@@ -1,5 +1,8 @@
 ## What's changed
 
+- Added Chinese enumeration punctuation support for citations such as `[Paper 1, p. 2、9]`.
+- Citations without matching evidence are now removed silently; no gray placeholder icon is rendered.
+
 - Evidence mode now consumes every recognized paper citation in the rendered reply so citation text does not remain visible.
 - Matched citations become clickable Reader evidence icons. Recognized citations without a matching evidence block become muted, non-clickable icons with a diagnostic tooltip instead of leaking raw citation text.
 - Preserved the automatic fallback icon only for replies that contain no explicit paper citation.

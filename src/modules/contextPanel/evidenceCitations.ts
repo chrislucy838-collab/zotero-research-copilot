@@ -9,14 +9,14 @@ export type EvidenceCitation = {
 const PAPER_PREFIX = "Paper\\s*(\\d+)\\s*[,\\uFF0C]\\s*";
 const PAGE_MARKER = "p(?:p|age|ages)?\\.?";
 const PAGE_SEQUENCE =
-  "\\d+(?:\\s*(?:[-\\u2012\\u2013\\u2014\\uFF5E]\\s*|[,，]\\s*)\\d+)*";
+  "\\d+(?:\\s*(?:[-\\u2012\\u2013\\u2014\\uFF5E]\\s*|[,，、]\\s*)\\d+)*";
 const CITATION_RE = new RegExp(
   `(?:\\[\\s*${PAPER_PREFIX}${PAGE_MARKER}\\s*${PAGE_SEQUENCE}\\s*\\]|(?<!\\[)\\b${PAPER_PREFIX}${PAGE_MARKER}\\s*${PAGE_SEQUENCE}(?:\\s*\\])?)`,
   "gi",
 );
 
 const CITATION_DETAILS_RE = new RegExp(
-  `^\\[*\\s*${PAPER_PREFIX}${PAGE_MARKER}\\s*(\\d+)((?:\\s*(?:[-\\u2012\\u2013\\u2014\\uFF5E]\\s*|[,，]\\s*)\\d+)*)\\s*\\]*$`,
+  `^\\[*\\s*${PAPER_PREFIX}${PAGE_MARKER}\\s*(\\d+)((?:\\s*(?:[-\\u2012\\u2013\\u2014\\uFF5E]\\s*|[,，、]\\s*)\\d+)*)\\s*\\]*$`,
   "i",
 );
 
@@ -238,19 +238,7 @@ export function linkEvidenceCitations(
         match.endPage,
       );
       fragment.appendChild(doc.createTextNode(text.slice(cursor, start)));
-      if (!matchingBlocks.length) {
-        const unmatched = doc.createElement("span");
-        unmatched.className =
-          "llm-evidence-citation llm-evidence-citation-unmatched";
-        unmatched.setAttribute(
-          "aria-label",
-          `No matching evidence for ${tooltipCitation}`,
-        );
-        unmatched.title = `No matching evidence for ${tooltipCitation}`;
-        unmatched.dataset.citation = tooltipCitation;
-        unmatched.appendChild(createBookOpenTextIcon(doc));
-        fragment.appendChild(unmatched);
-      } else {
+      if (matchingBlocks.length) {
         const anchor = doc.createElement("a") as HTMLAnchorElement;
         anchor.className = "llm-evidence-citation";
         anchor.href = "#";
