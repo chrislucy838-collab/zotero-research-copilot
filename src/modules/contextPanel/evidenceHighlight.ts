@@ -169,29 +169,91 @@ function buildSearchScript(queries: string[], pageIndexes: number[]): string {
         overlayPages.push(overlay);
         return overlay;
       }
-      function renderHighlight(highlight) {
-        var page = highlight && highlight.closest ? highlight.closest('.page') : null;
-        if (!page || !isTargetPage(page)) return false;
-        var pageRect = page.getBoundingClientRect();
-        var clientRects = Array.from(highlight.getClientRects ? highlight.getClientRects() : []);
-        if (!clientRects.length) clientRects = [highlight.getBoundingClientRect()];
-        var overlay = ensureOverlay(page);
-        clientRects.forEach(function(rect) {
-          if (!rect || rect.width <= 0 || rect.height <= 0) return;
-          var mark = page.ownerDocument.createElement('div');
-          mark.className = 'zrc-evidence-rect';
-          mark.style.position = 'absolute';
-          mark.style.left = Math.max(0, rect.left - pageRect.left) + 'px';
-          mark.style.top = Math.max(0, rect.top - pageRect.top) + 'px';
-          mark.style.width = Math.max(0, rect.width) + 'px';
-          mark.style.height = Math.max(0, rect.height) + 'px';
-          mark.style.background = 'rgba(255, 214, 64, .22)';
-          mark.style.boxShadow = '0 0 0 1px rgba(190, 135, 0, .10)';
-          mark.style.borderRadius = '2px';
-          overlay.appendChild(mark);
+      function mergeSameLineRects(rects) {
+        var valid = rects.filter(function(rect) {
+          return rect && rect.width > 0 && rect.height > 0;
+        }).map(function(rect) {
+          return {
+            left: rect.left,
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            width: rect.width,
+            height: rect.height
+          };
+        }).sort(function(left, right) {
+          return left.top - right.top || left.left - right.left;
         });
-        hideHighlight(highlight);
-        return true;
+        var merged = [];
+        valid.forEach(function(rect) {
+          var previous = merged[merged.length - 1];
+          if (!previous) {
+            merged.push(rect);
+            return;
+          }
+          var minHeight = Math.min(previous.height, rect.height);
+          var centerDistance = Math.abs(
+            (previous.top + previous.bottom) / 2 -
+            (rect.top + rect.bottom) / 2
+          );
+          var sameLine = centerDistance <= Math.max(2, minHeight * 0.35);
+          var gap = rect.left - previous.right;
+          var closeEnough = gap <= Math.max(4, minHeight * 0.75);
+          if (sameLine && closeEnough) {
+            previous.right = Math.max(previous.right, rect.right);
+            previous.bottom = Math.max(previous.bottom, rect.bottom);
+            previous.top = Math.min(previous.top, rect.top);
+            previous.width = previous.right - previous.left;
+            previous.height = previous.bottom - previous.top;
+          } else {
+            merged.push(rect);
+          }
+        });
+        return merged;
+      }
+      function renderHighlightGroup(group) {
+        var pages = [];
+        group.forEach(function(highlight) {
+          var page = highlight && highlight.closest ? highlight.closest('.page') : null;
+          if (!page || pages.some(function(entry) { return entry.page === page; })) return;
+          pages.push({ page: page, highlights: [] });
+        });
+        group.forEach(function(highlight) {
+          var page = highlight && highlight.closest ? highlight.closest('.page') : null;
+          var entry = pages.find(function(candidate) { return candidate.page === page; });
+          if (entry) entry.highlights.push(highlight);
+        });
+        var rendered = false;
+        pages.forEach(function(entry) {
+          var page = entry.page;
+          if (!isTargetPage(page)) return;
+          var pageRect = page.getBoundingClientRect();
+          var clientRects = [];
+          entry.highlights.forEach(function(highlight) {
+            var rects = Array.from(highlight.getClientRects ? highlight.getClientRects() : []);
+            if (!rects.length && highlight.getBoundingClientRect) {
+              rects = [highlight.getBoundingClientRect()];
+            }
+            clientRects.push.apply(clientRects, rects);
+          });
+          var overlay = ensureOverlay(page);
+          mergeSameLineRects(clientRects).forEach(function(rect) {
+            var mark = page.ownerDocument.createElement('div');
+            mark.className = 'zrc-evidence-rect';
+            mark.style.position = 'absolute';
+            mark.style.left = Math.max(0, rect.left - pageRect.left) + 'px';
+            mark.style.top = Math.max(0, rect.top - pageRect.top) + 'px';
+            mark.style.width = Math.max(0, rect.width) + 'px';
+            mark.style.height = Math.max(0, rect.height) + 'px';
+            mark.style.background = 'rgba(255, 214, 64, .20)';
+            mark.style.boxShadow = 'none';
+            mark.style.borderRadius = '1px';
+            overlay.appendChild(mark);
+          });
+          rendered = true;
+        });
+        group.forEach(hideHighlight);
+        return rendered;
       }
       function normalizeForCompare(value) {
         return String(value || '').replace(/\\s+/g, ' ').trim().toLowerCase();
@@ -235,10 +297,7 @@ function buildSearchScript(queries: string[], pageIndexes: number[]): string {
               if (group.some(function(highlight) { return highlight.hasAttribute('data-zrc-collected'); })) return;
               var target = group.some(isTargetHighlight);
               if (target && groupMatchesQuery(group)) {
-                var rendered = false;
-                group.forEach(function(highlight) {
-                  rendered = renderHighlight(highlight) || rendered;
-                });
+                var rendered = renderHighlightGroup(group);
                 if (rendered) {
                   group.forEach(function(highlight) {
                     highlight.setAttribute('data-zrc-collected', 'true');

@@ -1,5 +1,8 @@
 ## What's changed
 
+- Merged nearby PDF.js highlight rectangles on the same text line so continuous quotes render as a smoother highlight band instead of separate blocks.
+- Removed the temporary overlay border and shadow, and slightly reduced opacity to keep text crisp and improve the native-reader look.
+
 - Reduced temporary evidence overlay opacity from 0.68 to 0.22 and softened its border so PDF text remains clearly readable beneath the highlight.
 
 - Fixed evidence overlay contamination by requiring each collected PDF.js highlight group to match the currently searched quote before drawing it.

@@ -31,5 +31,22 @@ describe("evidence reader highlighting helpers", () => {
     assert.include(script, "groupMatchesQuery");
     assert.include(script, "doc.addEventListener('click'");
     assert.include(script, "clearSearch();");
+    assert.include(script, "mergeSameLineRects");
+    assert.include(script, "renderHighlightGroup");
+    assert.include(script, "entry.page === page");
+    assert.include(script, "mark.style.boxShadow = 'none'");
+  });
+
+  it("merges only nearby rectangles on the same text line", () => {
+    const script = __evidenceHighlightTest.buildSearchScript(
+      ["evidence quote"],
+      [1],
+    );
+    assert.include(script, "centerDistance <= Math.max(2, minHeight * 0.35)");
+    assert.include(script, "gap <= Math.max(4, minHeight * 0.75)");
+    assert.include(
+      script,
+      "previous.right = Math.max(previous.right, rect.right)",
+    );
   });
 });
